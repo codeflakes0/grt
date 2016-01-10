@@ -31,10 +31,12 @@ MatrixDouble::MatrixDouble(){
 }
     
 MatrixDouble::MatrixDouble(const unsigned int rows,const unsigned int cols){
+    infoLog.setProceedingText("[INFO MatrixDouble]");
     warningLog.setProceedingText("[WARNING MatrixDouble]");
     errorLog.setProceedingText("[ERROR MatrixDouble]");
     this->dataPtr = NULL;
     if( rows > 0 && cols > 0 ){
+        infoLog << "new MatrixDouble " << rows << " " << cols << endl;
         resize(rows, cols);
     }
 }
@@ -536,7 +538,31 @@ bool MatrixDouble::save(const string &filename) const{
     file.close();
     return true;
 }
-    
+
+bool MatrixDouble::set(float* data, int rowCount, int colCount) {
+
+    if( this->rows != rowCount || this->cols != colCount ){
+        warningLog << "set(...) - input data does not match matrix size!" << endl;
+        return false;
+    }
+
+    clear();
+
+    //Assign the memory
+    if( !resize(rowCount, colCount) ){
+        warningLog << "parseFile(...) - Failed to resize memory!" << endl;
+        return false;
+    }
+
+    //Convert the string column values to double values
+    for(unsigned int i=0; i<rowCount; i++){
+        for(unsigned int j=0; j<colCount; j++) {
+            dataPtr[i * colCount + j] = data[i * colCount + j];
+        }
+    }
+    return true;
+}
+
 bool MatrixDouble::load(const string &filename,const char seperator){
     
     //Clear any previous data

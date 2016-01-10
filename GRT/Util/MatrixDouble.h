@@ -34,6 +34,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "GRTTypedefs.h"
 #include "FileParser.h"
 #include "ErrorLog.h"
+#include "InfoLog.h"
 
 using namespace std;
 
@@ -113,6 +114,9 @@ public:
      @return returns true or false, indicating if the data was saved successful
      */
     bool save(const string &filename) const;
+	
+	 // CDF
+	 bool set(float* data, int rowCount, int colCount);
     
     /**
      Loads a matrix from a CSV file. This assumes that the data has been saved as rows and columns in the CSV file
@@ -319,7 +323,7 @@ protected:
   
     WarningLog warningLog;
     ErrorLog errorLog;
-    
+    InfoLog infoLog;
 };
     
 } //End of namespace GRT
