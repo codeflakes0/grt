@@ -62,6 +62,7 @@
 #include "Util/PeakDetection.h"
 #include "Util/ThresholdCrossingDetector.h"
 #include "Util/CommandLineParser.h"
+#include "Util/AndroidBuf.h"
 
 //Include the data structures
 #include "DataStructures/ClassificationData.h"

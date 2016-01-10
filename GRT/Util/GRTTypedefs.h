@@ -22,6 +22,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define GRT_TYPEDEFS_HEADER
 
 #include "GRTVersionInfo.h"
+#include "AndroidBuf.h"
 #include <vector>
 
 namespace GRT {
@@ -45,6 +46,14 @@ template<class T> inline void SWAP(T &a,T &b) { T temp(a); a = b; b = temp; }
 inline double SIGN(const double &a, const double &b) {return (b >= 0 ? (a >= 0 ? a : -a) : (a >= 0 ? -a : a));}
 
 inline double antilog(const double &x){ return exp( x ); }
+
+inline void enableAndroidLog() {
+    std::cout.rdbuf(new AndroidBuf); // leak AndroidBuf memory if disableAndroidLog is not called
+}
+
+inline void disableAndroidLog() {
+    delete std::cout.rdbuf(0);
+}
 
 #ifndef MIN
     #define	MIN(a,b) (((a)<(b))?(a):(b))
