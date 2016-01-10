@@ -813,7 +813,15 @@ bool MainWindow::initSignalsAndSlots(){
     connect(&core, SIGNAL(newOSCMessage(std::string)), this, SLOT(updateOSCMessageLog(const std::string)));
     connect(&core, SIGNAL(newTrainingResultReceived(const GRT::TrainingResult&)), this, SLOT(updateTrainingResults(const GRT::TrainingResult&)));
     connect(&core, SIGNAL(newTestInstanceResultReceived(const GRT::TestInstanceResult&)), this, SLOT(updateTestResults(const GRT::TestInstanceResult&)));
+
+    connect(ui->dataIO_clientIPAddressTextField, SIGNAL(editingFinished()), this, SLOT(resetOSCClient()));
+    connect(ui->dataIO_oscOutgoingPortSpinBox, SIGNAL(editingFinished()), this, SLOT(resetOSCClient()));
+
     connect(&core, SIGNAL(pipelineModeChanged(unsigned int)), this, SLOT(updatePipelineMode(const unsigned int)));
+
+    connect(&core, SIGNAL(clientPortChanged(unsigned int)), this, SLOT(updateClientPort(const unsigned int)));
+    connect(&core, SIGNAL(clientAddressChanged(std::string)), this, SLOT(updateClientAddress(const std::string)));
+
     connect(&core, SIGNAL(numInputDimensionsChanged(int)), this, SLOT(updateNumInputDimensions(const int)));
     connect(&core, SIGNAL(numTargetDimensionsChanged(int)), this, SLOT(updateNumTargetDimensions(const int)));
     connect(&core, SIGNAL(trainingClassLabelChanged(unsigned int)), this, SLOT(updateTrainingClassLabel(const unsigned int)));
@@ -1261,6 +1269,14 @@ void MainWindow::resetOSCClient(){
 void MainWindow::updateDataAddress(){
     string address = ui->dataIO_mainDataAddressTextField->text().toUtf8().constData();
     core.setMainDataAddress( address );
+}
+
+void MainWindow::updateClientPort(const unsigned int port){
+    ui->dataIO_oscOutgoingPortSpinBox->setValue( port );
+}
+
+void MainWindow::updateClientAddress(const std::string msg){
+    ui->dataIO_clientIPAddressTextField->setText( QString::fromStdString( msg ) );
 }
 
 void MainWindow::updateNumInputDimensions(const int numInputDimensions){

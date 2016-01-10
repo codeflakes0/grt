@@ -1136,7 +1136,8 @@ void Core::mainThreadFunction(){
 
     bool keepRunning = true;
     int statusMessageCounter = 0;
-    int statusMessageSendRate = 10;
+    //int statusMessageSendRate = 10;
+	int statusMessageSendRate = 100; // CDF
     newDataReceived = false;
 
     while( keepRunning ){
@@ -1238,21 +1239,33 @@ bool Core::processOSCMessage( const OSCMessagePtr oscMessage  ){
         if( m[i].getIsDouble() ){
             msg += GRT::Util::toString( m[i].getDouble() );
         }
+		// CDF
+        if( m[i].getIsString() ){
+            msg += m[i].getString();
+        }
 
         msg += " ";
     }
     emit newOSCMessage( msg );
 
     if( m.getAddressPattern() == "/Setup" && allowOSCControlCommands ){
-        if( m.getNumArgs() == 3 ){
+        if( m.getNumArgs() == 5 ){
             emit newInfoMessage( "Got OSC Setup Message" );
             unsigned int pipelineMode_ = m[0].getInt();
             unsigned int numInputDimensions_ = m[1].getInt();
             unsigned int targetVectorSize_ = m[2].getInt();
+
             if( setPipelineMode( pipelineMode_ ) ){
                 setNumInputDimensions( numInputDimensions_ );
                 setTargetVectorSize( targetVectorSize_ );
             }else newErrorMessage( "Failed to set pipeline mode - invalid OSC /Setup message!" );
+
+            std::string clientAddress = m[3].getString();
+            unsigned int clientPort = m[4].getInt();
+            resetOSCClient(clientAddress, clientPort);
+
+            emit clientAddressChanged( clientAddress );
+            emit clientPortChanged( clientPort );
 
             return true;
         }else return false;

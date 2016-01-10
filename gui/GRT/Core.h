@@ -1,7 +1,7 @@
 #ifndef GRT_CORE_H
 #define GRT_CORE_H
 
-#define GRT_GUI_VERSION "0.1_18"
+#define GRT_GUI_VERSION "0.1_18_CDF"
 
 #include <QObject>
 #include "OSC/OSCServer.h"
@@ -102,6 +102,9 @@ signals:
     void pipelineTrainingFinished( const bool result );
     void pipelineTestingFinished( const bool result );
     void setClassifierMessageReceived( const unsigned int classifierType,const bool useScaling,const bool useNullRejection,const double nullRejectionCoeff,const double parameter1 );
+    // CDF
+    void clientAddressChanged( const std::string clientAddress );
+    void clientPortChanged( const unsigned int clientPort );
     
 public slots:
     bool resetOSCClient( const std::string clientAddress,const int clientPort );

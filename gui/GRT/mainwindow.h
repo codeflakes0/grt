@@ -174,6 +174,9 @@ private slots:
     void setPipelineModeAsClusterMode();
     void updatePipelineMode(const unsigned int pipelineMode);
     void resetAll();
+    // CDF
+    void updateClientPort(const unsigned int port);
+    void updateClientAddress(const std::string msg);
 
     ////////////////////////////////// DATA IO TOOL FUNCTIONS ////////////////////////////////
     void showDataIOInfo();
