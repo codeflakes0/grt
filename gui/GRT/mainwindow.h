@@ -196,6 +196,8 @@ private slots:
     void saveTrainingDatasetToFile();
     void loadTrainingDatasetFromFile();
     void updateTrainingClassLabel(const unsigned int trainingClassLabel);
+    void updateTrainingClassName(std::string trainingClassName);
+    void updateTrainingClassName();
     void updateTargetVectorValue(const double value);
     void updateRecordStatus(const bool recordStatus);
     void updateNumTrainingSamples(const unsigned int numTrainingSamples);

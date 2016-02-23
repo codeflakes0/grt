@@ -1,7 +1,7 @@
 #ifndef GRT_CORE_H
 #define GRT_CORE_H
 
-#define GRT_GUI_VERSION "0.1_18_CDF"
+#define GRT_GUI_VERSION "0.1_18_CDF2"
 
 #include <QObject>
 #include "OSC/OSCServer.h"
@@ -28,6 +28,7 @@ public:
     unsigned int getNumInputDimensions();
     unsigned int getPipelineMode();
     unsigned int getTrainingClassLabel();
+    std::string getTrainingClassName();
     unsigned int getNumTrainingSamples();
     unsigned int getNumTestSamples();
     unsigned int getNumClasses();
@@ -69,6 +70,7 @@ signals:
     void dataChanged( const GRT::VectorDouble &data );
     void targetDataChanged( const GRT::VectorDouble &data );
     void trainingClassLabelChanged( const unsigned int trainingClassLabel );
+    void trainingClassNameChanged( const std::string trainingClassName );
     void recordStatusChanged( const bool record );
     void pipelineConfigurationReset();
     void pipelineConfigurationChanged();
@@ -128,6 +130,7 @@ public slots:
     bool setNumInputDimensions( const int numInputDimensions );
     bool setTargetVectorSize( const int targetVectorSize );
     bool setTrainingClassLabel( const int trainingClassLabel );
+    bool setTrainingClassName( const std::string trainingClassName );
     bool setMainDataAddress( const std::string address );
     bool setDatasetName( const std::string datasetName );
     bool setDatasetInfoText( const std::string datasetName );
@@ -183,6 +186,7 @@ protected:
     unsigned int numInputDimensions;
     unsigned int targetVectorSize;
     unsigned int trainingClassLabel;
+    std::string trainingClassName;
     unsigned int pipelineMode;
     GRT::VectorDouble inputData;
     GRT::VectorDouble targetVector;

@@ -213,6 +213,7 @@ bool MainWindow::initDataLabellingToolView(){
     ui->dataLabellingTool_classificationMode_infoTextField->setText("");
     ui->dataLabellingTool_classLabel->setValue( core.getTrainingClassLabel() );
     ui->dataLabellingTool_classLabel->setRange(1,100000);
+    ui->dataLabellingTool_className->setText("");
     ui->dataLabellingTool_classificationMode_numInputDimensionsField->setText( QString::number( 1 ) );
     ui->dataLabellingTool_classificationMode_numInputDimensionsField->setReadOnly( true );
     ui->dataLabellingTool_classificationMode_numTrainingSamples->setText( QString::number( core.getNumTrainingSamples() ) );
@@ -231,6 +232,7 @@ bool MainWindow::initDataLabellingToolView(){
     ui->dataLabellingTool_regressionMode_numTrainingSamples->setReadOnly( true );
 
     ui->dataLabellingTool_timeseriesClassificationMode_infoTextField->setText("");
+    ui->dataLabellingTool_timeseriesClassificationMode_className->setText("");
     ui->dataLabellingTool_timeseriesClassificationMode_classLabel->setValue( core.getTrainingClassLabel() );
     ui->dataLabellingTool_timeseriesClassificationMode_classLabel->setRange(1,100000);
     ui->dataLabellingTool_timeseriesClassificationMode_numTrainingSamples->setText( QString::number( core.getNumTrainingSamples() ) );
@@ -688,7 +690,10 @@ bool MainWindow::initSignalsAndSlots(){
     connect(ui->dataLabellingTool_loadButton, SIGNAL(clicked()),this, SLOT(loadTrainingDatasetFromFile()));
     connect(ui->dataLabellingTool_clearButton, SIGNAL(clicked()), &core, SLOT(clearTrainingData()));
     connect(ui->dataLabellingTool_classLabel, SIGNAL(valueChanged(int)), &core, SLOT(setTrainingClassLabel(const int)));
+    connect(ui->dataLabellingTool_className, SIGNAL(editingFinished()), this, SLOT(updateTrainingClassName()));
+
     connect(ui->dataLabellingTool_timeseriesClassificationMode_classLabel, SIGNAL(valueChanged(int)), &core, SLOT(setTrainingClassLabel(const int)));
+    connect(ui->dataLabellingTool_timeseriesClassificationMode_className, SIGNAL(editingFinished()), this, SLOT(updateTrainingClassName()));
     connect(ui->dataLabellingTool_targetVectorValueSpinBox, SIGNAL(valueChanged(double)), this, SLOT(updateTargetVectorValue(const double)));
     connect(ui->dataLabellingTool_classificationMode_datasetName, SIGNAL(editingFinished()), this, SLOT(updateDatasetName()));
     connect(ui->dataLabellingTool_regressionMode_datasetName, SIGNAL(editingFinished()), this, SLOT(updateDatasetName()));
@@ -825,6 +830,7 @@ bool MainWindow::initSignalsAndSlots(){
     connect(&core, SIGNAL(numInputDimensionsChanged(int)), this, SLOT(updateNumInputDimensions(const int)));
     connect(&core, SIGNAL(numTargetDimensionsChanged(int)), this, SLOT(updateNumTargetDimensions(const int)));
     connect(&core, SIGNAL(trainingClassLabelChanged(unsigned int)), this, SLOT(updateTrainingClassLabel(const unsigned int)));
+    connect(&core, SIGNAL(trainingClassNameChanged(std::string)), this, SLOT(updateTrainingClassName(std::string)));
     connect(&core, SIGNAL(dataChanged(const GRT::VectorDouble&)), this, SLOT(updateData(const GRT::VectorDouble&)));
     connect(&core, SIGNAL(targetDataChanged(const GRT::VectorDouble&)), this, SLOT(updateTargetVector(const GRT::VectorDouble&)));
     connect(&core, SIGNAL(recordStatusChanged(bool)), this, SLOT(updateRecordStatus(const bool)));
@@ -1359,6 +1365,32 @@ void MainWindow::loadTrainingDatasetFromFile(){
 
 void MainWindow::updateTrainingClassLabel(const unsigned int trainingClassLabel){
     ui->dataLabellingTool_classLabel->setValue( trainingClassLabel );
+}
+
+void MainWindow::updateTrainingClassName(std::string trainingClassName){
+    switch( core.getPipelineMode() ){
+        case Core::TIMESERIES_CLASSIFICATION_MODE:
+            ui->dataLabellingTool_timeseriesClassificationMode_className->setText( QString::fromStdString(trainingClassName) );
+        break;
+        default:
+            ui->dataLabellingTool_className->setText( QString::fromStdString(trainingClassName) );
+        break;
+    }
+
+}
+
+void MainWindow::updateTrainingClassName(){
+    std::string name = "";
+    switch( core.getPipelineMode() ){
+        case Core::TIMESERIES_CLASSIFICATION_MODE:
+            name = ui->dataLabellingTool_timeseriesClassificationMode_className->text().toUtf8().constData();
+            core.setTrainingClassName( name );
+        break;
+        default:
+            name = ui->dataLabellingTool_className->text().toUtf8().constData();
+            core.setTrainingClassName( name );
+        break;
+    }
 }
 
 void MainWindow::updateTargetVectorValue(const double value){

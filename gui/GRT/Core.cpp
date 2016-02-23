@@ -23,6 +23,7 @@ Core::Core(QObject *parent) : QObject(parent)
     inputData.resize( numInputDimensions );
     targetVector.resize( targetVectorSize, 0 );
     trainingClassLabel = 1;
+    trainingClassName = "";
     recordTrainingData = false;
     newDataReceived = false;
     predictionModeEnabled = true;
@@ -202,6 +203,7 @@ bool Core::setRecordingState( const bool state ){
                 if( !recordTrainingData ){
                     if(timeseriesSample.getNumRows() >= 1 ){
                         if( timeseriesClassificationTrainingData.addSample(trainingClassLabel, timeseriesSample) ){
+                            timeseriesClassificationTrainingData.setClassNameForCorrespondingClassLabel(trainingClassName, trainingClassLabel);
                             newSampleAdded = true;
                             numTrainingSamples = timeseriesClassificationTrainingData.getNumSamples();
                             timeseriesSample_ = timeseriesClassificationTrainingData[ numTrainingSamples-1 ];
@@ -547,6 +549,11 @@ unsigned int Core::getTrainingClassLabel(){
     return trainingClassLabel;
 }
 
+std::string Core::getTrainingClassName(){
+    std::unique_lock< std::mutex > lock( mutex );
+    return trainingClassName;
+}
+
 unsigned int Core::getNumTrainingSamples(){
     std::unique_lock< std::mutex > lock( mutex );
     switch( pipelineMode ){
@@ -885,6 +892,23 @@ bool Core::setTrainingClassLabel( const int trainingClassLabel ){
      }
      return true;
 }
+
+bool Core::setTrainingClassName( const std::string trainingClassName ) {
+    bool classNameUpdated = false;
+    {
+        std::unique_lock< std::mutex > lock( mutex );
+        if(trainingClassName != this->trainingClassName){
+            this->trainingClassName = trainingClassName;
+            timeseriesClassificationTrainingData.setClassNameForCorrespondingClassLabel(trainingClassName, trainingClassLabel);
+            classNameUpdated = true;
+        }
+     }
+     if( classNameUpdated ){
+        emit trainingClassNameChanged( trainingClassName );
+     }
+     return true;
+}
+
 
 bool Core::removeAllPreProcessingModules(){
     bool result = false;
@@ -1318,6 +1342,17 @@ bool Core::processOSCMessage( const OSCMessagePtr oscMessage  ){
                 trainingClassLabel = m[0].getInt();
             }
             emit trainingClassLabelChanged( m[0].getInt() );
+            return true;
+        }else return false;
+    }
+
+    if( m.getAddressPattern() == "/TrainingClassName" && allowOSCControlCommands ){
+        if( m.getNumArgs() == 1 ){
+            {
+                std::unique_lock< std::mutex > lock( mutex );
+                trainingClassName = m[0].getString();
+            }
+            emit trainingClassNameChanged( m[0].getString() );
             return true;
         }else return false;
     }

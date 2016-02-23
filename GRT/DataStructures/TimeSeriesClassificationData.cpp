@@ -344,7 +344,7 @@ bool TimeSeriesClassificationData::saveDatasetToFile(const string fileName) cons
 	file << "ClassIDsAndCounters: "<<endl;
 
 	for(UINT i=0; i<classTracker.size(); i++){
-		file << classTracker[i].classLabel << "\t" << classTracker[i].counter << endl;
+        file << classTracker[i].classLabel << "\t" << classTracker[i].counter << "\t" << classTracker[i].className << endl;
 	}
 
     file << "UseExternalRanges: " << useExternalRanges << endl;
@@ -360,7 +360,8 @@ bool TimeSeriesClassificationData::saveDatasetToFile(const string fileName) cons
 	for(UINT x=0; x<totalNumSamples; x++){
 		file << "************TIME_SERIES************\n";
 		file << "ClassID: "<<data[x].getClassLabel() <<endl;
-		file << "TimeSeriesLength: "<<data[x].getLength()<<endl;
+        file << "ClassName: "<<getClassNameForCorrespondingClassLabel(data[x].getClassLabel()) <<endl;
+        file << "TimeSeriesLength: "<<data[x].getLength()<<endl;
 		file << "TimeSeriesData: \n";
 		for(UINT i=0; i<data[x].getLength(); i++){
 			for(UINT j=0; j<numDimensions; j++){
@@ -465,6 +466,7 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const string filename){
 	for(UINT i=0; i<classTracker.size(); i++){
 		file >> classTracker[i].classLabel;
 		file >> classTracker[i].counter;
+        file >> classTracker[i].className;
 	}
 
     //Get the UseExternalRanges
