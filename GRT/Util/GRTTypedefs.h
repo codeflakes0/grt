@@ -47,6 +47,7 @@ inline double SIGN(const double &a, const double &b) {return (b >= 0 ? (a >= 0 ?
 
 inline double antilog(const double &x){ return exp( x ); }
 
+#ifdef ANDROID
 inline void enableAndroidLog() {
     std::cout.rdbuf(new AndroidBuf); // leak AndroidBuf memory if disableAndroidLog is not called
 }
@@ -54,6 +55,7 @@ inline void enableAndroidLog() {
 inline void disableAndroidLog() {
     delete std::cout.rdbuf(0);
 }
+#endif
 
 #ifndef MIN
     #define	MIN(a,b) (((a)<(b))?(a):(b))
