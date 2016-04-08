@@ -22,7 +22,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define GRT_TYPEDEFS_HEADER
 
 #include "GRTVersionInfo.h"
-#include "AndroidBuf.h"
 #include <vector>
 
 namespace GRT {
@@ -47,14 +46,9 @@ inline double SIGN(const double &a, const double &b) {return (b >= 0 ? (a >= 0 ?
 
 inline double antilog(const double &x){ return exp( x ); }
 
-#ifdef ANDROID
-inline void enableAndroidLog() {
-    std::cout.rdbuf(new AndroidBuf); // leak AndroidBuf memory if disableAndroidLog is not called
-}
-
-inline void disableAndroidLog() {
-    delete std::cout.rdbuf(0);
-}
+#ifdef __ANDROID__
+void enableAndroidLog();
+void disableAndroidLog();
 #endif
 
 #ifndef MIN
