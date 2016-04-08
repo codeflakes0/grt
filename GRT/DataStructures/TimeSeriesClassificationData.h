@@ -249,7 +249,7 @@ public:
 	 @param const string filename: the name of the file the data will be saved to
 	 @return true if the data was saved successfully, false otherwise
      */
-	bool saveDatasetToFile(const string filename) const;
+    bool saveDatasetToFile(const string &filename) const;
 	
 	/**
      Loads the labelled timeseries classification data from a custom file format.
@@ -257,7 +257,7 @@ public:
 	 @param const string filename: the name of the file the data will be loaded from
 	 @return true if the data was loaded successfully, false otherwise
      */
-	bool loadDatasetFromFile(const string filename);
+    bool loadDatasetFromFile(const string &filename);
     
     /**
      Saves the data to a CSV file.

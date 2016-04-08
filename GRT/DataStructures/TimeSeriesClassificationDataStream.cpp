@@ -890,5 +890,16 @@ vector< UINT > TimeSeriesClassificationDataStream::getClassLabels() const{
     return classLabels;
 }
 
+vector< string > TimeSeriesClassificationDataStream::getClassNames() const{
+    const UINT K = (UINT)classTracker.size();
+    vector< string > classNames( K );
+
+    for(UINT i=0; i<K; i++){
+        classNames[i] = classTracker[i].className;
+    }
+
+    return classNames;
+}
+
 } //End of namespace GRT
 

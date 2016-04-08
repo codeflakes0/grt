@@ -191,6 +191,8 @@ public:
      */
     vector< UINT > getClassLabels() const;
     
+    vector< string > getClassNames() const;
+
     /**
      Gets a vector of the ranges used to scale the data for training and prediction, these ranges are only used if the classifier has been trained
      with the #useScaling flag set to true. This should be an N-dimensional vector, where N is the number of features in your data.
@@ -321,6 +323,7 @@ protected:
     VectorDouble classDistances;
     VectorDouble nullRejectionThresholds;
     vector< UINT > classLabels;
+    vector< string > classNames;
     vector<MinMax> ranges;
     
     static StringClassifierMap *getMap() {

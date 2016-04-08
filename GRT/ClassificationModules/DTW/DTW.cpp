@@ -992,6 +992,22 @@ bool DTW::saveModelToFile( fstream &file ) const{
     return true;
 }
 
+bool DTW::loadModelFromFile( string filename ){
+    //Open the file
+    debugLog << "opening '" << filename << "'" << endl;
+    std::fstream file;
+    file.open(filename.c_str(), std::ios::in);
+
+    if( !loadModelFromFile( file ) ){
+        return false;
+    }
+
+    //Close the file
+    file.close();
+
+    return true;
+}
+
 bool DTW::loadModelFromFile( fstream &file ){
     
     std::string word;
@@ -1108,6 +1124,7 @@ bool DTW::loadModelFromFile( fstream &file ){
         //Clean and reset the memory
         templatesBuffer.resize(numTemplates);
         classLabels.resize(numTemplates);
+        classNames.resize(numTemplates);
         nullRejectionThresholds.resize(numTemplates);
         
         //Load each template
@@ -1146,6 +1163,16 @@ bool DTW::loadModelFromFile( fstream &file ){
             file >> templatesBuffer[i].classLabel;
             classLabels[i] = templatesBuffer[i].classLabel;
             
+            //Get the class name of this template
+            file >> word;
+            if(word != "ClassName:"){
+                clear();
+                errorLog << "loadDTWModelFromFile( string fileName ) - Failed to find ClassName!" << endl;
+                return false;
+            }
+            file >> templatesBuffer[i].className;
+            classNames[i] = templatesBuffer[i].className;
+
             //Get the time series length
             file >> word;
             if(word != "TimeSeriesLength:"){
@@ -1407,6 +1434,7 @@ bool DTW::loadLegacyModelFromFile( fstream &file ){
     //Clean and reset the memory
     templatesBuffer.resize(numTemplates);
     classLabels.resize(numTemplates);
+    classNames.resize(numTemplates);
     nullRejectionThresholds.resize(numTemplates);
     
     //Load each template

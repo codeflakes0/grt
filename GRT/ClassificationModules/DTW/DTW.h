@@ -75,6 +75,7 @@ class DTWTemplate{
 public:
 	DTWTemplate(){
         classLabel = 0;
+        className = "";
 		trainingMu = 0.0;
 		trainingSigma = 0.0;
 		averageTemplateLength=0;
@@ -82,7 +83,8 @@ public:
 	~DTWTemplate(){};
 
     UINT classLabel;                    //The class that this template belongs to
-	MatrixDouble timeSeries;            //The raw time series
+    string className;
+    MatrixDouble timeSeries;            //The raw time series
 	double trainingMu;                  //The mean distance value of the training data with the trained template 
 	double trainingSigma;               //The sigma of the distance value of the training data with the trained template 
 	UINT averageTemplateLength;          //The average length of the examples used to train this template
@@ -199,6 +201,8 @@ public:
      */
     virtual bool loadModelFromFile(fstream &file);
     
+    virtual bool loadModelFromFile(string filename);
+
     /**
      This recomputes the null rejection thresholds for each of the classes in the DTW model.
      This will be called automatically if the setGamma(double gamma) function is called.

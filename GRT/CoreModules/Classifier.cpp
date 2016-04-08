@@ -221,6 +221,11 @@ VectorDouble Classifier::getNullRejectionThresholds() const{
 vector< UINT > Classifier::getClassLabels() const{ 
     return classLabels;
 }
+
+vector< string > Classifier::getClassNames() const {
+    return classNames;
+}
+
     
 vector<MinMax> Classifier::getRanges() const{
     return ranges;

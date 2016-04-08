@@ -113,6 +113,8 @@ bool TimeSeriesClassificationData::setInfoText(const string infoText){
 
 bool TimeSeriesClassificationData::setClassNameForCorrespondingClassLabel(const string className,const UINT classLabel){
 
+    debugLog << "setClassNameForCorrespondingClassLabel " << className << " " << classLabel << endl;
+
     for(UINT i=0; i<classTracker.size(); i++){
         if( classTracker[i].classLabel == classLabel ){
             classTracker[i].className = className;
@@ -325,10 +327,11 @@ bool TimeSeriesClassificationData::load(const string &filename){
     return loadDatasetFromFile( filename );
 }
 
-bool TimeSeriesClassificationData::saveDatasetToFile(const string fileName) const{
+bool TimeSeriesClassificationData::saveDatasetToFile(const string &fileName) const{
 
 	std::fstream file;
 	file.open(fileName.c_str(), std::ios::out);
+    debugLog << "saving to file '" << fileName << "'" << endl;
 
 	if( !file.is_open() ){
         errorLog << "saveDatasetToFile(string fileName) -  Failed to open file!" << endl;
@@ -375,7 +378,7 @@ bool TimeSeriesClassificationData::saveDatasetToFile(const string fileName) cons
 	return true;
 }
 
-bool TimeSeriesClassificationData::loadDatasetFromFile(const string filename){
+bool TimeSeriesClassificationData::loadDatasetFromFile(const string &filename){
 
 	std::fstream file;
 	file.open(filename.c_str(), std::ios::in);
@@ -661,8 +664,8 @@ bool TimeSeriesClassificationData::loadDatasetFromCSVFile(const string &filename
 }
     
 bool TimeSeriesClassificationData::printStats() const {
-    
-    cout << getStatsAsString();
+
+    debugLog << getStatsAsString() << endl;
     
     return true;
 }
@@ -671,15 +674,23 @@ std::string TimeSeriesClassificationData::getStatsAsString() const{
     
     string stats;
     
+    stats += "\n";
     stats += "DatasetName:\t" + datasetName + "\n";
     stats += "DatasetInfo:\t" + infoText + "\n";
     stats += "Number of Dimensions:\t" + Util::toString(numDimensions) + "\n";
     stats += "Number of Samples:\t" + Util::toString(totalNumSamples) + "\n";
     stats += "Number of Classes:\t" + Util::toString(getNumClasses()) + "\n";
+    stats += "Registered classes:\n";
+
+    for(UINT k=0; k<classTracker.size(); k++){
+        stats += "\tClassLabel:\t" + Util::toString(classTracker[k].classLabel);
+        stats +="\tClassName:\t" + classTracker[k].className + "\n";
+    }
+
     stats += "ClassStats:\n";
     
     for(UINT k=0; k<getNumClasses(); k++){
-        stats += "ClassLabel:\t" + Util::toString(classTracker[k].classLabel);
+        stats += "\tClassLabel:\t" + Util::toString(classTracker[k].classLabel);
         stats += "\tNumber of Samples:\t" + Util::toString( classTracker[k].counter );
         stats +="\tClassName:\t" + classTracker[k].className + "\n";
     }

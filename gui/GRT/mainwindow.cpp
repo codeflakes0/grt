@@ -1364,7 +1364,14 @@ void MainWindow::loadTrainingDatasetFromFile(){
 }
 
 void MainWindow::updateTrainingClassLabel(const unsigned int trainingClassLabel){
-    ui->dataLabellingTool_classLabel->setValue( trainingClassLabel );
+    switch( core.getPipelineMode() ){
+        case Core::TIMESERIES_CLASSIFICATION_MODE:
+            ui->dataLabellingTool_timeseriesClassificationMode_classLabel->setValue( trainingClassLabel );
+        break;
+        default:
+            ui->dataLabellingTool_classLabel->setValue( trainingClassLabel );
+        break;
+    }
 }
 
 void MainWindow::updateTrainingClassName(std::string trainingClassName){

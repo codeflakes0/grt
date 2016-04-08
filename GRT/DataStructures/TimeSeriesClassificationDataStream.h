@@ -436,6 +436,7 @@ public:
      @return a vector containing the class labels from the current dataset.
      */
     vector< UINT > getClassLabels() const;
+    vector< string > getClassNames() const;
 
 protected:
     string datasetName;                                     ///< The name of the dataset
