@@ -181,7 +181,8 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
     trained = false;
     trainingTime = 0;
     clearTestResults();
-    
+    debugLog << "train with classification data" << endl;
+
     if( !getIsClassifierSet() ){
         errorLog << "train(ClassificationData trainingData) - Failed To Train Classifier, the classifier has not been set!" << endl;
         return false;
@@ -220,7 +221,7 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
         bool okToAddProcessedData = true;
         UINT classLabel = trainingData[i].getClassLabel();
         VectorDouble trainingSample = trainingData[i].getSample();
-        
+
         //Perform any preprocessing
         if( getIsPreProcessingSet() ){
             for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){

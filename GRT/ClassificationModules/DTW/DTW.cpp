@@ -145,6 +145,7 @@ bool DTW::train_(TimeSeriesClassificationData &labelledTrainingData){
 	//Cleanup Memory
 	templatesBuffer.clear();
     classLabels.clear();
+    classNames.clear();
 	trained = false;
     continuousInputDataBuffer.clear();
 
@@ -152,10 +153,12 @@ bool DTW::train_(TimeSeriesClassificationData &labelledTrainingData){
         TimeSeriesClassificationSampleTrimmer timeSeriesTrimmer(trimThreshold,maximumTrimPercentage);
         TimeSeriesClassificationData tempData;
         tempData.setNumDimensions( labelledTrainingData.getNumDimensions() );
-        
+
         for(UINT i=0; i<labelledTrainingData.getNumSamples(); i++){
             if( timeSeriesTrimmer.trimTimeSeries( labelledTrainingData[i] ) ){
                 tempData.addSample(labelledTrainingData[i].getClassLabel(), labelledTrainingData[i].getData());
+                UINT l = labelledTrainingData[i].getClassLabel();
+                tempData.setClassNameForCorrespondingClassLabel(labelledTrainingData.getClassNameForCorrespondingClassLabel(l), l);
             }else{
                 trainingLog << "Removing training sample " << i << " from the dataset as it could not be trimmed!" << endl;
             }
@@ -175,6 +178,7 @@ bool DTW::train_(TimeSeriesClassificationData &labelledTrainingData){
     numInputDimensions = labelledTrainingData.getNumDimensions();
 	templatesBuffer.resize( numClasses );
     classLabels.resize( numClasses );
+    classNames.resize( numClasses );
 	nullRejectionThresholds.resize( numClasses );
 	averageTemplateLength = 0;
 
@@ -190,15 +194,19 @@ bool DTW::train_(TimeSeriesClassificationData &labelledTrainingData){
 	for(UINT k=0; k<numTemplates; k++){
         //Get the class label for the cth class
         UINT classLabel = trainingData.getClassTracker()[k].classLabel;
+        string className = trainingData.getClassTracker()[k].className;
+
         TimeSeriesClassificationData classData = trainingData.getClassData( classLabel );
 		UINT numExamples = classData.getNumSamples();
 		bestIndex = 0;
 
         //Set the class label of this template
         templatesBuffer[k].classLabel = classLabel;
+        templatesBuffer[k].className = className;
 
         //Set the kth class label
         classLabels[k] = classLabel;
+        classNames[k] = className;
         
         trainingLog << "Training Template: " << k << " Class: " << classLabel << endl;
 
@@ -547,8 +555,10 @@ bool DTW::setModels( vector< DTWTemplate > newTemplates ){
 		templatesBuffer = newTemplates;
 		//Make sure the class labels have not changed
 		classLabels.resize( templatesBuffer.size() );
-		for(UINT i=0; i<templatesBuffer.size(); i++){
+        classNames.resize( templatesBuffer.size() );
+        for(UINT i=0; i<templatesBuffer.size(); i++){
 			classLabels[i] = templatesBuffer[i].classLabel;
+            classNames[i] = templatesBuffer[i].className;
 		}
 		return true;
 	}
@@ -931,6 +941,22 @@ void DTW::smoothData(MatrixDouble &data,UINT smoothFactor,MatrixDouble &resultsD
 
 ////////////////////////////// SAVE & LOAD FUNCTIONS ////////////////////////////////
     
+bool DTW::saveModelToFile( string filename ) const{
+    //Open the file
+    debugLog << "saving '" << filename << "'" << endl;
+    std::fstream file;
+    file.open(filename.c_str(), std::ios::out);
+
+    if( !saveModelToFile( file ) ){
+        return false;
+    }
+
+    //Close the file
+    file.close();
+
+    return true;
+}
+
 bool DTW::saveModelToFile( fstream &file ) const{
     
     if(!file.is_open()){
@@ -974,6 +1000,7 @@ bool DTW::saveModelToFile( fstream &file ) const{
             file << "***************TEMPLATE***************" << endl;
             file << "Template: " << i+1 << endl;
             file << "ClassLabel: " << templatesBuffer[i].classLabel << endl;
+            file << "ClassName: " << templatesBuffer[i].className << endl;
             file << "TimeSeriesLength: " << templatesBuffer[i].timeSeries.getNumRows() << endl;
             file << "TemplateThreshold: " << nullRejectionThresholds[i] << endl;
             file << "TrainingMu: " << templatesBuffer[i].trainingMu << endl;
@@ -1177,14 +1204,14 @@ bool DTW::loadModelFromFile( fstream &file ){
             file >> word;
             if(word != "TimeSeriesLength:"){
                 clear();
-                errorLog << "loadDTWModelFromFile( string fileName ) - Failed to find TimeSeriesLength!" << endl;
+                errorLog << "loadDTWModelFromFile( string fileName ) - Failed to find TimeSeriesLength1!" << endl;
                 return false;
             }
             file >> timeSeriesLength;
             
             //Resize the buffers
             templatesBuffer[i].timeSeries.resize(timeSeriesLength,numInputDimensions);
-            
+
             //Get the template threshold
             file >> word;
             if(word != "TemplateThreshold:"){
@@ -1470,7 +1497,7 @@ bool DTW::loadLegacyModelFromFile( fstream &file ){
         if(word != "TimeSeriesLength:"){
             numTemplates=0;
             trained = false;
-            errorLog << "loadDTWModelFromFile( string fileName ) - Failed to find TimeSeriesLength!" << endl;
+            errorLog << "loadDTWModelFromFile( string fileName ) - Failed to find TimeSeriesLength2!" << endl;
             return false;
         }
         file >> timeSeriesLength;

@@ -192,6 +192,8 @@ public:
      */
     virtual bool saveModelToFile(fstream &file) const;
     
+    virtual bool saveModelToFile(string filename) const;
+
     /**
      This loads a trained DTW model from a file.
      This overrides the loadModelFromFile function in the Classifier base class.

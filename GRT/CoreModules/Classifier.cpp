@@ -223,6 +223,7 @@ vector< UINT > Classifier::getClassLabels() const{
 }
 
 vector< string > Classifier::getClassNames() const {
+    debugLog << "getClassNames" << endl;
     return classNames;
 }
 

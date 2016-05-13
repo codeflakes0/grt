@@ -467,10 +467,11 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const string &filename){
 	}
 
 	for(UINT i=0; i<classTracker.size(); i++){
-		file >> classTracker[i].classLabel;
+        file >> classTracker[i].classLabel;
 		file >> classTracker[i].counter;
         file >> classTracker[i].className;
-	}
+        debugLog << "loaded " << classTracker[i].classLabel << " " << classTracker[i].className << endl;
+    }
 
     //Get the UseExternalRanges
 	file >> word;
@@ -507,6 +508,7 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const string &filename){
 	for(UINT x=0; x<totalNumSamples; x++){
 		UINT classLabel = 0;
 		UINT timeSeriesLength = 0;
+        string className;
 
 		file >> word;
 		if( word != "************TIME_SERIES************" ){
@@ -525,11 +527,20 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const string &filename){
 		}
 		file >> classLabel;
 
+        file >> word;
+        if( word != "ClassName:" ){
+            file.close();
+            clear();
+            errorLog << "loadDatasetFromFile(string filename) - Failed to find ClassName!" << endl;
+            return false;
+        }
+        file >> className;
+
 		file >> word;
 		if( word != "TimeSeriesLength:" ){
 			file.close();
             clear();
-            errorLog << "loadDatasetFromFile(string filename) - Failed to find TimeSeriesLength!" << endl;
+            errorLog << "loadDatasetFromFile(string filename) - Failed to find TimeSeriesLength3!" << endl;
             return false;
 		}
 		file >> timeSeriesLength;
@@ -551,7 +562,7 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const string &filename){
 		}
 
 		data[x].setTrainingSample(classLabel,trainingExample);
-	}
+    }
 
 	file.close();
 	return true;
