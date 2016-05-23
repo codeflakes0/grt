@@ -32,13 +32,19 @@ int AndroidBuf::sync() {
         return rc;
     }
 
+static bool bAndroidLogEnabled = false;
+
 void enableAndroidLog() {
+    bAndroidLogEnabled = true;
     __android_log_print(ANDROID_LOG_INFO, "GRT", "enableAndroidLog");
     std::cout.rdbuf(new GRT::AndroidBuf); // leak AndroidBuf memory if disableAndroidLog is not called
 }
 
 void disableAndroidLog() {
-    delete std::cout.rdbuf(0);
+    if(bAndroidLogEnabled) {
+        delete std::cout.rdbuf(0);
+        bAndroidLogEnabled = false;
+    }
 }
 
 }

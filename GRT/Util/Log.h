@@ -25,6 +25,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string.h>
 #include "Util.h"
 
+// TBE
+#ifdef __ANDROID__
+#include <android/log.h>
+#include <sys/system_properties.h>
+#endif
+
 namespace GRT{
 
 class Log{
@@ -36,11 +42,16 @@ public:
         writeProceedingText = true;
         writeProceedingTextPtr = &writeProceedingText;
         lastMessagePtr = &lastMessage;
+        #ifdef __ANDROID__
+        androidLogLevel = ANDROID_LOG_VERBOSE;
+        #endif
     }
 
     virtual ~Log(){}
     
     const Log& operator<< (const bool val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -54,6 +65,8 @@ public:
     }
     
     const Log& operator<< (const short val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -67,6 +80,8 @@ public:
     }
 
     const Log& operator<< (const unsigned short val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -80,6 +95,8 @@ public:
     }
 
     const Log& operator<< (const int val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -93,6 +110,8 @@ public:
     }
 
     const Log& operator<< (const unsigned int val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -106,6 +125,8 @@ public:
     }
 
     const Log& operator<< (const long val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -118,6 +139,8 @@ public:
         return *this;    }
 
     const Log& operator<< (const unsigned long val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -131,6 +154,8 @@ public:
     }
 
     const Log& operator<< (const unsigned long long val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -144,6 +169,8 @@ public:
     }
 
     const Log& operator<< (const float val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -156,6 +183,8 @@ public:
         return *this;    }
 
     const Log& operator<< (const double val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -169,6 +198,8 @@ public:
     }
 
     const Log& operator<< (const long double val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -181,6 +212,8 @@ public:
         return *this;    }
 
     const Log& operator<< (const void* val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -193,6 +226,8 @@ public:
     }
     
     const Log& operator<< (const std::string val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -206,6 +241,8 @@ public:
     }
     
     const Log& operator<< (const char* val ) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             if( *writeProceedingTextPtr ){
                 *writeProceedingTextPtr = false;
@@ -226,6 +263,8 @@ public:
     
     // define an operator<< to take in std::endl
     const Log& operator<<(const StandardEndLine manip) const{
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
         if( *loggingEnabledPtr && instanceLoggingEnabled ){
             // call the function, but we cannot return it's value
             manip(std::cout);
@@ -258,7 +297,35 @@ public:
         return true;
     }
 
+private:
+    // TBE
+    static int _strproperty_to_prio(char* str) {
+        #ifdef __ANDROID__
+        if(str == NULL) return ANDROID_LOG_DEFAULT;   // 1
+        if(str[0] == 'V') return ANDROID_LOG_VERBOSE; // 2
+        if(str[0] == 'D') return ANDROID_LOG_DEBUG;   // 3
+        if(str[0] == 'I') return ANDROID_LOG_INFO;    // 4
+        if(str[0] == 'W') return ANDROID_LOG_WARN;
+        if(str[0] == 'E') return ANDROID_LOG_ERROR;   // 6
+        return ANDROID_LOG_DEFAULT;
+        #else
+        return 0;
+        #endif
+    }
+
 protected:
+
+    // TBE
+   bool isAndroidLogLevelEnabled(int logLevel) const {
+        #ifdef __ANDROID__
+        static char prop[PROP_VALUE_MAX] = "FALSE";
+        __system_property_get("log.tag.GRT_C", prop);
+        return logLevel>=_strproperty_to_prio(prop);
+        #else
+        return true;
+        #endif
+   }
+
     virtual void triggerCallback( const std::string &message ) const{
         return;
     }
@@ -270,6 +337,9 @@ protected:
     bool *writeProceedingTextPtr;
     std::string *lastMessagePtr;
     bool writeProceedingText;
+
+    // TBE
+    int androidLogLevel; // default ANDROID_LOG_VERBOSE
 };
 
 } //End of namespace GRT

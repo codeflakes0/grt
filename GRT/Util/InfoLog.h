@@ -50,7 +50,14 @@ public:
 
 class InfoLog : public Log{
 public:
-    InfoLog(std::string proceedingText = ""){ setProceedingText(proceedingText); Log::loggingEnabledPtr = &infoLoggingEnabled; }
+    InfoLog(std::string proceedingText = ""){
+        setProceedingText(proceedingText);
+        Log::loggingEnabledPtr = &infoLoggingEnabled;
+
+        #ifdef __ANDROID__
+        this->androidLogLevel = ANDROID_LOG_INFO;
+        #endif
+    }
 
     virtual ~InfoLog(){}
 

@@ -53,6 +53,10 @@ public:
     WarningLog(std::string proceedingText =""){
         setProceedingText(proceedingText);
         Log::loggingEnabledPtr = &warningLoggingEnabled;
+
+        #ifdef __ANDROID__
+        this->androidLogLevel = ANDROID_LOG_WARN;
+        #endif
     }
 
     virtual ~WarningLog(){}

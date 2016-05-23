@@ -50,7 +50,14 @@ public:
 
 class DebugLog : public Log{
 public:
-    DebugLog(std::string proceedingText = ""){ setProceedingText(proceedingText); Log::loggingEnabledPtr = &debugLoggingEnabled; }
+    DebugLog(std::string proceedingText = ""){
+        setProceedingText(proceedingText);
+        Log::loggingEnabledPtr = &debugLoggingEnabled;
+
+        #ifdef __ANDROID__
+        this->androidLogLevel = ANDROID_LOG_DEBUG;
+        #endif
+    }
 
     virtual ~DebugLog(){}
 
