@@ -15,9 +15,10 @@
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define GRT_DLL_EXPORTS
 #include "MinDistModel.h"
 
-using namespace GRT;
+GRT_BEGIN_NAMESPACE
 
 MinDistModel::MinDistModel(){
     classLabel = 0;
@@ -58,7 +59,7 @@ MinDistModel& MinDistModel:: operator=(const MinDistModel &rhs){
 	return *this;
 }
 	
-bool MinDistModel::train(UINT classLabel,MatrixDouble &trainingData,UINT numClusters,double minChange,UINT maxNumEpochs){
+bool MinDistModel::train(UINT classLabel,MatrixFloat &trainingData,UINT numClusters,Float minChange,UINT maxNumEpochs){
 	
 	if( trainingData.getNumRows() < numClusters ){
         return false;
@@ -88,10 +89,10 @@ bool MinDistModel::train(UINT classLabel,MatrixDouble &trainingData,UINT numClus
     //Now compute the rejection threshold
     const UINT M = trainingData.getNumRows();
     const UINT N = trainingData.getNumCols();
-	VectorDouble predictions(M);
+	VectorFloat predictions(M);
 	for(UINT i=0; i<M; i++){
 		//Test the ith training example
-		VectorDouble testData(N);
+		VectorFloat testData(N);
 		for(UINT j=0; j<N; j++) {
 			testData[j] = trainingData[i][j];
         }
@@ -101,23 +102,23 @@ bool MinDistModel::train(UINT classLabel,MatrixDouble &trainingData,UINT numClus
 	}
     
 	//Calculate the mean prediction value
-	trainingMu /= double(M);
+	trainingMu /= Float(M);
     
 	//Calculate the standard deviation
 	for(UINT i=0; i<M; i++) {
 		trainingSigma += SQR( predictions[i]-trainingMu );
     }
-	trainingSigma = sqrt( trainingSigma / (double(M)-1.0) );
+	trainingSigma = sqrt( trainingSigma / (Float(M)-1.0) );
     
 	rejectionThreshold = trainingMu + ( trainingSigma * gamma );
 	return true;
 	
 }
 
-double MinDistModel::predict(const VectorDouble &inputVector){
+Float MinDistModel::predict(const VectorFloat &inputVector){
 	
-	double minDist = numeric_limits<double>::max();
-	double dist = 0;
+	Float minDist = grt_numeric_limits< Float >::max();
+	Float dist = 0;
 	
 	for(UINT k=0; k<numClusters; k++){
 		dist = 0;
@@ -150,23 +151,23 @@ UINT MinDistModel::getNumClusters() const{
 	return numClusters;
 }
     
-double MinDistModel::getRejectionThreshold() const{
+Float MinDistModel::getRejectionThreshold() const{
     return rejectionThreshold;
 }
 
-double MinDistModel::getGamma() const{
+Float MinDistModel::getGamma() const{
     return gamma;
 }
     
-double MinDistModel::getTrainingMu() const{
+Float MinDistModel::getTrainingMu() const{
     return trainingMu;
 }
     
-double MinDistModel::getTrainingSigma() const{
+Float MinDistModel::getTrainingSigma() const{
     return trainingSigma;
 }
 
-MatrixDouble MinDistModel::getClusters() const{
+MatrixFloat MinDistModel::getClusters() const{
 	return clusters;
 }
     
@@ -175,30 +176,32 @@ bool MinDistModel::setClassLabel(UINT classLabel){
     return true;
 }
 
-bool MinDistModel::setClusters(MatrixDouble &clusters){
+bool MinDistModel::setClusters(MatrixFloat &clusters){
     this->clusters = clusters;
 	this->numClusters = clusters.getNumRows();
 	this->numFeatures = clusters.getNumCols();
     return true;
 }
 
-bool MinDistModel::setGamma(double gamma){
+bool MinDistModel::setGamma(Float gamma){
     this->gamma = gamma;
     return true;
 }
 
-bool MinDistModel::setRejectionThreshold(double rejectionThreshold){
+bool MinDistModel::setRejectionThreshold(Float rejectionThreshold){
     this->rejectionThreshold = rejectionThreshold;
     return true;
 }
 
-bool MinDistModel::setTrainingSigma(double trainingSigma){
+bool MinDistModel::setTrainingSigma(Float trainingSigma){
     this->trainingSigma = trainingSigma;
     return true;
 }
 
-bool MinDistModel::setTrainingMu(double trainingMu){
+bool MinDistModel::setTrainingMu(Float trainingMu){
     this->trainingMu = trainingMu;
     return true;
 }
+
+GRT_END_NAMESPACE
 

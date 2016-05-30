@@ -31,7 +31,7 @@
 
 #include "../../CoreModules/Classifier.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 class SoftmaxModel{
 public:
@@ -61,8 +61,8 @@ public:
         return true;
     }
     
-    double compute(const VectorDouble &x){
-        double sum = w0;
+    Float compute(const VectorFloat &x){
+        Float sum = w0;
         for(UINT i=0; i<N; i++){
             sum += x[i]*w[i];
         }
@@ -71,12 +71,12 @@ public:
     
     UINT classLabel;
     UINT N; //The number of dimensions
-    VectorDouble w; //The coefficents
-    double w0;
+    VectorFloat w; //The coefficents
+    Float w0;
     
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //SoftmaxModel
 

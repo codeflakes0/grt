@@ -1,13 +1,14 @@
 
+#define GRT_DLL_EXPORTS
 #include "GaussianMixtureModels.h"
 
-namespace GRT {
+GRT_BEGIN_NAMESPACE
     
 //Register the GaussianMixtureModels class with the Clusterer base class
 RegisterClustererModule< GaussianMixtureModels > GaussianMixtureModels::registerModule("GaussianMixtureModels");
 
 //Constructor,destructor
-GaussianMixtureModels::GaussianMixtureModels(const UINT numClusters,const UINT minNumEpochs,const UINT maxNumEpochs,const double minChange){
+GaussianMixtureModels::GaussianMixtureModels(const UINT numClusters,const UINT minNumEpochs,const UINT maxNumEpochs,const Float minChange){
     
     this->numClusters = numClusters;
     this->minNumEpochs = minNumEpochs;
@@ -128,7 +129,7 @@ bool GaussianMixtureModels::clear(){
     return true;
 }
 
-bool GaussianMixtureModels::train_(MatrixDouble &data){
+bool GaussianMixtureModels::train_(MatrixFloat &data){
     
     trained = false;
     
@@ -138,7 +139,7 @@ bool GaussianMixtureModels::train_(MatrixDouble &data){
     numTrainingIterationsToConverge = 0;
     
     if( data.getNumRows() == 0 ){
-        errorLog << "train_(MatrixDouble &data) - Training Failed! Training data is empty!" << endl;
+        errorLog << "train_(MatrixFloat &data) - Training Failed! Training data is empty!" << std::endl;
         return false;
     }
     
@@ -172,7 +173,7 @@ bool GaussianMixtureModels::train_(MatrixDouble &data){
     
     //Pick K random starting points for the inital guesses of Mu
     Random random;
-    vector< UINT > randomIndexs(numTrainingSamples);
+    Vector< UINT > randomIndexs(numTrainingSamples);
     for(UINT i=0; i<numTrainingSamples; i++) randomIndexs[i] = i;
     for(UINT i=0; i<numClusters; i++){
         SWAP(randomIndexs[ i ],randomIndexs[ random.getRandomNumberInt(0,numTrainingSamples) ]);
@@ -185,7 +186,7 @@ bool GaussianMixtureModels::train_(MatrixDouble &data){
     
     //Setup sigma and the uniform prior on P(k)
     for(UINT k=0; k<numClusters; k++){
-        frac[k] = 1.0/double(numClusters);
+        frac[k] = 1.0/Float(numClusters);
         for(UINT i=0; i<numInputDimensions; i++){
             for(UINT j=0; j<numInputDimensions; j++) sigma[k][i][j] = 0;
             sigma[k][i][i] = 1.0e-2;   //Set the diagonal to a small number
@@ -194,10 +195,10 @@ bool GaussianMixtureModels::train_(MatrixDouble &data){
     
     loglike = 0;
     bool keepGoing = true;
-    double change = 99.9e99;
+    Float change = 99.9e99;
     UINT numIterationsNoChange = 0;
-    VectorDouble u(numInputDimensions);
-	VectorDouble v(numInputDimensions);
+    VectorFloat u(numInputDimensions);
+	VectorFloat v(numInputDimensions);
     
     while( keepGoing ){
         
@@ -216,7 +217,7 @@ bool GaussianMixtureModels::train_(MatrixDouble &data){
             if( ++numTrainingIterationsToConverge >= maxNumEpochs ) keepGoing = false;
             
         }else{
-            errorLog << "train_(MatrixDouble &data) - Estep failed at iteration " << numTrainingIterationsToConverge << endl;
+            errorLog << "train_(MatrixFloat &data) - Estep failed at iteration " << numTrainingIterationsToConverge << std::endl;
             return false;
         }
     }
@@ -225,7 +226,7 @@ bool GaussianMixtureModels::train_(MatrixDouble &data){
     if( !computeInvAndDet() ){
         det.clear();
         invSigma.clear();
-        errorLog << "train_(MatrixDouble &data) - Failed to compute inverse and determinat!" << endl;
+        errorLog << "train_(MatrixFloat &data) - Failed to compute inverse and determinat!" << std::endl;
         return false;
     }
     
@@ -244,33 +245,33 @@ bool GaussianMixtureModels::train_(MatrixDouble &data){
 }
 
 bool GaussianMixtureModels::train_(ClassificationData &trainingData){
-    MatrixDouble data = trainingData.getDataAsMatrixDouble();
+    MatrixFloat data = trainingData.getDataAsMatrixFloat();
     return train_( data );
 }
 
 bool GaussianMixtureModels::train_(UnlabelledData &trainingData){
-    MatrixDouble data = trainingData.getDataAsMatrixDouble();
+    MatrixFloat data = trainingData.getDataAsMatrixFloat();
     return train_( data );
 }
     
-bool GaussianMixtureModels::predict_(VectorDouble &x){
+bool GaussianMixtureModels::predict_(VectorFloat &x){
     
     if( !trained ){
         return false;
     }
     
-    if( x.size() != numInputDimensions ){
+    if( x.getSize() != numInputDimensions ){
         return false;
     }
     
     if( useScaling ){
         for(UINT n=0; n<numInputDimensions; n++){
-            x[n] = scale(x[n], ranges[n].minValue, ranges[n].maxValue, 0, 1);
+            x[n] = grt_scale(x[n], ranges[n].minValue, ranges[n].maxValue, 0.0, 1.0);
         }
     }
     
-    double sum = 0;
-    double dist = 0;
+    Float sum = 0;
+    Float dist = 0;
     UINT minIndex = 0;
     bestDistance = 0;
     predictedClusterLabel = 0;
@@ -306,17 +307,17 @@ bool GaussianMixtureModels::predict_(VectorDouble &x){
     return true;
 }
     
-bool GaussianMixtureModels::saveModelToFile(fstream &file) const{
+bool GaussianMixtureModels::saveModelToFile( std::fstream &file ) const{
     
     if( !file.is_open() ){
-        errorLog << "saveModelToFile(string filename) - Failed to open file!" << endl;
+        errorLog << "saveModelToFile(string filename) - Failed to open file!" << std::endl;
         return false;
     }
     
     file << "GRT_GAUSSIAN_MIXTURE_MODELS_FILE_V1.0\n";
     
     if( !saveClustererSettingsToFile( file ) ){
-        errorLog << "saveModelToFile(fstream &file) - Failed to save cluster settings to file!" << endl;
+        errorLog << "saveModelToFile(fstream &file) - Failed to save cluster settings to file!" << std::endl;
         return false;
     }
     
@@ -326,7 +327,7 @@ bool GaussianMixtureModels::saveModelToFile(fstream &file) const{
             for(UINT n=0; n<numInputDimensions; n++){
                 file << mu[k][n] << "\t";
             }
-            file << endl;
+            file << std::endl;
         }
         
         file << "Sigma:\n";
@@ -336,7 +337,7 @@ bool GaussianMixtureModels::saveModelToFile(fstream &file) const{
                     file << sigma[k][i][j] << "\t";
                 }
             }
-            file << endl;
+            file << std::endl;
         }
         
         file << "InvSigma:\n";
@@ -346,12 +347,12 @@ bool GaussianMixtureModels::saveModelToFile(fstream &file) const{
                     file << invSigma[k][i][j] << "\t";
                 }
             }
-            file << endl;
+            file << std::endl;
         }
         
         file << "Det:\n";
         for(UINT k=0; k<numClusters; k++){
-            file << det[k] << endl;
+            file << det[k] << std::endl;
         }
     }
     
@@ -359,19 +360,19 @@ bool GaussianMixtureModels::saveModelToFile(fstream &file) const{
     
 }
 
-bool GaussianMixtureModels::loadModelFromFile(fstream &file){
+bool GaussianMixtureModels::loadModelFromFile( std::fstream &file ){
     
     //Clear any previous model
     clear();
     
-    string word;
+    std::string word;
     file >> word;
     if( word != "GRT_GAUSSIAN_MIXTURE_MODELS_FILE_V1.0" ){
         return false;
     }
     
     if( !loadClustererSettingsFromFile( file ) ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to load cluster settings from file!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to load cluster settings from file!" << std::endl;
         return false;
     }
     
@@ -388,7 +389,7 @@ bool GaussianMixtureModels::loadModelFromFile(fstream &file){
         file >> word;
         if( word != "Mu:" ){
             clear();
-            errorLog << "loadModelFromFile(fstream &file) - Failed to load Mu!" << endl;
+            errorLog << "loadModelFromFile(fstream &file) - Failed to load Mu!" << std::endl;
             return false;
         }
         for(UINT k=0; k<numClusters; k++){
@@ -401,7 +402,7 @@ bool GaussianMixtureModels::loadModelFromFile(fstream &file){
         file >> word;
         if( word != "Sigma:" ){
             clear();
-            errorLog << "loadModelFromFile(fstream &file) - Failed to load Sigma!" << endl;
+            errorLog << "loadModelFromFile(fstream &file) - Failed to load Sigma!" << std::endl;
             return false;
         }
         for(UINT k=0; k<numClusters; k++){
@@ -417,7 +418,7 @@ bool GaussianMixtureModels::loadModelFromFile(fstream &file){
         file >> word;
         if( word != "InvSigma:" ){
             clear();
-            errorLog << "loadModelFromFile(fstream &file) - Failed to load InvSigma!" << endl;
+            errorLog << "loadModelFromFile(fstream &file) - Failed to load InvSigma!" << std::endl;
             return false;
         }
         for(UINT k=0; k<numClusters; k++){
@@ -433,7 +434,7 @@ bool GaussianMixtureModels::loadModelFromFile(fstream &file){
         file >> word;
         if( word != "Det:" ){
             clear();
-            errorLog << "loadModelFromFile(fstream &file) - Failed to load Det!" << endl;
+            errorLog << "loadModelFromFile(fstream &file) - Failed to load Det!" << std::endl;
             return false;
         }
         for(UINT k=0; k<numClusters; k++){
@@ -453,9 +454,9 @@ bool GaussianMixtureModels::loadModelFromFile(fstream &file){
     return true;
 }
 
-bool GaussianMixtureModels::estep( const MatrixDouble &data, VectorDouble &u, VectorDouble &v, double &change ){
+bool GaussianMixtureModels::estep( const MatrixFloat &data, VectorFloat &u, VectorFloat &v, Float &change ){
 
-	double tmp,sum,max,oldloglike;
+	Float tmp,sum,max,oldloglike;
 	for(UINT j=0; j<numInputDimensions; j++) u[j] = v[j] = 0;
 
 	oldloglike = loglike;
@@ -491,13 +492,13 @@ bool GaussianMixtureModels::estep( const MatrixDouble &data, VectorDouble &u, Ve
 	return true;
 }
 
-bool GaussianMixtureModels::mstep( const MatrixDouble &data ){
+bool GaussianMixtureModels::mstep( const MatrixFloat &data ){
 
-	double wgt, sum;
+	Float wgt, sum;
 	for(UINT k=0; k<numClusters; k++){
 		wgt = 0.0;
 		for(UINT m=0; m<numTrainingSamples; m++) wgt += resp[m][k];
-		frac[k] = wgt/double(numTrainingSamples);
+		frac[k] = wgt/Float(numTrainingSamples);
 		for(UINT n=0; n<numInputDimensions; n++){
 			sum = 0;
 			for(UINT m=0; m<numTrainingSamples; m++) sum += resp[m][k] * data[m][n];
@@ -530,7 +531,7 @@ bool GaussianMixtureModels::computeInvAndDet(){
 	for(UINT k=0; k<numClusters; k++){
 		LUDecomposition lu(sigma[k]);
 		if( !lu.inverse( invSigma[k] ) ){
-            errorLog << "computeInvAndDet() - Matrix inversion failed for cluster " << k+1 << endl;
+            errorLog << "computeInvAndDet() - Matrix inversion failed for cluster " << k+1 << std::endl;
             return false;
         }
 		det[k] = lu.det();
@@ -540,4 +541,4 @@ bool GaussianMixtureModels::computeInvAndDet(){
 
 }
 
-}//End of namespace GRT
+GRT_END_NAMESPACE

@@ -18,9 +18,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "GRTBase.h"
 
-using namespace GRT;
+GRT_BEGIN_NAMESPACE
     
 GRTBase::GRTBase(void):classType(""),debugLog("[DEBUG]"),errorLog("[ERROR]"),trainingLog("[TRAINING]"),testingLog("[TESTING]"),warningLog("[WARNING]"){
 
@@ -32,7 +33,7 @@ GRTBase::~GRTBase(void){
 bool GRTBase::copyGRTBaseVariables(const GRTBase *base){
     
     if( base == NULL ){
-        errorLog << "copyBaseVariables(const GRTBase *base) - base pointer is NULL!" << endl;
+        errorLog << "copyBaseVariables(const GRTBase *base) - base pointer is NULL!" << std::endl;
         return false;
     }
 
@@ -47,29 +48,29 @@ bool GRTBase::copyGRTBaseVariables(const GRTBase *base){
     return true;
 }
     
-string GRTBase::getLastWarningMessage() const {
+std::string GRTBase::getLastWarningMessage() const {
     return warningLog.getLastMessage();
 }
 
-string GRTBase::getLastErrorMessage() const {
+std::string GRTBase::getLastErrorMessage() const {
     return errorLog.getLastMessage();
 }
     
-string GRTBase::getLastInfoMessage() const {
+std::string GRTBase::getLastInfoMessage() const {
     return infoLog.getLastMessage();
 }
     
-string GRTBase::getGRTVersion(bool returnRevision){
-    string version = GRT_VERSION;
+std::string GRTBase::getGRTVersion(bool returnRevision){
+    std::string version = GRT_VERSION;
     if( returnRevision ) version += " revision: " + getGRTRevison();
     return version;
 }
 
-string GRTBase::getGRTRevison(){
+std::string GRTBase::getGRTRevison(){
     return GRT_REVISION;
 }
     
-string GRTBase::getClassType() const{
+std::string GRTBase::getClassType() const{
     return classType;
 }
     
@@ -95,4 +96,7 @@ bool GRTBase::setErrorLoggingEnabled(const bool loggingEnabled){
     errorLog.setEnableInstanceLogging( loggingEnabled );
     return true;
 }
+
+GRT_END_NAMESPACE
+
 

@@ -18,9 +18,10 @@
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define GRT_DLL_EXPORTS
 #include "PeakDetection.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 PeakDetection::PeakDetection(const UINT lowPassFilterSize,const UINT searchWindowSize){
     
@@ -59,7 +60,7 @@ PeakDetection& PeakDetection::operator=(const PeakDetection &rhs){
     return *this;
 }
 
-bool PeakDetection::update( const double x){
+bool PeakDetection::update( const Float x){
     
     //Update the input counter
     if( ++inputTimeoutCounter >= inputTimeoutLimit ){
@@ -71,13 +72,13 @@ bool PeakDetection::update( const double x){
     peakInfo.clear();
     
     //Low pass filter the input data to remove some noise
-    double filteredValue = lowPassFilter.filter(x);
+    Float filteredValue = lowPassFilter.filter(x);
     
     //Compute the first deriv
-    double firstDeriv = filteredValue - filteredDataBuffer.getBack();
+    Float firstDeriv = filteredValue - filteredDataBuffer.getBack();
     
     //Compute the second deriv
-    double secondDeriv = firstDeriv - firstDerivBuffer.getBack();
+    Float secondDeriv = firstDeriv - firstDerivBuffer.getBack();
     
     //Filter the second deriv using the deadzone filter, this removes any jitter around the 0
     secondDeriv = deadZoneFilter.filter( secondDeriv );
@@ -190,4 +191,4 @@ bool PeakDetection::setSearchWindowSize(const UINT searchWindowSize){
     return true;
 }
 
-}//End of namespace GRT
+GRT_END_NAMESPACE

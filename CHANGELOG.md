@@ -2,6 +2,20 @@
 
 This file contains some notes about significant changes to the GRT.
 
+# Version 0.1.0
+
+## 21th February 2016
+- **added new << operator to GestureRecognitionPipeline**: modules can now be added via: pipeline << ANBC();
+
+## 20th February 2016
+- **updated version to 0.1.0**, merged dev to master
+- **added unit tests**: unit tests can be run via the: *make test* command
+
+# Version 0.0.1
+
+## 20th February 2016
+- **moved to semantic versioning, set version to 0.0.1**
+
 ## 19th Novemeber 2015
 - **moved swig files from GRT directory to jni directory**: The .i files were causing some issues for non-swig users, so moving them to the JNI directory to clean things up, updated
 .i file paths accordingly.

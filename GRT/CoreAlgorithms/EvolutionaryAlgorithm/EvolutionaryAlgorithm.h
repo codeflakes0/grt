@@ -35,7 +35,7 @@
 
 #include "Individual.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 template <typename INDIVIDUAL>
 class EvolutionaryAlgorithm : public GRTBase{
@@ -45,8 +45,8 @@ public:
      Default Constructor, if the populationSize and geneSize parameters are greater than zero then the algorithm will
      be initialized.
      
-     @param const UINT populationSize: the number of individuals in the population. Default value = 0
-     @param const UINT geneSize: the number of elements in each individuals gene. Default value = 0
+     @param populationSize: the number of individuals in the population. Default value = 0
+     @param geneSize: the number of elements in each individuals gene. Default value = 0
      */
     EvolutionaryAlgorithm(const UINT populationSize = 0,const UINT geneSize = 0){
         maxIteration = 1000;
@@ -80,7 +80,7 @@ public:
      This operator allows you to directly access each individual in the population. The user must ensure that index is a valid number
      in the range of [0 populationSize-1].
      
-     @param const UINT index: the index of the individual you want to access
+     @param index: the index of the individual you want to access
      @return returns a reference to the individual in the population at the specific index
      */
     INDIVIDUAL& operator[](const UINT &index){
@@ -91,8 +91,8 @@ public:
      This function initalizes the population, setting each individual's genes to a random value in the range [0.0 1.0].
      Both the populationSize and geneSize parameters must be greater than zero.
      
-     @param const UINT populationSize: the number of individuals in the population
-     @param const UINT geneSize: the number of elements in each individuals gene
+     @param populationSize: the number of individuals in the population
+     @param geneSize: the number of elements in each individuals gene
      @return returns true if the population was initalized, false otherwise
      */
     virtual bool initPopulation(const UINT populationSize,const UINT geneSize){
@@ -120,9 +120,9 @@ public:
         //Init each individual
         UINT i = 0;
         UINT index = 0;
-        typename vector< INDIVIDUAL >::iterator populationIter = population.begin();
-        vector< IndexedDouble >::iterator weightsIter = populationWeights.begin();
-        vector< double >::iterator geneIter;
+        typename Vector< INDIVIDUAL >::iterator populationIter = population.begin();
+        Vector< IndexedDouble >::iterator weightsIter = populationWeights.begin();
+        VectorFloat::iterator geneIter;
         
         while( populationIter != population.end() ){
             populationIter->fitness = 0;
@@ -152,12 +152,12 @@ public:
      This function estimates the populations fitness, based on the training data. It will return a reference to the bestFitness value
      and the index of the individual with the best fitness.
      
-     @param const MatrixDouble &trainingData: a reference to the trainingData that will be used to estimate the fitness
-     @param double &bestFitness: a reference that will return the best fitness value
-     @param UINT &bestIndex: a reference that will return the index of the individual with the best fitness
+     @param trainingData: a reference to the trainingData that will be used to estimate the fitness
+     @param bestFitness: a reference that will return the best fitness value
+     @param bestIndex: a reference that will return the index of the individual with the best fitness
      @return returns true if the population fitness was estimated, false otherwise
      */
-    virtual bool estimatePopulationFitness( const MatrixDouble &trainingData, double &bestFitness, UINT &bestIndex ){
+    virtual bool estimatePopulationFitness( const MatrixFloat &trainingData, Float &bestFitness, UINT &bestIndex ){
         
         UINT index = 0;
         bestFitness = 0;
@@ -165,8 +165,8 @@ public:
         
         if( !initialized ) return false;
         
-        typename vector< INDIVIDUAL >::iterator populationIter = population.begin();
-        vector< IndexedDouble >::iterator weightsIter = populationWeights.begin();
+        typename Vector< INDIVIDUAL >::iterator populationIter = population.begin();
+        Vector< IndexedDouble >::iterator weightsIter = populationWeights.begin();
         
         while( populationIter != population.end() ){
             //Compute the fitness of the current individual
@@ -202,8 +202,8 @@ public:
         UINT mom = 0;
         UINT dad = 0;
         UINT crossOverPoint = 0;
-        typename vector< INDIVIDUAL >::iterator populationIter = population.begin();
-        vector< IndexedDouble >::iterator weightsIter = populationWeights.begin();
+        typename Vector< INDIVIDUAL >::iterator populationIter = population.begin();
+        Vector< IndexedDouble >::iterator weightsIter = populationWeights.begin();
         
         //Get the current weights values
         weightsIter = populationWeights.begin();
@@ -225,7 +225,7 @@ public:
         }
         
         if( accumSumLookup[populationSize-1] == 0 ){
-            warningLog << "evolvePopulation() - The accum sum is zero!" << endl;
+            warningLog << "evolvePopulation() - The accum sum is zero!" << std::endl;
         }
         
         //Reset the population iterator
@@ -300,11 +300,11 @@ public:
      This function evaluates the fitness of an individual, using the training data.  This function assumes that each row in the
      training data is an example, each column must therefore match the geneSize.  
      
-     @param INDIVIDUAL &individual: a reference to the individual you want to compute the fitness for
-     @param const MatrixDouble &trainingData: a reference to the training data that will be used to compute the individual's fitness
+     @param individual: a reference to the individual you want to compute the fitness for
+     @param trainingData: a reference to the training data that will be used to compute the individual's fitness
      @return returns the fitness of the individual
      */
-    virtual double evaluateFitness( INDIVIDUAL &individual, const MatrixDouble &trainingData ){
+    virtual Float evaluateFitness( INDIVIDUAL &individual, const MatrixFloat &trainingData ){
         
         individual.fitness = 0;
         
@@ -313,8 +313,8 @@ public:
         if( trainingData.getNumCols() != geneSize ) return 0;
         
         UINT M = trainingData.getNumRows();
-        double error = 0;
-        double minError = numeric_limits< double >::max();
+        Float error = 0;
+        Float minError = grt_numeric_limits< Float >::max();
         
         for(UINT i=0; i<M; i++){
             error = 0;
@@ -326,7 +326,7 @@ public:
         }
         //Make sure the minError is not zero
         minError += 0.00001;
-        minError /= double(geneSize);
+        minError /= Float(geneSize);
         
         //Good individuals should have a high fitness
         individual.fitness = 1.0/(minError*minError);
@@ -334,14 +334,14 @@ public:
         return individual.fitness;
     }
 
-    virtual bool train(const MatrixDouble &trainingData){
+    virtual bool train(const MatrixFloat &trainingData){
         
         if( !initialized ) return false;
         
         UINT currentIteration = 0;
         UINT numIterationsNoChange = 0;
         bool keepTraining = true;
-        double lastBestFitness = 0;
+        Float lastBestFitness = 0;
         
         if( storeHistory ){
             populationHistory.reserve( maxIteration/storeRate );
@@ -365,7 +365,7 @@ public:
             
             //Perform the selection
             if( !evolvePopulation() ){
-                errorLog << "Failed to evolve population" << endl;
+                errorLog << "Failed to evolve population" << std::endl;
                 return false;
             }
             
@@ -374,20 +374,20 @@ public:
                 return false;
             }
             
-            double delta = fabs( bestIndividualFitness-lastBestFitness );
+            Float delta = fabs( bestIndividualFitness-lastBestFitness );
             lastBestFitness = bestIndividualFitness;
             
-            trainingLog << "Iteration: " << currentIteration << "\tBestFitness: " << bestIndividualFitness << "\tBestIndex: " << bestIndividualIndex << "\tDelta: " << delta << "\tNumIterationsNoChange: " << numIterationsNoChange << endl;
+            trainingLog << "Iteration: " << currentIteration << "\tBestFitness: " << bestIndividualFitness << "\tBestIndex: " << bestIndividualIndex << "\tDelta: " << delta << "\tNumIterationsNoChange: " << numIterationsNoChange << std::endl;
             
             if( currentIteration >= maxIteration ){
                 keepTraining = false;
-                trainingLog << "Max Iteration Reached!" << endl;
+                trainingLog << "Max Iteration Reached!" << std::endl;
             }
             
             if( delta <= minChange ){
                 if( ++numIterationsNoChange >= minNumIterationsNoChange ){
                     keepTraining = false;
-                    trainingLog << "Min Changed Reached!" << endl;
+                    trainingLog << "Min Changed Reached!" << std::endl;
                 }
             }else{
                 numIterationsNoChange = 0;
@@ -395,7 +395,7 @@ public:
             
             if( customConvergenceCheck() ){
                 keepTraining = false;
-                trainingLog << "Custom Convergance Triggered!" << endl;
+                trainingLog << "Custom Convergance Triggered!" << std::endl;
             }
             
             //Update the iteration
@@ -419,7 +419,7 @@ public:
         return initialized;
     }
     
-    vector< INDIVIDUAL > getPopulation() const{
+    Vector< INDIVIDUAL > getPopulation() const{
         return population;
     }
     
@@ -453,22 +453,22 @@ public:
         return true;
     }
     
-    bool setBaiseCoeff(const double baiseCoeff){
+    bool setBaiseCoeff(const Float baiseCoeff){
         this->baiseCoeff = baiseCoeff;
         return true;
     }
     
-    bool setMutationRate(const double mutationRate){
+    bool setMutationRate(const Float mutationRate){
         this->mutationRate = mutationRate;
         return true;
     }
     
-    bool setMinChange(const double minChange){
+    bool setMinChange(const Float minChange){
         this->minChange = minChange;
         return true;
     }
     
-    virtual bool setPopulation( const vector< INDIVIDUAL > &newPopulation ){
+    virtual bool setPopulation( const Vector< INDIVIDUAL > &newPopulation ){
         
         if( newPopulation.size() == 0 ) return false;
         
@@ -478,9 +478,9 @@ public:
         accumSumLookup.resize( populationSize );
         
         UINT index = 0;
-        typename vector< INDIVIDUAL >::iterator populationIter = population.begin();
-        vector< IndexedDouble >::iterator weightsIter = populationWeights.begin();
-        vector< double >::iterator geneIter;
+        typename Vector< INDIVIDUAL >::iterator populationIter = population.begin();
+        Vector< IndexedDouble >::iterator weightsIter = populationWeights.begin();
+        VectorFloat::iterator geneIter;
     
         while( populationIter != population.end() ){
             weightsIter->value = populationIter->fitness;
@@ -493,7 +493,7 @@ public:
         return true;
     }
     
-    virtual inline double generateRandomGeneValue(){
+    virtual inline Float generateRandomGeneValue(){
         return rand.getRandomNumberUniform(0.0,1.0);
     }
     
@@ -504,39 +504,39 @@ public:
     virtual bool printBest() const{
         if( !initialized ) return false;
         
-		cout << "BestIndividual: ";
+		std::cout << "BestIndividual: ";
 		for(UINT i=0; i<geneSize; i++){
-			cout << population[ bestIndividualIndex ].gene[i] << "\t";
+			std::cout << population[ bestIndividualIndex ].gene[i] << "\t";
 		}
-		cout << endl;
+		std::cout << std::endl;
         return true;
     }
     
 public:
     
+    bool initialized;
+    bool useElitism;
+    bool storeHistory;
+    bool baiseWeights;
     UINT populationSize;
     UINT geneSize;
     UINT minNumIterationsNoChange;
     UINT maxIteration;
     UINT storeRate;
     UINT bestIndividualIndex;
-    double bestIndividualFitness;
-    double mutationRate;
-    double minChange;
-    double baiseCoeff;
-    bool initialized;
-    bool useElitism;
-    bool storeHistory;
-    bool baiseWeights;
+    Float bestIndividualFitness;
+    Float mutationRate;
+    Float minChange;
+    Float baiseCoeff;
     Random rand;
-    vector< INDIVIDUAL > population;
-    vector< INDIVIDUAL > parents;
-    vector< IndexedDouble > populationWeights;
-    vector< vector< INDIVIDUAL > > populationHistory;
-    vector< IndexedDouble > fitnessHistory;
-    vector< double > accumSumLookup;
+    Vector< INDIVIDUAL > population;
+    Vector< INDIVIDUAL > parents;
+    Vector< IndexedDouble > populationWeights;
+    Vector< Vector< INDIVIDUAL > > populationHistory;
+    Vector< IndexedDouble > fitnessHistory;
+    VectorFloat accumSumLookup;
 };
     
-}
+GRT_END_NAMESPACE
 
 #endif //GRT_EVOLUTIONARY_ALGORITHM_HEADER

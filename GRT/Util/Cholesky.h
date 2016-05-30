@@ -29,25 +29,31 @@
 
 #ifndef GRT_CHOLESKY_HEADER
 #define GRT_CHOLESKY_HEADER
-#include "GRTCommon.h"
 
-namespace GRT {
+#include "Log.h"
+#include "DebugLog.h"
+#include "ErrorLog.h"
+#include "WarningLog.h"
+#include "../DataStructures/VectorFloat.h"
+#include "../DataStructures/MatrixFloat.h"
 
-class Cholesky{
+GRT_BEGIN_NAMESPACE
+
+class GRT_API Cholesky{
 public:
 	Cholesky();
-	Cholesky(Matrix<double> &a);
-	bool solve(VectorDouble &b,VectorDouble &x);
-	bool elmult(VectorDouble &y,VectorDouble &b);
-	bool elsolve(VectorDouble &b,VectorDouble &y);
-	bool inverse(Matrix<double> &ainv);
-	double logdet();
+	Cholesky(MatrixFloat &a);
+	bool solve(VectorFloat &b,VectorFloat &x);
+	bool elmult(VectorFloat &y,VectorFloat &b);
+	bool elsolve(VectorFloat &b,VectorFloat &y);
+	bool inverse(MatrixFloat &ainv);
+	Float logdet();
     
     bool getSuccess(){ return success; }
 
 	unsigned int N;
     bool success;
-	Matrix<double> el;
+	MatrixFloat el;
     
     DebugLog debugLog;
     ErrorLog errorLog;
@@ -55,6 +61,6 @@ public:
 
 };
 
-}//End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_CHOLESKY_HEADER

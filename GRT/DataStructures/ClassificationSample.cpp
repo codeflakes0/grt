@@ -18,9 +18,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "ClassificationSample.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 ClassificationSample::ClassificationSample():numDimensions(0),classLabel(0){
 }
@@ -31,7 +32,7 @@ ClassificationSample::ClassificationSample(const UINT numDimensions){
 	sample.resize( numDimensions );
 }
 	
-ClassificationSample::ClassificationSample(const UINT classLabel,const VectorDouble &sample){
+ClassificationSample::ClassificationSample(const UINT classLabel,const VectorFloat &sample){
 	this->classLabel = classLabel;
 	this->sample = sample;
 	this->numDimensions = (UINT)sample.size();
@@ -53,7 +54,7 @@ bool ClassificationSample::clear(){
     return true;
 }
 
-bool ClassificationSample::set(UINT classLabel,const VectorDouble &sample){
+bool ClassificationSample::set(UINT classLabel,const VectorFloat &sample){
 	this->classLabel = classLabel;
 	this->sample = sample;
 	this->numDimensions = (UINT)sample.size();
@@ -65,10 +66,10 @@ bool ClassificationSample::setClassLabel(const UINT classLabel){
     return true;
 }
 
-bool ClassificationSample::setSample(const VectorDouble &sample){
+bool ClassificationSample::setSample(const VectorFloat &sample){
     this->sample = sample;
     this->numDimensions = (UINT)sample.size();
     return true;
 }
 
-}; //End of namespace GRT
+GRT_END_NAMESPACE

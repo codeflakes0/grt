@@ -18,11 +18,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "ANBC_Model.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
-bool ANBC_Model::train(UINT classLabel,MatrixDouble &trainingData,VectorDouble &weightsVector){
+bool ANBC_Model::train( UINT classLabel, const MatrixFloat &trainingData, const VectorFloat &weightsVector ){
 
 	//Check to make sure the column sizes match
 	if( trainingData.getNumCols() != weightsVector.size() ){
@@ -49,11 +50,7 @@ bool ANBC_Model::train(UINT classLabel,MatrixDouble &trainingData,VectorDouble &
 			mu[j] += trainingData[i][j];
         }
 
-		mu[j] /= double(M);
-        
-        if( mu[j] == 0 ){
-            return false;
-        }
+		mu[j] /= Float(M);
 	}
 
 	//Calculate the sample standard deviation
@@ -61,39 +58,38 @@ bool ANBC_Model::train(UINT classLabel,MatrixDouble &trainingData,VectorDouble &
 		sigma[j] = 0.0;
 
 		for(UINT i=0; i<M; i++){
-			sigma[j] += SQR( trainingData[i][j]-mu[j] );
+			sigma[j] += grt_sqr( trainingData[i][j]-mu[j] );
         }
-        sigma[j] += 0.01; //Add a small amount to the standard deviation to ensure it is not zero
-        sigma[j] = sqrt( sigma[j]/double(M-1) );
+        sigma[j] = grt_sqrt( sigma[j]/Float(M-1) );
         
         if( sigma[j] == 0 ){
-            return false;
+        	sigma[j] = 0.1; //Set the sigma to a small value so sigma is not zero!
         }
 	}
 
 	//Now compute the threshold
-    double meanPrediction = 0.0;
-	VectorDouble predictions(M);
+    Float meanPrediction = 0.0;
+	VectorFloat predictions(M);
+	VectorFloat testData(N);
 	for(UINT i=0; i<M; i++){
 		//Test the ith training example
-		vector<double> testData(N);
 		for(UINT j=0; j<N; j++) {
 			testData[j] = trainingData[i][j];
         }
         
-		predictions[i] = predict(testData);
+		predictions[i] = predict( testData );
         meanPrediction += predictions[i];
 	}
 
 	//Calculate the mean prediction value
-	meanPrediction /= double(M);
+	meanPrediction /= Float(M);
 
 	//Calculate the standard deviation
-	double stdDev = 0.0;
+	Float stdDev = 0.0;
 	for(UINT i=0; i<M; i++) {
-		stdDev += SQR( predictions[i]-meanPrediction );
+		stdDev += grt_sqr( predictions[i]-meanPrediction );
     }
-	stdDev = sqrt( stdDev / (double(M)-1.0) );
+	stdDev = grt_sqrt( stdDev / (Float(M)-1.0) );
 
 	threshold = meanPrediction-(stdDev*gamma);
 
@@ -104,35 +100,35 @@ bool ANBC_Model::train(UINT classLabel,MatrixDouble &trainingData,VectorDouble &
 	return true;
 }
 
-double ANBC_Model::predict(const VectorDouble &x){
-	double prediction = 0.0;
+Float ANBC_Model::predict( const VectorFloat &x ){
+	Float prediction = 0.0;
 	for(UINT j=0; j<N; j++){
 		if(weights[j]>0)
-			prediction += log(gauss(x[j],mu[j],sigma[j]) * weights[j]);
+			prediction += grt_log(gauss(x[j],mu[j],sigma[j]) * weights[j]);
 	}
 	return prediction;
 }
 
-double ANBC_Model::predictUnnormed(const VectorDouble &x){
-	double prediction = 0.0;
+Float ANBC_Model::predictUnnormed( const VectorFloat &x ){
+	Float prediction = 0.0;
 	for(UINT j=0; j<N; j++){
 		if(weights[j]>0)
-			prediction += log(unnormedGauss(x[j],mu[j],sigma[j]) * weights[j]);
+			prediction += grt_log( unnormedGauss(x[j], mu[j], sigma[j]) * weights[j] );
 	}
 	return prediction;
 }
 
-inline double ANBC_Model::gauss(const double x,const double mu,const double sigma){
+inline Float ANBC_Model::gauss(const Float x,const Float mu,const Float sigma){
 	return ( 1.0/(sigma*sqrt(TWO_PI)) ) * exp( - ( ((x-mu)*(x-mu))/(2*(sigma*sigma)) ) );
 }
 
-inline double ANBC_Model::unnormedGauss(const double x,const double mu,const double sigma){
+inline Float ANBC_Model::unnormedGauss(const Float x,const Float mu,const Float sigma){
 	return exp( - ( ((x-mu)*(x-mu))/(2*(sigma*sigma)) ) );
 }
 
-void ANBC_Model::recomputeThresholdValue(const double gamma){
+void ANBC_Model::recomputeThresholdValue(const Float gamma){
 	this->gamma = gamma;
 	threshold = trainingMu-(trainingSigma*gamma);
 }
 
-} //End of namespace GRT
+GRT_END_NAMESPACE

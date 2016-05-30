@@ -35,28 +35,28 @@
 #include "../../CoreAlgorithms/Tree/Tree.h"
 #include "RegressionTreeNode.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
-class RegressionTree : public Tree, public Regressifier
+class GRT_API RegressionTree : public Tree, public Regressifier
 {
 public:
     /**
      Default Constructor
 
-     @param UINT numSplittingSteps: sets the number of steps that will be used to search for the best spliting value for each node. Default value = 100
-     @param UINT minNumSamplesPerNode: sets the minimum number of samples that are allowed per node, if the number of samples is below that, the node will become a leafNode.  Default value = 5
-     @param UINT maxDepth: sets the maximum depth of the tree. Default value = 10
-     @param bool removeFeaturesAtEachSpilt: sets if a feature is removed at each spilt so it can not be used again. Default value = false
-     @param UINT trainingMode: sets the training mode, this should be one of the TrainingMode enums. Default value = BEST_ITERATIVE_SPILT
-     @param bool useScaling: sets if the training and real-time data should be scaled between [0 1]. Default value = false
-     @param const double minRMSErrorPerNode: sets the minimum RMS error that allowed per node, if the RMS error is below that, the node will become a leafNode. Default value = 0.01
+     @param numSplittingSteps: sets the number of steps that will be used to search for the best spliting value for each node. Default value = 100
+     @param minNumSamplesPerNode: sets the minimum number of samples that are allowed per node, if the number of samples is below that, the node will become a leafNode.  Default value = 5
+     @param maxDepth: sets the maximum depth of the tree. Default value = 10
+     @param removeFeaturesAtEachSpilt: sets if a feature is removed at each spilt so it can not be used again. Default value = false
+     @param trainingMode: sets the training mode, this should be one of the TrainingMode enums. Default value = BEST_ITERATIVE_SPILT
+     @param useScaling: sets if the training and real-time data should be scaled between [0 1]. Default value = false
+     @param minRMSErrorPerNode: sets the minimum RMS error that allowed per node, if the RMS error is below that, the node will become a leafNode. Default value = 0.01
      */
-	RegressionTree(const UINT numSplittingSteps=100,const UINT minNumSamplesPerNode=5,const UINT maxDepth=10,const bool removeFeaturesAtEachSpilt = false,const UINT trainingMode = BEST_ITERATIVE_SPILT,const bool useScaling=false,const double minRMSErrorPerNode = 0.01);
+	RegressionTree(const UINT numSplittingSteps=100,const UINT minNumSamplesPerNode=5,const UINT maxDepth=10,const bool removeFeaturesAtEachSpilt = false,const UINT trainingMode = BEST_ITERATIVE_SPILT,const bool useScaling=false,const Float minRMSErrorPerNode = 0.01);
     
     /**
      Defines the copy constructor.
      
-     @param const RegressionTree &rhs: the instance from which all the data will be copied into this instance
+     @param rhs: the instance from which all the data will be copied into this instance
      */
     RegressionTree(const RegressionTree &rhs);
     
@@ -68,7 +68,7 @@ public:
     /**
      Defines how the data from the rhs RegressionTree should be copied to this RegressionTree
      
-     @param const RegressionTree &rhs: another instance of a RegressionTree
+     @param rhs: another instance of a RegressionTree
      @return returns a pointer to this instance of the RegressionTree
      */
 	RegressionTree &operator=(const RegressionTree &rhs);
@@ -77,7 +77,7 @@ public:
      This is required for the Gesture Recognition Pipeline for when the pipeline.setRegressifier(...) method is called.
      It clones the data from the Base Class Regressifier pointer (which should be pointing to an RegressionTree instance) into this instance
      
-     @param Regressifier *regressifier: a pointer to the Regressifier Base Class, this should be pointing to another RegressionTree instance
+     @param regressifier: a pointer to the Regressifier Base Class, this should be pointing to another RegressionTree instance
      @return returns true if the clone was successfull, false otherwise
     */
 	virtual bool deepCopyFrom(const Regressifier *regressifier);
@@ -86,7 +86,7 @@ public:
      This trains the RegressionTree model, using the labelled regression data.
      This overrides the train function in the Regressifier base class.
      
-     @param RegressionData trainingData: a reference to the training data
+     @param trainingData: a reference to the training data
      @return returns true if the RegressionTree model was trained, false otherwise
     */
     virtual bool train_(RegressionData &trainingData);
@@ -95,10 +95,10 @@ public:
      This predicts the class of the inputVector.
      This overrides the predict function in the Regressifier base class.
      
-     @param VectorDouble inputVector: the input vector to predict
+     @param inputVector: the input Vector to predict
      @return returns true if the prediction was performed, false otherwise
     */
-    virtual bool predict_(VectorDouble &inputVector);
+    virtual bool predict_(VectorFloat &inputVector);
     
     /**
      This overrides the clear function in the Regressifier base class.
@@ -119,19 +119,19 @@ public:
      This saves the trained RegressionTree model to a file.
      This overrides the saveModelToFile function in the Regressifier base class.
      
-     @param fstream &file: a reference to the file the RegressionTree model will be saved to
+     @param file: a reference to the file the RegressionTree model will be saved to
      @return returns true if the model was saved successfully, false otherwise
      */
-    virtual bool saveModelToFile(fstream &file) const;
+    virtual bool saveModelToFile( std::fstream &file ) const;
     
     /**
      This loads a trained RegressionTree model from a file.
      This overrides the loadModelFromFile function in the Regressifier base class.
      
-     @param fstream &file: a reference to the file the RegressionTree model will be loaded from
+     @param file: a reference to the file the RegressionTree model will be loaded from
      @return returns true if the model was loaded successfully, false otherwise
      */
-    virtual bool loadModelFromFile(fstream &file);
+    virtual bool loadModelFromFile( std::fstream &file );
 
     /**
      Deep copies the regression tree, returning a pointer to the new regression tree.
@@ -155,14 +155,15 @@ public:
      
      @return returns the minimum RMS error per node
      */
-    double getMinRMSErrorPerNode() const;
+    Float getMinRMSErrorPerNode() const;
     
     /**
      Sets the minimum RMS error that needs to be exceeded for the tree to continue growing at a specific node.
      
+     @param minRMSErrorPerNode: sets the minRMSErrorPerNode parameter
      @return returns true if the parameter was updated
      */
-    bool setMinRMSErrorPerNode(const double minRMSErrorPerNode);
+    bool setMinRMSErrorPerNode(const Float minRMSErrorPerNode);
     
     //Tell the compiler we are using the base class train method to stop hidden virtual function warnings
     using MLBase::saveModelToFile;
@@ -171,19 +172,19 @@ public:
     using MLBase::predict; ///<Tell the compiler we are using the base class predict method to stop hidden virtual function warnings
     
 protected:
-    double minRMSErrorPerNode;
+    Float minRMSErrorPerNode;
     
-    RegressionTreeNode* buildTree( const RegressionData &trainingData, RegressionTreeNode *parent, vector< UINT > features, UINT nodeID );
-    bool computeBestSpilt( const RegressionData &trainingData, const vector< UINT > &features, UINT &featureIndex, double &threshold, double &minError );
-    bool computeBestSpiltBestIterativeSpilt( const RegressionData &trainingData, const vector< UINT > &features, UINT &featureIndex, double &threshold, double &minError );
-    //bool computeBestSpiltBestRandomSpilt( const RegressionData &trainingData, const vector< UINT > &features, const vector< UINT > &classLabels, UINT &featureIndex, double &threshold, double &minError );
-    bool computeNodeRegressionData( const RegressionData &trainingData, VectorDouble &regressionData );
+    RegressionTreeNode* buildTree( const RegressionData &trainingData, RegressionTreeNode *parent, Vector< UINT > features, UINT nodeID );
+    bool computeBestSpilt( const RegressionData &trainingData, const Vector< UINT > &features, UINT &featureIndex, Float &threshold, Float &minError );
+    bool computeBestSpiltBestIterativeSpilt( const RegressionData &trainingData, const Vector< UINT > &features, UINT &featureIndex, Float &threshold, Float &minError );
+    //bool computeBestSpiltBestRandomSpilt( const RegressionData &trainingData, const Vector< UINT > &features, const Vector< UINT > &classLabels, UINT &featureIndex, Float &threshold, Float &minError );
+    bool computeNodeRegressionData( const RegressionData &trainingData, VectorFloat &regressionData );
 
     static RegisterRegressifierModule< RegressionTree > registerModule;
     
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_REGRESSION_TREE_HEADER
 

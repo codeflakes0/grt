@@ -21,9 +21,10 @@
  
 */
 
+#define GRT_DLL_EXPORTS
 #include "Cholesky.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 Cholesky::Cholesky(){
 	debugLog.setProceedingText("[DEBUG LUdcmp]");
@@ -33,7 +34,7 @@ Cholesky::Cholesky(){
 	N = 0;
 }
 
-Cholesky::Cholesky(Matrix<double> &a) : N(a.getNumRows()), el(a) {
+Cholesky::Cholesky(MatrixFloat &a) : N(a.getNumRows()), el(a) {
     
     debugLog.setProceedingText("[DEBUG LUdcmp]");
     errorLog.setProceedingText("[ERROR LUdcmp]");
@@ -41,10 +42,10 @@ Cholesky::Cholesky(Matrix<double> &a) : N(a.getNumRows()), el(a) {
     success = false;
     
 	int i,j,k; //k has to an int (rather than a UINT)
- 	VectorDouble tmp;
-	double sum = 0;
+ 	VectorFloat tmp;
+	Float sum = 0;
 	if( el.getNumCols() != N ){
-        errorLog << "The input matrix is not square!" << endl;
+        errorLog << "The input matrix is not square!" << std::endl;
 		return;
 	}
 
@@ -54,7 +55,7 @@ Cholesky::Cholesky(Matrix<double> &a) : N(a.getNumRows()), el(a) {
 			for (sum=el[i][j],k=i-1;k>=0;k--) sum -= el[i][k]*el[j][k];
 			if (i == j) {
 				if (sum <= 0.0){
-					errorLog << "Sum is <=0.0" << endl;
+					errorLog << "Sum is <=0.0" << std::endl;
                     return;
 				}
 				el[i][i]=sqrt(sum);
@@ -68,13 +69,13 @@ Cholesky::Cholesky(Matrix<double> &a) : N(a.getNumRows()), el(a) {
     success = true;
 }
 
-bool Cholesky::solve(VectorDouble &b,VectorDouble &x) {
+bool Cholesky::solve(VectorFloat &b,VectorFloat &x) {
 	int i,k;
 	const int n = int(N);
-	double sum;
+	Float sum;
 	
 	if (b.size() != N || x.size() != N){
-		errorLog << ":solve(vector<double> &b, vector<double> &x) - The input vectors are not the same size!" << endl;
+		errorLog << ":solve(vector<Float> &b, vector<Float> &x) - The input vectors are not the same size!" << std::endl;
 		return false;
 	}
 	for(i=0; i<n; i++) {
@@ -88,10 +89,10 @@ bool Cholesky::solve(VectorDouble &b,VectorDouble &x) {
     return true;
 }
 
-bool Cholesky::elmult(VectorDouble &y,VectorDouble &b){
+bool Cholesky::elmult(VectorFloat &y,VectorFloat &b){
 	unsigned int i,j;
 	if (b.size() != N || y.size() != N){
-		errorLog << "elmult(vector<double> &y vector<double> &b) - The input vectors are not the same size!" << endl;
+		errorLog << "elmult(vector<Float> &y vector<Float> &b) - The input vectors are not the same size!" << std::endl;
 		return false;
 	}
 	for (i=0;i<N;i++) {
@@ -101,12 +102,12 @@ bool Cholesky::elmult(VectorDouble &y,VectorDouble &b){
     return true;
 }
 
-bool Cholesky::elsolve(VectorDouble &b,VectorDouble &y){
+bool Cholesky::elsolve(VectorFloat &b,VectorFloat &y){
 	UINT i,j;
-	double sum = 0;
+	Float sum = 0;
 	
 	if (b.size() != N || y.size() != N){
-		errorLog << "elsolve(vector<double> &b vector<double> &y) - The input vectors are not the same size!" << endl;
+		errorLog << "elsolve(vector<Float> &b vector<Float> &y) - The input vectors are not the same size!" << std::endl;
 		return false;
 	}
 	for (i=0; i<N; i++) {
@@ -116,10 +117,10 @@ bool Cholesky::elsolve(VectorDouble &b,VectorDouble &y){
     return true;
 }
 
-bool Cholesky::inverse(Matrix<double> &ainv){
+bool Cholesky::inverse(MatrixFloat &ainv){
 	int i,j,k;
 	const int n = int(N);
-	double sum = 0;
+	Float sum = 0;
 	ainv.resize(N,N);
 	
 	for(i=0; i<n; i++) for(j=0; j<=i; j++){
@@ -135,10 +136,10 @@ bool Cholesky::inverse(Matrix<double> &ainv){
     return true;
 }
 
-double Cholesky::logdet(){
-	double sum = 0.;
+Float Cholesky::logdet(){
+	Float sum = 0.;
 	for(unsigned int i=0; i<N; i++) sum += log(el[i][i]);
 	return 2.*sum;
 }
 
-}//End of namespace GRT
+GRT_END_NAMESPACE

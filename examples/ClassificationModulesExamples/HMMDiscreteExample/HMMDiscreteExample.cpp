@@ -39,8 +39,9 @@
 */
 
 //You might need to set the specific path of the GRT header relative to your project
-#include "GRT.h"
+#include <GRT/GRT.h>
 using namespace GRT;
+using namespace std;
 
 int main(int argc, const char * argv[]){
     
@@ -75,7 +76,7 @@ int main(int argc, const char * argv[]){
         MatrixDouble quantizedSample;
         
         for(UINT j=0; j<trainingData[i].getLength(); j++){
-            quantizer.quantize( trainingData[i].getData().getRowVector(j) );
+            quantizer.quantize( trainingData[i].getData().getRow(j) );
             
             quantizedSample.push_back( quantizer.getFeatureVector() );
         }
@@ -135,7 +136,7 @@ int main(int argc, const char * argv[]){
         MatrixDouble quantizedSample;
         
         for(UINT j=0; j<testData[i].getLength(); j++){
-            quantizer.quantize( testData[i].getData().getRowVector(j) );
+            quantizer.quantize( testData[i].getData().getRow(j) );
             
             quantizedSample.push_back( quantizer.getFeatureVector() );
         }
@@ -157,8 +158,8 @@ int main(int argc, const char * argv[]){
         if( classLabel == hmm.getPredictedClassLabel() ) numCorrect++;
         numTests++;
         
-        VectorDouble classLikelihoods = hmm.getClassLikelihoods();
-        VectorDouble classDistances = hmm.getClassDistances();
+        VectorFloat classLikelihoods = hmm.getClassLikelihoods();
+        VectorFloat classDistances = hmm.getClassDistances();
         
         cout << "ClassLabel: " << classLabel;
         cout << " PredictedClassLabel: " << hmm.getPredictedClassLabel();

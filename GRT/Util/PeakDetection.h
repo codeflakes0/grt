@@ -13,13 +13,13 @@
 #include "../PreProcessingModules/DoubleMovingAverageFilter.h"
 #include "../PreProcessingModules/DeadZone.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 struct PeakInfo{
     unsigned int peakType;
     unsigned int peakIndex;
-    double peakValue;
-    PeakInfo(unsigned int peakType = 0,unsigned int peakIndex = 0,double peakValue = 0){
+    Float peakValue;
+    PeakInfo(unsigned int peakType = 0,unsigned int peakIndex = 0,Float peakValue = 0){
         this->peakType = peakType;
         this->peakIndex = peakIndex;
         this->peakValue = peakValue;
@@ -30,7 +30,7 @@ typedef struct PeakInfo PeakInfo;
 #define DEFAULT_GLOBAL_MAXIMA_VALUE -1.0e+99
 #define DEFAULT_GLOBAL_MINIMA_VALUE 1.0e+99
     
-class PeakDetection{
+class GRT_API PeakDetection{
 public:
     PeakDetection(const UINT lowPassFilterSize = 5,const UINT searchWindowSize = 5);
     
@@ -42,7 +42,7 @@ public:
     
     bool setSearchWindowSize(const UINT searchWindowSize);
 	
-    bool update( const double x );
+    bool update( const Float x );
     
     bool reset();
     
@@ -57,14 +57,14 @@ public:
     unsigned int lowPassFilterSize;
     unsigned int searchWindowSize;
     unsigned int searchHistorySize;
-    double deadZoneThreshold;
+    Float deadZoneThreshold;
     DoubleMovingAverageFilter lowPassFilter;
     DeadZone deadZoneFilter;
-    CircularBuffer< double > filteredDataBuffer;
-    CircularBuffer< double > firstDerivBuffer;
-    CircularBuffer< double > secondDerivBuffer;
+    CircularBuffer< Float > filteredDataBuffer;
+    CircularBuffer< Float > firstDerivBuffer;
+    CircularBuffer< Float > secondDerivBuffer;
     CircularBuffer< unsigned int > peakTypesBuffer;
-    vector< PeakInfo > peakInfo;
+    Vector< PeakInfo > peakInfo;
     PeakInfo globalMaximaPeakInfo;
     PeakInfo globalMinimaPeakInfo;
     
@@ -72,6 +72,6 @@ public:
 	
 };
 
-}//End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_PEAK_DETECTION_HEADER

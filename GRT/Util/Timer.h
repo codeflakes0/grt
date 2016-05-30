@@ -21,7 +21,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef GRT_TIMER_HEADER
 #define GRT_TIMER_HEADER
 
-#include "../Util/GRTVersionInfo.h"
+#include "GRTVersionInfo.h"
+#include "GRTTypedefs.h"
 
 //Include the platform specific time headers
 #if defined(__GRT_WINDOWS_BUILD__)
@@ -37,45 +38,60 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     #include <sys/time.h>
 #endif
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 class Timer{
 public:
-	/**
-	Default constructor. 
-	*/
-    Timer(){}
+    /**
+     Default constructor. 
+    */
+    Timer(){
+        timerMode = NORMAL_MODE;
+        timerState = NOT_RUNNING;
+        timerRunning = false;
+    }
 
     /**
-	Default destructor.
+     Default destructor.
 	*/
     ~Timer(){}
 
     /**
-	Starts the timer. This starts the timer in NORMAL_MODE, in this mode the timer will run forever.
+     Starts the timer. This starts the timer in NORMAL_MODE, in this mode the timer will run forever.
 	
-	@return returns true if the timer was started successfully, false otherwise
+     @return returns true if the timer was started successfully, false otherwise
 	*/
     bool start(){
         startTime = getSystemTime();
         timerRunning = true;
         timerMode = NORMAL_MODE;
+        timerState = RUNNING;
         return true;
     }
 
     /**
-	Starts the timer. This starts the timer in COUNTDOWN_MODE, in this mode the timer will start at the specified countdown time and count down until it reaches zero.
-	At zero, the timer will set its state to timerRunning = false, however the timer will continue to countdown resulting in a negative query time.
+     Starts the timer. This starts the timer in COUNTDOWN_MODE, in this mode the timer will start at the specified countdown time and count down until it reaches zero.
+     At zero, the timer will set its state to timerRunning = false, however the timer will continue to countdown resulting in a negative query time.  The second option
+     controls the preperation time, this is useful if you are recording a gesture and want to have a short pause after triggering the recording before data is actually
+     recorded/tagged.  If the prepTime parameter is larger than zero, then the timer will enter the PREP_STATE for the specified prepTime before entering the COUNTDOWN_STATE.
 	
-	@param unsigned long countDownTime: sets the countdown time, this should be in milliseconds (i.e. start(5000) would start the timer with a countdown time of 5 seconds)
-	@return returns true if the timer was started successfully, false otherwise
+     @param countDownTime: sets the countdown time, this should be in milliseconds (i.e. start(5000) would start the timer with a countdown time of 5 seconds)
+     @return returns true if the timer was started successfully, false otherwise
 	*/
-    bool start(unsigned long countDownTime){
+    bool start(unsigned long countDownTime,unsigned long prepTime = 0){
         if( countDownTime > 0 ){
             startTime = getSystemTime();
             timerRunning = true;
-            timerMode = COUNTDOWN_MODE;
             this->countDownTime = countDownTime;
+            this->prepTime = prepTime;
+            timerMode = COUNTDOWN_MODE;
+
+            if( prepTime > 0 ){
+                timerState = PREP_STATE;
+            }else{
+                timerState = COUNTDOWN_STATE;
+            }
+            
             return true;
         }
         return false;
@@ -88,6 +104,7 @@ public:
 	*/
     bool stop(){
         timerRunning = false;
+        timerState = NOT_RUNNING;
         return true;
     }
 
@@ -97,7 +114,7 @@ public:
 	
 	@return returns the current time elapsed in milliseconds (1000 milliseconds == 1 second) or 0 if the timer is not running
 	*/
-    signed long getMilliSeconds() const {
+    signed long getMilliSeconds() {
         if( !timerRunning ) return 0;
 
         unsigned long now = getSystemTime();
@@ -107,7 +124,15 @@ public:
                 return (now-startTime);
                 break;
             case COUNTDOWN_MODE:
-                return (countDownTime - (now-startTime));
+                if( timerState == PREP_STATE ){
+                    if( now-startTime >= prepTime ){
+                        timerState = COUNTDOWN_STATE;
+                        startTime = now;
+                        return countDownTime;
+                    }
+                    return countDownTime;
+                }
+                if( timerState == COUNTDOWN_STATE ) return (countDownTime - (now-startTime));
                 break;
             default:
                 return 0;
@@ -124,8 +149,8 @@ public:
      (so 0.5 is 500 milliseconds).
      
      @return returns the current time elapsed in seconds or 0 if the timer is not running
-     */
-    double getSeconds() const {
+    */
+    Float getSeconds() {
         if( !timerRunning ) return 0;
         return getMilliSeconds()/1000.0;
     }
@@ -135,25 +160,46 @@ public:
 	
 	@return returns true if the timer is running, false otherwise
 	*/
-    bool running() const { return timerRunning; }
+    bool running() { return getTimerRunning(); }
+
+    /**
+    Gets if the timer is running.
+    
+    @return returns true if the timer is running, false otherwise
+    */
+    bool getTimerRunning() {
+        if( !timerRunning ){
+            return false;
+        }
+        if( getMilliSeconds() > 0 ) return false;
+        return true;
+    }
 
     /**
 	Gets if the countdown time has been reached.
 	
 	@return returns true if the countdown time has been reached, false otherwise
 	*/
-    bool getTimerReached() const {
+    bool getTimerReached() {
 	    if( !timerRunning ){
             return false;
         }
         if( getMilliSeconds() > 0 ) return false;
         return true;
 	}
+
+    bool getInPrepState() const {
+        return timerState == PREP_STATE;
+    }
+
+    bool getInCountdownState() const {
+        return timerState == COUNTDOWN_STATE;
+    }
 	
 	/**
 	This function is now deprecated, you should use getTimerReached() instead.
 	*/
-	bool timerReached() const {
+	bool timerReached() {
 		return getTimerReached();
     }
 
@@ -182,16 +228,18 @@ public:
     }
 
 protected:
+    enum TimerMode {NORMAL_MODE=0,COUNTDOWN_MODE};
+    enum TimerState {NOT_RUNNING=0,RUNNING,COUNTDOWN_STATE,PREP_STATE};
+
     unsigned long startTime;
     unsigned long countDownTime;
-    unsigned int timerMode;
+    unsigned long prepTime;
     bool timerRunning;
-
-    enum TimerModes{NORMAL_MODE=0,COUNTDOWN_MODE};
+    TimerMode timerMode;
+    TimerState timerState;
 
 };
 
-}; //End of namespace GRT
-
+GRT_END_NAMESPACE
 
 #endif //GRT_TIMER_HEADER

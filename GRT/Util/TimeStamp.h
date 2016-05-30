@@ -459,47 +459,83 @@ public:
             return false;
         }
         
-        year = Util::stringToInt( s[0] );
-        month = Util::stringToInt( s[1]  );
-        day = Util::stringToInt( s[2] );
-        hour = Util::stringToInt( s[3]  );
-        minute = Util::stringToInt( s[4] );
-        second = Util::stringToInt( s[5]  );
-        millisecond = Util::stringToInt( s[6]  );
+        year = grt_from_str< unsigned int >( s[0] );
+        month = grt_from_str <unsigned int >( s[1]  );
+        day = grt_from_str< unsigned int >( s[2] );
+        hour = grt_from_str< unsigned int >( s[3]  );
+        minute = grt_from_str< unsigned int >( s[4] );
+        second = grt_from_str< unsigned int >( s[5]  );
+        millisecond = grt_from_str< unsigned int >( s[6]  );
         
         return true;
     }
     
-    std::string getTimeStampAsString() const{
-        std::string timeString = "";
-        timeString += Util::toString(year) + "_" + Util::toString(month) + "_" + Util::toString(day);
-        timeString += "_" + Util::toString(hour) + "_" + Util::toString(minute) + "_" + Util::toString(second) + "_" + Util::toString(millisecond);
+    std::string getTimeStampAsString() const {
+        std::string timeString = grt_to_str< unsigned int >(year);
+        timeString += grt_to_str("_");
+        timeString += grt_to_str< unsigned int >(month);
+        timeString += grt_to_str("_");
+        timeString += grt_to_str< unsigned int >(day);
+        timeString += grt_to_str("_");
+        timeString += grt_to_str< unsigned int >(hour);
+        timeString += grt_to_str("_");
+        timeString += grt_to_str< unsigned int >(minute);
+        timeString += grt_to_str("_");
+        timeString += grt_to_str< unsigned int >(second);
+        timeString += grt_to_str("_");
+        timeString += grt_to_str< unsigned int >(millisecond);
         return timeString;
     }
     
-    std::string getTimeStampAsJSONString() const{
+    std::string getTimeStampAsJSONString() const {
         std::string timeString = "{";
-        timeString += "\"year\":" + Util::toString(year) + ",";
-        timeString += "\"month\":" + Util::toString(month) + ",";
-        timeString += "\"day\":" + Util::toString(day) + ",";
-        timeString += "\"hour\":" + Util::toString(hour) + ",";
-        timeString += "\"minute\":" + Util::toString(minute) + ",";
-        timeString += "\"second\":" + Util::toString(second) + ",";
-        timeString += "\"millisecond\":" + Util::toString(millisecond) + ",";
-        timeString += "\"timeInMS\":" + Util::toString(getTimeInMilliseconds());
-        timeString += "}";
+        timeString += grt_to_str("\"year\":");
+        timeString += grt_to_str< unsigned int >(year);
+        timeString += grt_to_str(",");
+        timeString += grt_to_str("\"month\":");
+        timeString += grt_to_str< unsigned int >(month);
+        timeString += grt_to_str(",");
+        timeString += grt_to_str("\"day\":");
+        timeString += grt_to_str< unsigned int >(day);
+        timeString += grt_to_str(",");
+        timeString += grt_to_str("\"hour\":");
+        timeString += grt_to_str< unsigned int >(hour);
+        timeString += grt_to_str(",");
+        timeString += grt_to_str("\"minute\":");
+        timeString += grt_to_str< unsigned int >(minute);
+        timeString += grt_to_str(",");
+        timeString += grt_to_str("\"second\":");
+        timeString += grt_to_str< unsigned int >(second);
+        timeString += grt_to_str(",");
+        timeString += grt_to_str("\"millisecond\":");
+        timeString += grt_to_str< unsigned int >(millisecond);
+        timeString += grt_to_str(",");
+        timeString += grt_to_str("\"timeInMS\":");
+        timeString += grt_to_str< unsigned int >(
+            static_cast<unsigned int>(
+                getTimeInMilliseconds()
+            )
+        );
+        timeString += grt_to_str("}");
         return timeString;
     }
     
-    std::string getTimeAsISOString() const{
+    std::string getTimeAsISOString() const {
         std::string s = "";
-        s += Util::toString(year) + "-";
-        s += pad( Util::toString(month) ) + "-";
-        s += pad( Util::toString(day) ) + "T";
-        s += pad( Util::toString( hour ) ) + ":";
-        s += pad( Util::toString( minute ) ) + ":";
-        s += pad( Util::toString( second ) ) + ".";
-        s += Util::toString( millisecond ) + "Z";
+        s += grt_to_str< unsigned int >(year);
+        s += grt_to_str("-");
+        s += pad( grt_to_str< unsigned int >(month) );
+        s += grt_to_str("-");
+        s += pad( grt_to_str< unsigned int >(day) );
+        s += grt_to_str("T");
+        s += pad( grt_to_str< unsigned int >( hour ) );
+        s += grt_to_str(":");
+        s += pad( grt_to_str< unsigned int >( minute ) );
+        s += grt_to_str(":");
+        s += pad( grt_to_str< unsigned int >( second ) );
+        s += grt_to_str(".");
+        s += grt_to_str< unsigned int >( millisecond );
+        s += grt_to_str("Z");
         return s;
     }
     
@@ -546,8 +582,7 @@ public:
         return 0;
     }
     
-    std::string pad(const std::string s) const {
-        
+    std::string pad(const std::string &s) const {
         if( s.length() != 1 ) return s;
         return ( "0" + s );
     }

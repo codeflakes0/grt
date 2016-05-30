@@ -1,7 +1,8 @@
 
+#define GRT_DLL_EXPORTS
 #include "DecisionTreeClusterNode.h"
 
-using namespace GRT;
+GRT_BEGIN_NAMESPACE
 
 //Register the DecisionTreeClusterNode module with the Node base class
 RegisterNode< DecisionTreeClusterNode > DecisionTreeClusterNode::registerModule("DecisionTreeClusterNode");
@@ -18,7 +19,7 @@ DecisionTreeClusterNode::~DecisionTreeClusterNode(){
     clear();
 }
 
-bool DecisionTreeClusterNode::predict(const VectorDouble &x) {
+bool DecisionTreeClusterNode::predict(const VectorFloat &x) {
 
     if( x[ featureIndex ] >= threshold ) return true;
 
@@ -38,24 +39,24 @@ bool DecisionTreeClusterNode::clear(){
 
 bool DecisionTreeClusterNode::print() const{
 
-    ostringstream stream;
+    std::ostringstream stream;
 
     if( getModel( stream ) ){
-        cout << stream.str();
+        std::cout << stream.str();
         return true;
     }
 
     return false;
 }
 
-bool DecisionTreeClusterNode::computeFeatureWeights( VectorDouble &weights ) const{
+bool DecisionTreeClusterNode::computeFeatureWeights( VectorFloat &weights ) const{
 
     if( isLeafNode ){ //If we reach a leaf node, no weight update needed
         return true;
     }
     
     if( featureIndex >= ((UINT)weights.size()) ){ //Feature index is out of bounds
-        warningLog << "computeFeatureWeights( VectorDouble &weights ) - Feature index is greater than weights vector size!" << endl;
+        warningLog << "computeFeatureWeights( VectorFloat &weights ) - Feature index is greater than weights Vector size!" << std::endl;
         return false;
     }else{
         weights[ featureIndex ]++;
@@ -71,24 +72,24 @@ bool DecisionTreeClusterNode::computeFeatureWeights( VectorDouble &weights ) con
     return true;
 }
 
-bool DecisionTreeClusterNode::computeLeafNodeWeights( MatrixDouble &weights ) const{
+bool DecisionTreeClusterNode::computeLeafNodeWeights( MatrixFloat &weights ) const{
 
     if( isLeafNode ){ //If we reach a leaf node, there is nothing to do
         return true;
     }
 
     if( featureIndex >= weights.getNumCols() ){ //Feature index is out of bounds
-        warningLog << "computeFeatureWeights( VectorDouble &weights ) - Feature index is greater than weights vector size!" << endl;
+        warningLog << "computeFeatureWeights( VectorFloat &weights ) - Feature index is greater than weights Vector size!" << std::endl;
         return false;
     }
 
     if( leftChild ){ //Recursively compute the weights for the left child until we reach the node above a leaf node
         if( leftChild->getIsLeafNode() ){
-            if( (UINT)(classProbabilities.size()) != weights.getNumRows() ){
-                warningLog << "computeFeatureWeights( VectorDouble &weights ) - The number of rows in the weights matrix does not match the class probabilities vector size!" << endl;
+            if( classProbabilities.getSize() != weights.getNumRows() ){
+                warningLog << "computeFeatureWeights( VectorFloat &weights ) - The number of rows in the weights matrix does not match the class probabilities Vector size!" << std::endl;
                 return false;
             }
-            for(size_t i=0; i<classProbabilities.size(); i++){
+            for(UINT i=0; i<classProbabilities.getSize(); i++){
                 weights[ i ][ featureIndex ] += classProbabilities[ i ];
             }
             
@@ -96,11 +97,11 @@ bool DecisionTreeClusterNode::computeLeafNodeWeights( MatrixDouble &weights ) co
     }
     if( rightChild ){ //Recursively compute the weights for the right child until we reach the node above a leaf node
         if( rightChild->getIsLeafNode() ){
-            if( (UINT)(classProbabilities.size()) != weights.getNumRows() ){
-                warningLog << "computeFeatureWeights( VectorDouble &weights ) - The number of rows in the weights matrix does not match the class probabilities vector size!" << endl;
+            if( classProbabilities.getSize() != weights.getNumRows() ){
+                warningLog << "computeFeatureWeights( VectorFloat &weights ) - The number of rows in the weights matrix does not match the class probabilities Vector size!" << std::endl;
                 return false;
             }
-            for(size_t i=0; i<classProbabilities.size(); i++){
+            for(UINT i=0; i<classProbabilities.getSize(); i++){
                 weights[ i ][ featureIndex ] += classProbabilities[ i ];
             }
         } rightChild->computeLeafNodeWeights( weights );
@@ -109,30 +110,30 @@ bool DecisionTreeClusterNode::computeLeafNodeWeights( MatrixDouble &weights ) co
     return true;
 }
 
-bool DecisionTreeClusterNode::getModel(ostream &stream) const{
+bool DecisionTreeClusterNode::getModel( std::ostream &stream ) const{
 
-    string tab = "";
+    std::string tab = "";
     for(UINT i=0; i<depth; i++) tab += "\t";
 
     stream << tab << "depth: " << depth;
     stream << " nodeSize: " << nodeSize;
     stream << " featureIndex: " << featureIndex;
     stream << " threshold " << threshold;
-    stream << " isLeafNode: " << isLeafNode << endl;
+    stream << " isLeafNode: " << isLeafNode << std::endl;
 
     stream << tab << "ClassProbabilities: ";
-    for(UINT i=0; i<classProbabilities.size(); i++){
+    for(UINT i=0; i<classProbabilities.getSize(); i++){
         stream << classProbabilities[i] << "\t";
     }
-    stream << endl;
+    stream << std::endl;
 
     if( leftChild != NULL ){
-        stream << tab << "LeftChild: " << endl;
+        stream << tab << "LeftChild: " << std::endl;
         leftChild->getModel( stream );
     }
 
     if( rightChild != NULL ){
-        stream << tab << "RightChild: " << endl;
+        stream << tab << "RightChild: " << std::endl;
         rightChild->getModel( stream );
     }
 
@@ -180,11 +181,11 @@ UINT DecisionTreeClusterNode::getFeatureIndex() const{
     return featureIndex;
 }
 
-double DecisionTreeClusterNode::getThreshold() const{
+Float DecisionTreeClusterNode::getThreshold() const{
     return threshold;
 }
 
-bool DecisionTreeClusterNode::set(const UINT nodeSize,const UINT featureIndex,const double threshold,const VectorDouble &classProbabilities){
+bool DecisionTreeClusterNode::set(const UINT nodeSize,const UINT featureIndex,const Float threshold,const VectorFloat &classProbabilities){
     this->nodeSize = nodeSize;
     this->featureIndex = featureIndex;
     this->threshold = threshold;
@@ -192,17 +193,17 @@ bool DecisionTreeClusterNode::set(const UINT nodeSize,const UINT featureIndex,co
     return true;
 }
 
-bool DecisionTreeClusterNode::computeBestSpiltBestIterativeSpilt( const UINT &numSplittingSteps, const ClassificationData &trainingData, const vector< UINT > &features, const vector< UINT > &classLabels, UINT &featureIndex, double &minError ){
+bool DecisionTreeClusterNode::computeBestSpiltBestIterativeSpilt( const UINT &numSplittingSteps, const ClassificationData &trainingData, const Vector< UINT > &features, const Vector< UINT > &classLabels, UINT &featureIndex, Float &minError ){
 
     return computeBestSpilt( numSplittingSteps, trainingData, features, classLabels, featureIndex, minError);
 }
 
-bool DecisionTreeClusterNode::computeBestSpiltBestRandomSpilt( const UINT &numSplittingSteps, const ClassificationData &trainingData, const vector< UINT > &features, const vector< UINT > &classLabels, UINT &featureIndex, double &minError ){
+bool DecisionTreeClusterNode::computeBestSpiltBestRandomSpilt( const UINT &numSplittingSteps, const ClassificationData &trainingData, const Vector< UINT > &features, const Vector< UINT > &classLabels, UINT &featureIndex, Float &minError ){
 
     return computeBestSpilt( numSplittingSteps, trainingData, features, classLabels, featureIndex, minError);
 }
 
-bool DecisionTreeClusterNode::computeBestSpilt( const UINT &numSplittingSteps, const ClassificationData &trainingData, const vector< UINT > &features, const vector< UINT > &classLabels, UINT &featureIndex, double &minError ){
+bool DecisionTreeClusterNode::computeBestSpilt( const UINT &numSplittingSteps, const ClassificationData &trainingData, const Vector< UINT > &features, const Vector< UINT > &classLabels, UINT &featureIndex, Float &minError ){
 
     const UINT M = trainingData.getNumSamples();
     const UINT N = (UINT)features.size();
@@ -210,30 +211,40 @@ bool DecisionTreeClusterNode::computeBestSpilt( const UINT &numSplittingSteps, c
 
     if( N == 0 ) return false;
 
-    minError = numeric_limits<double>::max();
+    minError = grt_numeric_limits< Float >::max();
     Random random;
     UINT bestFeatureIndex = 0;
-    double bestThreshold = 0;
-    double error = 0;
-    double giniIndexL = 0;
-    double giniIndexR = 0;
-    double weightL = 0;
-    double weightR = 0;
-    vector< UINT > groupIndex(M);
-    VectorDouble groupCounter(2,0);
-    vector< MinMax > ranges = trainingData.getRanges();
-    MatrixDouble classProbabilities(K,2);
+    Float bestThreshold = 0;
+    Float error = 0;
+    Vector< UINT > groupIndex(M);
+    Vector< MinMax > ranges = trainingData.getRanges();
     MatrixDouble data(M,1); //This will store our temporary data for each dimension
 
     //Randomly select which features we want to use
     UINT numRandomFeatures = numSplittingSteps > N ? N : numSplittingSteps;
-    vector< UINT > randomFeatures = random.getRandomSubset( 0, N, numRandomFeatures );
+    Vector< UINT > randomFeatures = random.getRandomSubset( 0, N, numRandomFeatures );
 
     //Loop over each random feature and try and find the best split point
     for(UINT n=0; n<numRandomFeatures; n++){
 
         featureIndex = features[ randomFeatures[n] ];
 
+        //Use the data in this feature dimension to create a sum dataset
+        for(UINT i=0; i<M; i++){
+            data[i][0] = trainingData[i][featureIndex];
+        }
+
+        if( computeError( trainingData, data, classLabels, ranges, groupIndex, featureIndex, threshold, error ) ){
+            //Store the best threshold and feature index
+            if( error < minError ){
+                minError = error;
+                bestThreshold = threshold;
+                bestFeatureIndex = featureIndex;
+            }
+        }
+
+
+/*
         //Use the data in this feature dimension to create a sum dataset
         for(UINT i=0; i<M; i++){
             data[i][0] = trainingData[i][featureIndex];
@@ -250,13 +261,18 @@ bool DecisionTreeClusterNode::computeBestSpilt( const UINT &numSplittingSteps, c
         //Disable the logging to clean things up
         kmeans.setTrainingLoggingEnabled( false );
 
+<<<<<<< HEAD
         if( !kmeans.train( data ) ){
+            errorLog << "computeBestSpilt() - Failed to train KMeans model for feature: " << featureIndex << std::endl;
+=======
+        if( !kmeans.train_( data ) ){
             errorLog << "computeBestSpilt() - Failed to train KMeans model for feature: " << featureIndex << endl;
+>>>>>>> master
             return false;
         }
 
         //Set the split threshold as the mid point between the two clusters
-        MatrixDouble clusters = kmeans.getClusters();
+        MatrixFloat clusters = kmeans.getClusters();
         threshold = 0;
         for(UINT i=0; i<clusters.getNumRows(); i++){
             threshold += clusters[i][0];
@@ -294,68 +310,138 @@ bool DecisionTreeClusterNode::computeBestSpilt( const UINT &numSplittingSteps, c
             bestThreshold = threshold;
             bestFeatureIndex = featureIndex;
         }
+*/
      }
 
      //Set the best feature index that will be returned to the DecisionTree that called this function
      featureIndex = bestFeatureIndex;
 
      //Store the node size, feature index, best threshold and class probabilities for this node
-     set(M,featureIndex,bestThreshold,trainingData.getClassProbabilities(classLabels));
+     set( M, featureIndex, bestThreshold, trainingData.getClassProbabilities(classLabels) );
 
      return true;
 }
 
-bool DecisionTreeClusterNode::saveParametersToFile(fstream &file) const{
+bool DecisionTreeClusterNode::computeError( const ClassificationData &trainingData, MatrixFloat &data, const Vector< UINT > &classLabels, Vector< MinMax > ranges, Vector< UINT > groupIndex, const UINT featureIndex, Float &threshold, Float &error ){
+
+    error = 0;
+    threshold = 0;
+
+    const UINT M = trainingData.getNumSamples();
+    const UINT K = (UINT)classLabels.size();
+
+    Float giniIndexL = 0;
+    Float giniIndexR = 0;
+    Float weightL = 0;
+    Float weightR = 0;
+    VectorFloat groupCounter(2,0);
+    MatrixFloat classProbabilities(K,2);
+
+    //Use this data to train a KMeans cluster with 2 clusters
+    KMeans kmeans;
+    kmeans.setNumClusters( 2 );
+    kmeans.setComputeTheta( true );
+    kmeans.setMinChange( 1.0e-5 );
+    kmeans.setMinNumEpochs( 1 );
+    kmeans.setMaxNumEpochs( 100 );
+
+    //Disable the logging to clean things up
+    kmeans.setTrainingLoggingEnabled( false );
+
+    if( !kmeans.train_( data ) ){
+        errorLog << "computeSplitError() - Failed to train KMeans model for feature: " << featureIndex << std::endl;
+        return false;
+    }
+
+    //Set the split threshold as the mid point between the two clusters
+    const MatrixFloat &clusters = kmeans.getClusters();
+    threshold = 0;
+    for(UINT i=0; i<clusters.getNumRows(); i++){
+        threshold += clusters[i][0];
+    }
+    threshold /= clusters.getNumRows();
+
+    //Iterate over each sample and work out if it should be in the lhs (0) or rhs (1) group based on the current threshold
+    groupCounter[0] = groupCounter[1] = 0;
+    classProbabilities.setAllValues(0);
+    for(UINT i=0; i<M; i++){
+        groupIndex[i] = trainingData[ i ][ featureIndex ] >= threshold ? 1 : 0;
+        groupCounter[ groupIndex[i] ]++;
+        classProbabilities[ getClassLabelIndexValue(trainingData[i].getClassLabel(),classLabels) ][ groupIndex[i] ]++;
+    }
+
+    //Compute the class probabilities for the lhs group and rhs group
+    for(UINT k=0; k<K; k++){
+        classProbabilities[k][0] = groupCounter[0]>0 ? classProbabilities[k][0]/groupCounter[0] : 0;
+        classProbabilities[k][1] = groupCounter[1]>0 ? classProbabilities[k][1]/groupCounter[1] : 0;
+    }
+
+    //Compute the Gini index for the lhs and rhs groups
+    giniIndexL = giniIndexR = 0;
+    for(UINT k=0; k<K; k++){
+        giniIndexL += classProbabilities[k][0] * (1.0-classProbabilities[k][0]);
+        giniIndexR += classProbabilities[k][1] * (1.0-classProbabilities[k][1]);
+    }
+    weightL = groupCounter[0]/M;
+    weightR = groupCounter[1]/M;
+    error = (giniIndexL*weightL) + (giniIndexR*weightR);
+
+    return true;
+}
+
+bool DecisionTreeClusterNode::saveParametersToFile( std::fstream &file ) const{
 
     if( !file.is_open() )
     {
-        errorLog << "saveParametersToFile(fstream &file) - File is not open!" << endl;
+        errorLog << "saveParametersToFile(fstream &file) - File is not open!" << std::endl;
         return false;
     }
 
     //Save the DecisionTreeNode parameters
     if( !DecisionTreeNode::saveParametersToFile( file ) ){
-        errorLog << "saveParametersToFile(fstream &file) - Failed to save DecisionTreeNode parameters to file!" << endl;
+        errorLog << "saveParametersToFile(fstream &file) - Failed to save DecisionTreeNode parameters to file!" << std::endl;
         return false;
     }
 
     //Save the custom DecisionTreeThresholdNode parameters
-    file << "FeatureIndex: " << featureIndex << endl;
-    file << "Threshold: " << threshold << endl;
+    file << "FeatureIndex: " << featureIndex << std::endl;
+    file << "Threshold: " << threshold << std::endl;
 
     return true;
 }
 
-bool DecisionTreeClusterNode::loadParametersFromFile(fstream &file){
+bool DecisionTreeClusterNode::loadParametersFromFile( std::fstream &file ){
 
     if(!file.is_open())
     {
-        errorLog << "loadParametersFromFile(fstream &file) - File is not open!" << endl;
+        errorLog << "loadParametersFromFile(fstream &file) - File is not open!" << std::endl;
         return false;
     }
 
     //Load the DecisionTreeNode parameters
     if( !DecisionTreeNode::loadParametersFromFile( file ) ){
-        errorLog << "loadParametersFromFile(fstream &file) - Failed to load DecisionTreeNode parameters from file!" << endl;
+        errorLog << "loadParametersFromFile(fstream &file) - Failed to load DecisionTreeNode parameters from file!" << std::endl;
         return false;
     }
 
-    string word;
+    std::string word;
     //Load the custom DecisionTreeThresholdNode Parameters
     file >> word;
     if( word != "FeatureIndex:" ){
-        errorLog << "loadParametersFromFile(fstream &file) - Failed to find FeatureIndex header!" << endl;
+        errorLog << "loadParametersFromFile(fstream &file) - Failed to find FeatureIndex header!" << std::endl;
         return false;
     }
     file >> featureIndex;
 
     file >> word;
     if( word != "Threshold:" ){
-        errorLog << "loadParametersFromFile(fstream &file) - Failed to find Threshold header!" << endl;
+        errorLog << "loadParametersFromFile(fstream &file) - Failed to find Threshold header!" << std::endl;
         return false;
     }
     file >> threshold;
 
     return true;
 }
+
+GRT_END_NAMESPACE
 

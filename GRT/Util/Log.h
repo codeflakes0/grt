@@ -21,19 +21,23 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef GRT_LOG_HEADER
 #define GRT_LOG_HEADER
 
-#include <iostream>
-#include <string.h>
-#include "Util.h"
-
+#include "GRTTypedefs.h"
+//Only include the C++ 11 code if C++11 support it is enabled
+#ifdef GRT_CXX11_ENABLED
+#include <atomic>
+#include <thread>
+#include <mutex>
+#endif //GRT_CXX11_ENABLED
 // TBE
 #ifdef __ANDROID__
 #include <android/log.h>
 #include <sys/system_properties.h>
 #endif
 
-namespace GRT{
 
-class Log{
+GRT_BEGIN_NAMESPACE
+
+class GRT_API Log{
 public:
     Log(std::string proceedingText = ""){
         setProceedingText(proceedingText);
@@ -48,34 +52,27 @@ public:
     }
 
     virtual ~Log(){}
-    
-    const Log& operator<< (const bool val ) const;
-    
-    const Log& operator<< (const short val ) const;
 
-    const Log& operator<< (const unsigned short val ) const;
+    template < class T >
+	    const Log& operator<< (const T val ) const{
 
-    const Log& operator<< (const int val ) const;
-
-    const Log& operator<< (const unsigned int val ) const;
-
-    const Log& operator<< (const long val ) const;
-
-    const Log& operator<< (const unsigned long val ) const;
-
-    const Log& operator<< (const unsigned long long val ) const;
-
-    const Log& operator<< (const float val ) const;
-
-    const Log& operator<< (const double val ) const;
-
-    const Log& operator<< (const long double val ) const;
-
-    const Log& operator<< (const void* val ) const;
-    
-    const Log& operator<< (const std::string val ) const;
-    
-    const Log& operator<< (const char* val ) const;
+#ifdef GRT_CXX11_ENABLED
+        std::unique_lock<std::mutex> lock( logMutex );
+#endif
+        
+        if( *loggingEnabledPtr && instanceLoggingEnabled ){
+            if( *writeProceedingTextPtr ){
+                *writeProceedingTextPtr = false;
+                std::cout << proceedingText.c_str();
+                *lastMessagePtr = "";
+            }
+            std::cout << val;
+            std::stringstream stream;
+            stream << val;
+            *lastMessagePtr += stream.str();
+        }
+        return *this;
+    }
 
     // this is the type of std::cout
     typedef std::basic_ostream<char, std::char_traits<char> > CoutType;
@@ -138,6 +135,13 @@ protected:
     virtual void triggerCallback( const std::string &message ) const{
         return;
     }
+
+    template< class T >
+    std::string to_str( const T &val ) const {
+        std::stringstream s;
+        s << val;
+        return s.str();
+    }
     
     std::string proceedingText;
     std::string lastMessage;
@@ -147,11 +151,15 @@ protected:
     std::string *lastMessagePtr;
     bool writeProceedingText;
 
-    // TBE
+	// TBE
     int androidLogLevel; // default ANDROID_LOG_VERBOSE
-    friend std::ostream& operator<<(std::ostream& os, const Log& l);
+    //friend std::ostream& operator<<(std::ostream& os, const Log& l);
+
+#ifdef GRT_CXX11_ENABLED
+	static std::mutex logMutex;
+#endif
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_LOG_HEADER

@@ -18,9 +18,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "Neuron.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 Neuron::Neuron(){
 	activationFunction = LINEAR;
@@ -69,9 +70,9 @@ void Neuron::clear(){
 	previousUpdate.clear();
 }
 
-double Neuron::fire(const VectorDouble &x){
+Float Neuron::fire(const VectorFloat &x){
     
-    double y = 0;
+    Float y = 0;
     UINT i=0;
     
     switch( activationFunction ){
@@ -111,9 +112,9 @@ double Neuron::fire(const VectorDouble &x){
     
 }
 
-double Neuron::getDerivative(const double &y){
+Float Neuron::getDerivative(const Float &y){
 
-	double yy = 0;
+	Float yy = 0;
 	switch( activationFunction ){
         case(LINEAR):
 			yy = 1.0;
@@ -133,4 +134,4 @@ bool Neuron::validateActivationFunction(const UINT actvationFunction){
     return false;
 }
 
-}//End of namespace GRT
+GRT_END_NAMESPACE

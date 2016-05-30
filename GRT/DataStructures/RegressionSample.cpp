@@ -18,14 +18,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "RegressionSample.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 RegressionSample::RegressionSample(){
 }
 
-RegressionSample::RegressionSample(const VectorDouble &inputVector,const VectorDouble &targetVector){
+RegressionSample::RegressionSample(const VectorFloat &inputVector,const VectorFloat &targetVector){
 	this->inputVector = inputVector;
 	this->targetVector = targetVector;
 }
@@ -43,35 +44,35 @@ void RegressionSample::clear(){
 	targetVector.clear();
 }
 
-void RegressionSample::set(const VectorDouble &inputVector,const VectorDouble &targetVector){
+void RegressionSample::set(const VectorFloat &inputVector,const VectorFloat &targetVector){
 	this->inputVector = inputVector;
 	this->targetVector = targetVector;
 }
 
 UINT RegressionSample::getNumInputDimensions() const{
-    return (UINT)inputVector.size();
+    return inputVector.getSize();
 }
 
 UINT RegressionSample::getNumTargetDimensions() const{
-    return (UINT)targetVector.size();
+    return targetVector.getSize();
 }
     
-double RegressionSample::getInputVectorValue(const UINT index) const{
-    if( index < inputVector.size() ) return inputVector[index];
+Float RegressionSample::getInputVectorValue(const UINT index) const{
+    if( index < inputVector.getSize() ) return inputVector[index];
     else return 0;
 }
-double RegressionSample::getTargetVectorValue(const UINT index) const{
-    if( index < targetVector.size() ) return targetVector[index];
+Float RegressionSample::getTargetVectorValue(const UINT index) const{
+    if( index < targetVector.getSize() ) return targetVector[index];
     else return 0;
 }
 
-const VectorDouble& RegressionSample::getInputVector() const{
+const VectorFloat& RegressionSample::getInputVector() const{
     return inputVector;
 }
 
-const VectorDouble& RegressionSample::getTargetVector() const{
+const VectorFloat& RegressionSample::getTargetVector() const{
     return targetVector;
 }
 	
-} //End of namespace GRT
+GRT_END_NAMESPACE
 

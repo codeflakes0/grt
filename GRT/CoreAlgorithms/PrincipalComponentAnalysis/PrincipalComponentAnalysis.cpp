@@ -23,9 +23,10 @@
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define GRT_DLL_EXPORTS
 #include "PrincipalComponentAnalysis.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 PrincipalComponentAnalysis::PrincipalComponentAnalysis(){
     trained = false;
@@ -43,18 +44,18 @@ PrincipalComponentAnalysis::~PrincipalComponentAnalysis(){
 	
 }
 
-bool PrincipalComponentAnalysis::computeFeatureVector(const MatrixDouble &data,double maxVariance,bool normData){
+bool PrincipalComponentAnalysis::computeFeatureVector(const MatrixFloat &data,double maxVariance,bool normData){
     trained = false;
     this->maxVariance = maxVariance;
     this->normData = normData;
     return computeFeatureVector_(data,MAX_VARIANCE);
 }
 
-bool PrincipalComponentAnalysis::computeFeatureVector(const MatrixDouble &data,UINT numPrincipalComponents,bool normData){
+bool PrincipalComponentAnalysis::computeFeatureVector(const MatrixFloat &data,UINT numPrincipalComponents,bool normData){
     trained = false;
     if( numPrincipalComponents > data.getNumCols() ){
-        errorLog << "computeFeatureVector(const MatrixDouble &data,UINT numPrincipalComponents,bool normData) - The number of principal components (";
-        errorLog << numPrincipalComponents << ") is greater than the number of columns in your data (" << data.getNumCols() << ")" << endl;
+        errorLog << "computeFeatureVector(const MatrixFloat &data,UINT numPrincipalComponents,bool normData) - The number of principal components (";
+        errorLog << numPrincipalComponents << ") is greater than the number of columns in your data (" << data.getNumCols() << ")" << std::endl;
         return false;
     }
     this->numPrincipalComponents = numPrincipalComponents;
@@ -62,14 +63,14 @@ bool PrincipalComponentAnalysis::computeFeatureVector(const MatrixDouble &data,U
     return computeFeatureVector_(data,MAX_NUM_PCS);
 }
 
-bool PrincipalComponentAnalysis::computeFeatureVector_(const MatrixDouble &data,const UINT analysisMode){
+bool PrincipalComponentAnalysis::computeFeatureVector_(const MatrixFloat &data,const UINT analysisMode){
 
     trained = false;
     const UINT M = data.getNumRows();
     const UINT N = data.getNumCols();
     this->numInputDimensions = N;
 
-    MatrixDouble msData( M, N );
+    MatrixFloat msData( M, N );
 
     //Compute the mean and standard deviation of the input data
     mean = data.getMean();
@@ -89,7 +90,7 @@ bool PrincipalComponentAnalysis::computeFeatureVector_(const MatrixDouble &data,
     }
 
     //Get the covariance matrix
-    MatrixDouble cov = msData.getCovarianceMatrix();
+    MatrixFloat cov = msData.getCovarianceMatrix();
 
     //Use Eigen Value Decomposition to find eigenvectors of the covariance matrix
     EigenvalueDecomposition eig;
@@ -100,7 +101,7 @@ bool PrincipalComponentAnalysis::computeFeatureVector_(const MatrixDouble &data,
         componentWeights.clear();
         sortedEigenvalues.clear();
         eigenvectors.clear();
-        errorLog << "computeFeatureVector(const MatrixDouble &data,UINT analysisMode) - Failed to decompose input matrix!" << endl;
+        errorLog << "computeFeatureVector(const MatrixFloat &data,UINT analysisMode) - Failed to decompose input matrix!" << std::endl;
         return false;
     }
 
@@ -115,13 +116,13 @@ bool PrincipalComponentAnalysis::computeFeatureVector_(const MatrixDouble &data,
     }
 
     //Sort the eigenvalues and compute the component weights
-    double sum = 0;
+    Float sum = 0;
     UINT componentIndex = 0;
     sortedEigenvalues.clear();
     componentWeights.resize(N,0);
 
     while( true ){
-        double maxValue = 0;
+        Float maxValue = 0;
         UINT index = 0;
         for(UINT i=0; i<eigenvalues.size(); i++){
             if( eigenvalues[i] > maxValue ){
@@ -138,7 +139,7 @@ bool PrincipalComponentAnalysis::computeFeatureVector_(const MatrixDouble &data,
         eigenvalues[ index ] = 0; //Set the maxValue to zero so it won't be used again
     }
 
-    double cumulativeVariance = 0;
+    Float cumulativeVariance = 0;
     switch( analysisMode ){
         case MAX_VARIANCE:
             //Normalize the component weights and workout how many components we need to use to reach the maxVariance
@@ -162,7 +163,7 @@ bool PrincipalComponentAnalysis::computeFeatureVector_(const MatrixDouble &data,
             }
         break;
         default:
-        errorLog << "computeFeatureVector(const MatrixDouble &data,UINT analysisMode) - Unknown analysis mode!" << endl;
+        errorLog << "computeFeatureVector(const MatrixFloat &data,UINT analysisMode) - Unknown analysis mode!" << std::endl;
         break;
     }
     
@@ -175,19 +176,19 @@ bool PrincipalComponentAnalysis::computeFeatureVector_(const MatrixDouble &data,
     return true;
 }
 
-bool PrincipalComponentAnalysis::project(const MatrixDouble &data,MatrixDouble &prjData){
+bool PrincipalComponentAnalysis::project(const MatrixFloat &data,MatrixFloat &prjData){
 	
     if( !trained ){
-        warningLog << "project(const MatrixDouble &data,MatrixDouble &prjData) - The PrincipalComponentAnalysis module has not been trained!" << endl;
+        warningLog << "project(const MatrixFloat &data,MatrixFloat &prjData) - The PrincipalComponentAnalysis module has not been trained!" << std::endl;
         return false;
     }
 
     if( data.getNumCols() != numInputDimensions ){
-        warningLog << "project(const MatrixDouble &data,MatrixDouble &prjData) - The number of columns in the input vector (" << data.getNumCols() << ") does not match the number of input dimensions (" << numInputDimensions << ")!" << endl;
+        warningLog << "project(const MatrixFloat &data,MatrixFloat &prjData) - The number of columns in the input vector (" << data.getNumCols() << ") does not match the number of input dimensions (" << numInputDimensions << ")!" << std::endl;
         return false;
     }
 	
-    MatrixDouble msData( data );
+    MatrixFloat msData( data );
     prjData.resize(data.getNumRows(),numPrincipalComponents);
 	
     if( normData ){
@@ -214,21 +215,21 @@ bool PrincipalComponentAnalysis::project(const MatrixDouble &data,MatrixDouble &
     return true;
 }
     
-bool PrincipalComponentAnalysis::project(const VectorDouble &data,VectorDouble &prjData){
+bool PrincipalComponentAnalysis::project(const VectorFloat &data,VectorFloat &prjData){
     
     const unsigned int N = (unsigned int)data.size();
     
     if( !trained ){
-        warningLog << "project(const VectorDouble &data,VectorDouble &prjData) - The PrincipalComponentAnalysis module has not been trained!" << endl;
+        warningLog << "project(const VectorFloat &data,VectorFloat &prjData) - The PrincipalComponentAnalysis module has not been trained!" << std::endl;
         return false;
     }
 
     if( N != numInputDimensions ){
-        warningLog << "project(const VectorDouble &data,VectorDouble &prjData) - The size of the input vector (" << N << ") does not match the number of input dimensions (" << numInputDimensions << ")!" << endl;
+        warningLog << "project(const VectorFloat &data,VectorFloat &prjData) - The size of the input vector (" << N << ") does not match the number of input dimensions (" << numInputDimensions << ")!" << std::endl;
         return false;
     }
     
-    VectorDouble msData = data;
+    VectorFloat msData = data;
     
     if( normData ){
         //Mean subtract the data
@@ -251,65 +252,65 @@ bool PrincipalComponentAnalysis::project(const VectorDouble &data,VectorDouble &
     return true;
 }
 
-bool PrincipalComponentAnalysis::saveModelToFile(fstream &file) const {
+bool PrincipalComponentAnalysis::saveModelToFile( std::fstream &file ) const {
 
     //Write the header info
     file << "GRT_PCA_MODEL_FILE_V1.0\n";
 
     if( !MLBase::saveBaseSettingsToFile( file ) ) return false;
 
-    file << "NumPrincipalComponents: " << numPrincipalComponents << endl;
-    file << "NormData: " << normData << endl;
-    file << "MaxVariance: " << maxVariance << endl;
+    file << "NumPrincipalComponents: " << numPrincipalComponents << std::endl;
+    file << "NormData: " << normData << std::endl;
+    file << "MaxVariance: " << maxVariance << std::endl;
 
     if( trained ){
         file << "Mean: ";
         for(unsigned int i=0; i<numInputDimensions; i++){
             file << mean[i] << " ";
         } 
-        file << endl;
+        file << std::endl;
 
         file << "StdDev: ";
         for(unsigned int i=0; i<numInputDimensions; i++){
             file << stdDev[i] << " ";
         } 
-        file << endl;
+        file << std::endl;
 
         file << "ComponentWeights: ";
         for(unsigned int i=0; i<numInputDimensions; i++){
             file << componentWeights[i] << " ";
         } 
-        file << endl;
+        file << std::endl;
 
         file << "Eigenvalues: ";
         for(unsigned int i=0; i<numInputDimensions; i++){
             file << eigenvalues[i] << " ";
         } 
-        file << endl;
+        file << std::endl;
 
         file << "SortedEigenvalues: ";
         for(unsigned int i=0; i<numInputDimensions; i++){
             file << sortedEigenvalues[i].index << " ";
             file << sortedEigenvalues[i].value << " ";
         } 
-        file << endl;
+        file << std::endl;
 
         file << "Eigenvectors: ";
-        file << eigenvectors.getNumRows() << " " << eigenvectors.getNumCols() << endl;
+        file << eigenvectors.getNumRows() << " " << eigenvectors.getNumCols() << std::endl;
         for(unsigned int i=0; i<eigenvectors.getNumRows(); i++){
             for(unsigned int j=0; j<eigenvectors.getNumCols(); j++){
                 file << eigenvectors[i][j];
                 if( j+1 < eigenvectors.getNumCols() ) file << " ";
-                else file << endl;
+                else file << std::endl;
             }
         } 
-        file << endl;
+        file << std::endl;
     }
 
     return true;
 }
 
-bool PrincipalComponentAnalysis::loadModelFromFile(fstream &file) {
+bool PrincipalComponentAnalysis::loadModelFromFile( std::fstream &file ) {
 
     std::string word;
 
@@ -426,36 +427,36 @@ bool PrincipalComponentAnalysis::loadModelFromFile(fstream &file) {
     return true;
 }
     
-bool PrincipalComponentAnalysis::print(string title) const{
+bool PrincipalComponentAnalysis::print( std::string title ) const{
     
     if( title != "" ){
-        cout << title << endl;
+        std::cout << title << std::endl;
     }
     if( !trained ){
-        cout << "Not Trained!\n";
+        std::cout << "Not Trained!\n";
         return false;
     }
-    cout << "NumInputDimensions: " << numInputDimensions << " NumPrincipalComponents: " << numPrincipalComponents << endl;
-    cout << "ComponentWeights: ";
+    std::cout << "NumInputDimensions: " << numInputDimensions << " NumPrincipalComponents: " << numPrincipalComponents << std::endl;
+    std::cout << "ComponentWeights: ";
     for(UINT k=0; k<componentWeights.size(); k++){
-        cout << "\t" << componentWeights[k];
+        std::cout << "\t" << componentWeights[k];
     }
-    cout << endl;
-    cout << "SortedEigenValues: ";
+    std::cout << std::endl;
+    std::cout << "SortedEigenValues: ";
     for(UINT k=0; k<sortedEigenvalues.size(); k++){
-        cout << "\t" << sortedEigenvalues[k].value;
+        std::cout << "\t" << sortedEigenvalues[k].value;
     }
-    cout << endl;
+    std::cout << std::endl;
     eigenvectors.print("Eigenvectors:");
     
     return true;
 }
     
-MatrixDouble PrincipalComponentAnalysis::getEigenVectors() const{
+MatrixFloat PrincipalComponentAnalysis::getEigenVectors() const{
     return eigenvectors;
 }
 
-bool PrincipalComponentAnalysis::setModel( const VectorDouble &mean, const MatrixDouble &eigenvectors ){
+bool PrincipalComponentAnalysis::setModel( const VectorFloat &mean, const MatrixFloat &eigenvectors ){
 
     if( (UINT)mean.size() != eigenvectors.getNumCols() ){
         return false;
@@ -478,5 +479,4 @@ bool PrincipalComponentAnalysis::setModel( const VectorDouble &mean, const Matri
     return true;
 }
 
-
-}//End of namespace GRT
+GRT_END_NAMESPACE

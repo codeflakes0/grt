@@ -49,8 +49,6 @@
 //Include the Utilities
 #include "Util/GRTVersionInfo.h"
 #include "Util/GRTCommon.h"
-#include "Util/Matrix.h"
-#include "Util/MatrixDouble.h"
 #include "Util/RangeTracker.h"
 #include "Util/TrainingDataRecordingTimer.h"
 #include "Util/SVD.h"
@@ -62,12 +60,17 @@
 #include "Util/PeakDetection.h"
 #include "Util/ThresholdCrossingDetector.h"
 #include "Util/CommandLineParser.h"
+// TBE
 #include "Util/AndroidBuf.h"
 
 //Include the data structures
+#include "DataStructures/Vector.h"
+#include "DataStructures/VectorFloat.h"
+#include "DataStructures/Matrix.h"
+#include "DataStructures/MatrixFloat.h"
 #include "DataStructures/ClassificationData.h"
 #include "DataStructures/TimeSeriesClassificationData.h"
-#include "DataStructures/TimeSeriesClassificationDataStream.h"
+#include "DataStructures/ClassificationDataStream.h"
 #include "DataStructures/RegressionData.h"
 #include "DataStructures/UnlabelledData.h"
 
@@ -93,9 +96,11 @@
 #include "PreProcessingModules/DoubleMovingAverageFilter.h"
 #include "PreProcessingModules/SavitzkyGolayFilter.h"
 #include "PreProcessingModules/DeadZone.h"
+#include "PreProcessingModules/WeightedAverageFilter.h"
 
 //Include the FeatureExtraction Modules
 #include "FeatureExtractionModules/ZeroCrossingCounter/ZeroCrossingCounter.h"
+#include "FeatureExtractionModules/EnvelopeExtractor/EnvelopeExtractor.h"
 #include "FeatureExtractionModules/FFT/FFT.h"
 #include "FeatureExtractionModules/FFT/FFTFeatures.h"
 #include "FeatureExtractionModules/MovementTrajectoryFeatures/MovementTrajectoryFeatures.h"

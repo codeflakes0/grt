@@ -36,7 +36,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "WarningLog.h"
 #include "ErrorLog.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 class CommandLineParser {
 public:
@@ -111,7 +111,7 @@ public:
         
         if( it == results.end() ){
             value = defaultValue;
-            warningLog << "get(const std::string &id,T &value) - Failed to find id: " << id << endl;
+            warningLog << "get(const std::string &id,T &value) - Failed to find id: " << id << std::endl;
             return false;
         }
         
@@ -122,7 +122,7 @@ public:
             return true;
         }catch( ... ){
             value = defaultValue;
-            warningLog << "get(const std::string &id,T &value) - Can not parse type: " << typeid( value ).name() << endl;
+            warningLog << "get(const std::string &id,T &value) - Can not parse type: " << typeid( value ).name() << std::endl;
         }
 
         return false;
@@ -142,7 +142,7 @@ public:
         it = results.find( id );
         
         if( it == results.end() ){
-            warningLog << "validate(const std::string ) - Failed to find id: " << id << endl;
+            warningLog << "validate(const std::string ) - Failed to find id: " << id << std::endl;
             return false;
         }
         
@@ -192,6 +192,6 @@ protected:
 
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_COMMAND_LINE_PARSER_HEADER

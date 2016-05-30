@@ -18,9 +18,10 @@
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define GRT_DLL_EXPORTS
 #include "MovementTrajectoryFeatures.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 //Register the ZeroCrossingCounter module with the FeatureExtraction base class
 RegisterFeatureExtractionModule< MovementTrajectoryFeatures > MovementTrajectoryFeatures::registerModule("MovementTrajectoryFeatures");
@@ -81,20 +82,20 @@ bool MovementTrajectoryFeatures::deepCopyFrom(const FeatureExtraction *featureEx
         return true;
     }
     
-    errorLog << "clone(FeatureExtraction *featureExtraction) -  FeatureExtraction Types Do Not Match!" << endl;
+    errorLog << "clone(FeatureExtraction *featureExtraction) -  FeatureExtraction Types Do Not Match!" << std::endl;
     
     return false;
 }
     
-bool MovementTrajectoryFeatures::computeFeatures(const VectorDouble &inputVector){
+bool MovementTrajectoryFeatures::computeFeatures(const VectorFloat &inputVector){
     
     if( !initialized ){
-        errorLog << "computeFeatures(const VectorDouble &inputVector) - Not initialized!" << endl;
+        errorLog << "computeFeatures(const VectorFloat &inputVector) - Not initialized!" << std::endl;
         return false;
     }
     
-    if( inputVector.size() != numInputDimensions ){
-        errorLog << "computeFeatures(const VectorDouble &inputVector) - The size of the inputVector (" << inputVector.size() << ") does not match that of the filter (" << numInputDimensions << ")!" << endl;
+    if( inputVector.getSize() != numInputDimensions ){
+        errorLog << "computeFeatures(const VectorFloat &inputVector) - The size of the inputVector (" << inputVector.getSize() << ") does not match that of the filter (" << numInputDimensions << ")!" << std::endl;
         return false;
     }
     
@@ -110,7 +111,7 @@ bool MovementTrajectoryFeatures::reset(){
     return false;
 }
     
-bool MovementTrajectoryFeatures::saveModelToFile(string filename) const{
+bool MovementTrajectoryFeatures::saveModelToFile( std::string filename ) const{
     
     std::fstream file;
     file.open(filename.c_str(), std::ios::out);
@@ -124,7 +125,7 @@ bool MovementTrajectoryFeatures::saveModelToFile(string filename) const{
     return true;
 }
 
-bool MovementTrajectoryFeatures::loadModelFromFile(string filename){
+bool MovementTrajectoryFeatures::loadModelFromFile( std::string filename ){
     
     std::fstream file;
     file.open(filename.c_str(), std::ios::in);
@@ -139,59 +140,59 @@ bool MovementTrajectoryFeatures::loadModelFromFile(string filename){
     return true;
 }
 
-bool MovementTrajectoryFeatures::saveModelToFile(fstream &file) const{
+bool MovementTrajectoryFeatures::saveModelToFile( std::fstream &file ) const{
     
     if( !file.is_open() ){
-        errorLog << "saveModelToFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "saveModelToFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
     //Write the file header
-    file << "GRT_MOVEMENT_TRAJECTORY_FEATURES_FILE_V1.0" << endl;	
+    file << "GRT_MOVEMENT_TRAJECTORY_FEATURES_FILE_V1.0" << std::endl;	
     
     //Save the base settings to the file
     if( !saveFeatureExtractionSettingsToFile( file ) ){
-        errorLog << "saveFeatureExtractionSettingsToFile(fstream &file) - Failed to save base feature extraction settings to file!" << endl;
+        errorLog << "saveFeatureExtractionSettingsToFile(fstream &file) - Failed to save base feature extraction settings to file!" << std::endl;
         return false;
     }
     
     //Write the movement trajectory settings to the file
-    file << "TrajectoryLength: " << trajectoryLength << endl;
-    file << "NumCentroids: " << numCentroids << endl;
-    file << "FeatureMode: " << featureMode << endl;
-    file << "NumHistogramBins: " << numHistogramBins << endl;
-    file << "UseTrajStartAndEndValues: " << useTrajStartAndEndValues << endl;
-    file << "UseWeightedMagnitudeValues: " << useWeightedMagnitudeValues << endl;
+    file << "TrajectoryLength: " << trajectoryLength << std::endl;
+    file << "NumCentroids: " << numCentroids << std::endl;
+    file << "FeatureMode: " << featureMode << std::endl;
+    file << "NumHistogramBins: " << numHistogramBins << std::endl;
+    file << "UseTrajStartAndEndValues: " << useTrajStartAndEndValues << std::endl;
+    file << "UseWeightedMagnitudeValues: " << useWeightedMagnitudeValues << std::endl;
     
     return true;
 }
 
-bool MovementTrajectoryFeatures::loadModelFromFile(fstream &file){
+bool MovementTrajectoryFeatures::loadModelFromFile( std::fstream &file ){
     
     if( !file.is_open() ){
-        errorLog << "loadModelFromFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
-    string word;
+    std::string word;
     
     //Load the header
     file >> word;
     
     if( word != "GRT_MOVEMENT_TRAJECTORY_FEATURES_FILE_V1.0" ){
-        errorLog << "loadModelFromFile(fstream &file) - Invalid file format!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Invalid file format!" << std::endl;
         return false;     
     }
     
     if( !loadFeatureExtractionSettingsFromFile( file ) ){
-        errorLog << "loadFeatureExtractionSettingsFromFile(fstream &file) - Failed to load base feature extraction settings from file!" << endl;
+        errorLog << "loadFeatureExtractionSettingsFromFile(fstream &file) - Failed to load base feature extraction settings from file!" << std::endl;
         return false;
     }
     
     //Load the TrajectoryLength
     file >> word;
     if( word != "TrajectoryLength:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read TrajectoryLength header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read TrajectoryLength header!" << std::endl;
         return false;     
     }
     file >> trajectoryLength;
@@ -199,7 +200,7 @@ bool MovementTrajectoryFeatures::loadModelFromFile(fstream &file){
     //Load the NumCentroids
     file >> word;
     if( word != "NumCentroids:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read NumCentroids header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read NumCentroids header!" << std::endl;
         return false;     
     }
     file >> numCentroids;
@@ -207,7 +208,7 @@ bool MovementTrajectoryFeatures::loadModelFromFile(fstream &file){
     //Load the FeatureMode
     file >> word;
     if( word != "FeatureMode:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read FeatureMode header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read FeatureMode header!" << std::endl;
         return false;     
     }
     file >> featureMode;
@@ -215,7 +216,7 @@ bool MovementTrajectoryFeatures::loadModelFromFile(fstream &file){
     //Load the NumHistogramBins
     file >> word;
     if( word != "NumHistogramBins:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read NumHistogramBins header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read NumHistogramBins header!" << std::endl;
         return false;     
     }
     file >> numHistogramBins;
@@ -223,7 +224,7 @@ bool MovementTrajectoryFeatures::loadModelFromFile(fstream &file){
     //Load the UseTrajStartAndEndValues
     file >> word;
     if( word != "UseTrajStartAndEndValues:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read UseTrajStartAndEndValues header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read UseTrajStartAndEndValues header!" << std::endl;
         return false;     
     }
     file >> useTrajStartAndEndValues;
@@ -231,7 +232,7 @@ bool MovementTrajectoryFeatures::loadModelFromFile(fstream &file){
     //Load the UseWeightedMagnitudeValues
     file >> word;
     if( word != "UseWeightedMagnitudeValues:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read UseWeightedMagnitudeValues header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read UseWeightedMagnitudeValues header!" << std::endl;
         return false;     
     }
     file >> useWeightedMagnitudeValues;
@@ -245,21 +246,21 @@ bool MovementTrajectoryFeatures::init(UINT trajectoryLength,UINT numCentroids,UI
     initialized = false;
     
     if( numCentroids > trajectoryLength ){
-        errorLog << "init(...) - The number of centroids parameter can not be larger than the trajectory length parameter!" << endl;
+        errorLog << "init(...) - The number of centroids parameter can not be larger than the trajectory length parameter!" << std::endl;
         return false;
     }
     if( trajectoryLength % numCentroids != 0 ){
-        errorLog << "init(...) - The trajectory length parameter must be divisible with no remainders by the number of centroids parameter!" << endl;
+        errorLog << "init(...) - The trajectory length parameter must be divisible with no remainders by the number of centroids parameter!" << std::endl;
         return false;
     }
     
     if( featureMode == CENTROID_ANGLE_2D && numDimensions % 2 != 0 ){
-        errorLog << "init(...) - If the featureMode is CENTROID_ANGLE_2D then the numberOfDimensions should be divisble by 2 (as each pair of points should represent {x,y})!" << endl;
+        errorLog << "init(...) - If the featureMode is CENTROID_ANGLE_2D then the numberOfDimensions should be divisble by 2 (as each pair of points should represent {x,y})!" << std::endl;
         return false;
     }
     
     if( numHistogramBins == 0 && featureMode == CENTROID_ANGLE_2D ){
-        errorLog << "init(...) - If the featureMode is CENTROID_ANGLE_2D then the numHistogramBins parameter must greater than 0!" << endl;
+        errorLog << "init(...) - If the featureMode is CENTROID_ANGLE_2D then the numHistogramBins parameter must greater than 0!" << std::endl;
         return false;
     }
     
@@ -296,21 +297,21 @@ bool MovementTrajectoryFeatures::init(UINT trajectoryLength,UINT numCentroids,UI
             numOutputDimensions = numHistogramBins*(numDimensions/2);
             break;
         default:
-            errorLog << "init(...)- Unknown featureMode!" << endl;
+            errorLog << "init(...)- Unknown featureMode!" << std::endl;
             return false;
             break;
     }
     
     if( numOutputDimensions == 0 ){
-        errorLog << "init(...) - The numOutputDimensions is zero!" << endl;
+        errorLog << "init(...) - The numOutputDimensions is zero!" << std::endl;
         return false;
     }
     
-    //Resize the feature vector
+    //Resize the feature Vector
     featureVector.resize(numOutputDimensions);
     
     //Resize the raw trajectory data buffer
-    trajectoryDataBuffer.resize( trajectoryLength, VectorDouble(numInputDimensions,0) );
+    trajectoryDataBuffer.resize( trajectoryLength, VectorFloat(numInputDimensions,0) );
     
     //Resize the centroids buffer
     centroids.resize(numCentroids,numInputDimensions);
@@ -321,20 +322,20 @@ bool MovementTrajectoryFeatures::init(UINT trajectoryLength,UINT numCentroids,UI
     return true;
 }
 
-VectorDouble MovementTrajectoryFeatures::update(double x){
-	return update(VectorDouble(1,x));
+VectorFloat MovementTrajectoryFeatures::update(Float x){
+	return update(VectorFloat(1,x));
 }
     
-VectorDouble MovementTrajectoryFeatures::update(const VectorDouble &x){
+VectorFloat MovementTrajectoryFeatures::update(const VectorFloat &x){
     
     if( !initialized ){
-        errorLog << "update(const VectorDouble &x) - Not Initialized!" << endl;
-        return vector<double>();
+        errorLog << "update(const VectorFloat &x) - Not Initialized!" << std::endl;
+        return VectorFloat();
     }
     
-    if( x.size() != numInputDimensions ){
-        errorLog << "update(const VectorDouble &x)- The Number Of Input Dimensions (" << numInputDimensions << ") does not match the size of the input vector (" << x.size() << ")!" << endl;
-        return vector<double>();
+    if( x.getSize() != numInputDimensions ){
+        errorLog << "update(const VectorFloat &x)- The Number Of Input Dimensions (" << numInputDimensions << ") does not match the size of the input Vector (" << x.getSize() << ")!" << std::endl;
+        return VectorFloat();
     }
     
     //Add the new data to the trajectory data buffer
@@ -349,25 +350,25 @@ VectorDouble MovementTrajectoryFeatures::update(const VectorDouble &x){
     centroids.setAllValues(0);
     
     UINT dataBufferIndex = 0;
-    UINT numValuesPerCentroid = (UINT)floor(double(trajectoryLength/numCentroids));
+    UINT numValuesPerCentroid = (UINT)floor(Float(trajectoryLength/numCentroids));
     for(UINT n=0; n<numInputDimensions; n++){
         dataBufferIndex = 0;
         for(UINT i=0; i<numCentroids; i++){
             for(UINT j=0; j<numValuesPerCentroid; j++){
                 centroids[i][n] += trajectoryDataBuffer[dataBufferIndex++][n];
             }
-            centroids[i][n] /= double(numValuesPerCentroid);
+            centroids[i][n] /= Float(numValuesPerCentroid);
         }
     }
     
     //Copmute the features
     UINT featureIndex = 0;
-    vector< MinMax > centroidNormValues(numInputDimensions);
-    VectorDouble histSumValues;
-    vector< vector< AngleMagnitude > >  angleMagnitudeValues;
+    Vector< MinMax > centroidNormValues(numInputDimensions);
+    VectorFloat histSumValues;
+    Vector< Vector< AngleMagnitude > >  angleMagnitudeValues;
     switch( featureMode ){
         case CENTROID_VALUE:
-            //Simply set the feature vector as the list of centroids
+            //Simply set the feature Vector as the list of centroids
             for(UINT n=0; n<numInputDimensions; n++){
                 for(UINT i=0; i<numCentroids; i++){
                     featureVector[ featureIndex++ ] = centroids[i][n];
@@ -415,7 +416,7 @@ VectorDouble MovementTrajectoryFeatures::update(const VectorDouble &x){
             histSumValues.resize( numInputDimensions/2, 0);
             angleMagnitudeValues.resize( numInputDimensions/2 );
             
-            //Zero the feature vector
+            //Zero the feature Vector
             fill(featureVector.begin(),featureVector.end(),0);
             
             //Compute the angle and magnitude betweem each of the centroids, do this for each pair of points
@@ -429,13 +430,13 @@ VectorDouble MovementTrajectoryFeatures::update(const VectorDouble &x){
                 //Add the angles to the histogram
                 for(UINT i=0; i<numCentroids-1; i++){
                     UINT histBin = 0;
-                    double degreesPerBin = 360.0/numHistogramBins;
-                    double binStartValue = 0;
-                    double binEndValue = degreesPerBin;
+                    Float degreesPerBin = 360.0/numHistogramBins;
+                    Float binStartValue = 0;
+                    Float binEndValue = degreesPerBin;
                     
                     if( angleMagnitudeValues[n][i].angle < 0 || angleMagnitudeValues[n][i].angle  > 360.0 ){
-                        warningLog << "The angle of a point is not between [0 360]. Angle: " << angleMagnitudeValues[n][i].angle << endl;
-                        return vector<double>();
+                        warningLog << "The angle of a point is not between [0 360]. Angle: " << angleMagnitudeValues[n][i].angle << std::endl;
+                        return VectorFloat();
                     }
                     
                     //Find which hist bin the current angle is in
@@ -463,7 +464,7 @@ VectorDouble MovementTrajectoryFeatures::update(const VectorDouble &x){
             }
             break;
         default:
-            errorLog << "update(VectorDouble x)- Unknown featureMode!" << endl;
+            errorLog << "update(VectorFloat x)- Unknown featureMode!" << std::endl;
             return featureVector;
             break;
     }
@@ -471,18 +472,18 @@ VectorDouble MovementTrajectoryFeatures::update(const VectorDouble &x){
     return featureVector;
 }
     
-CircularBuffer< VectorDouble > MovementTrajectoryFeatures::getTrajectoryData(){
+CircularBuffer< VectorFloat > MovementTrajectoryFeatures::getTrajectoryData(){
     if( initialized ){
         return trajectoryDataBuffer;
     }
-    return CircularBuffer< VectorDouble >();
+    return CircularBuffer< VectorFloat >();
 }
 
-MatrixDouble MovementTrajectoryFeatures::getCentroids(){
+MatrixFloat MovementTrajectoryFeatures::getCentroids(){
     if( initialized ){
         return centroids;
     }
-    return MatrixDouble();
+    return MatrixFloat();
 }
     
 UINT MovementTrajectoryFeatures::getFeatureMode(){
@@ -492,4 +493,4 @@ UINT MovementTrajectoryFeatures::getFeatureMode(){
     return 0;
 }
     
-}//End of namespace GRT
+GRT_END_NAMESPACE

@@ -29,11 +29,11 @@
 
 #include "../../CoreAlgorithms/ParticleFilter/Particle.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 class FSMParticle : public Particle{
 public:
-    FSMParticle(const unsigned int numDimensions){
+    FSMParticle(const unsigned int numDimensions = 0){
         w = 0;
         currentState = 0;
         if( numDimensions > 0 ){
@@ -63,6 +63,6 @@ public:
     int currentState;
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif

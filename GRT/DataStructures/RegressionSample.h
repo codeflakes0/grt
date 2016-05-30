@@ -31,12 +31,12 @@
 
 #include "../Util/GRTCommon.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
-class RegressionSample{
+class GRT_API RegressionSample{
 public:
 	RegressionSample();
-	RegressionSample(const VectorDouble &inputVector,const VectorDouble &targetVector);
+	RegressionSample(const VectorFloat &inputVector,const VectorFloat &targetVector);
 	RegressionSample(const RegressionSample &rhs);
 	~RegressionSample();
 
@@ -58,20 +58,20 @@ public:
     }
 
 	void clear();
-	void set(const VectorDouble &inputVector,const VectorDouble &targetVector);
+	void set(const VectorFloat &inputVector,const VectorFloat &targetVector);
 
     UINT getNumInputDimensions() const;
     UINT getNumTargetDimensions() const;
-    double getInputVectorValue(const UINT index) const;
-    double getTargetVectorValue(const UINT index) const;
-    const VectorDouble& getInputVector() const;
-    const VectorDouble& getTargetVector() const;
+    Float getInputVectorValue(const UINT index) const;
+    Float getTargetVectorValue(const UINT index) const;
+    const VectorFloat& getInputVector() const;
+    const VectorFloat& getTargetVector() const;
 
 private:
-	VectorDouble inputVector;
-	VectorDouble targetVector;
+	VectorFloat inputVector;
+	VectorFloat targetVector;
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_REGRESSION_SAMPLE_HEADER

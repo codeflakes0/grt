@@ -18,9 +18,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "RangeTracker.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
 RangeTracker::RangeTracker(){
     trackData = true;
@@ -63,7 +64,7 @@ bool RangeTracker::setNumDimensions(UINT numDimensions){
     return false;
 }
 
-bool RangeTracker::update(vector<double> sample){
+bool RangeTracker::update(VectorFloat sample){
 	if( sample.size() != numDimensions ) return false;
     
     if( !trackData ) return true;
@@ -77,7 +78,7 @@ bool RangeTracker::update(vector<double> sample){
 	return true;
 }
 
-bool RangeTracker::saveRangeDataToFile(string filename){
+bool RangeTracker::saveRangeDataToFile(std::string filename){
 
 	std::fstream file; 
 	file.open(filename.c_str(), std::ios::out);
@@ -87,30 +88,30 @@ bool RangeTracker::saveRangeDataToFile(string filename){
 	}
 
 	file << "GRT_RANGE_TRACKER_DATA_FILE_V1.0\n";
-	file << "NumDimensions: " << numDimensions << endl;
-	file << "TotalNumSamplesViewed: " << totalNumSamplesViewed << endl;
-    file << "Ranges: " << endl;
+	file << "NumDimensions: " << numDimensions << std::endl;
+	file << "TotalNumSamplesViewed: " << totalNumSamplesViewed << std::endl;
+    file << "Ranges: " << std::endl;
     
-    for(UINT i=0; i<ranges.size(); i++){
-        file << ranges[i].minValue << "\t" << ranges[i].maxValue << endl;
+    for(UINT i=0; i<ranges.getSize(); i++){
+        file << ranges[i].minValue << "\t" << ranges[i].maxValue << std::endl;
     }
     
    	file.close();
 	return true;
 }
 
-bool RangeTracker::loadRangeDataFromFile(string filename){
+bool RangeTracker::loadRangeDataFromFile(std::string filename){
 
 	std::fstream file; 
 	file.open(filename.c_str(), std::ios::in);
 	clear();
 
 	if( !file.is_open() ){
-        cout << "FILE NOT FOUND\n";
+        std::cout << "FILE NOT FOUND\n";
 		return false;
 	}
 
-	string word;
+	std::string word;
 
 	//Check to make sure this is a file with the correct file format
 	file >> word;
@@ -153,9 +154,8 @@ bool RangeTracker::loadRangeDataFromFile(string filename){
 	return true;
 }
     
-vector<MinMax> RangeTracker::getRanges(){
-    
+Vector<MinMax> RangeTracker::getRanges(){
     return ranges;
 }
     
-}; //End of namespace GRT
+GRT_END_NAMESPACE

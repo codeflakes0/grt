@@ -33,31 +33,31 @@
 
 #include "../../../Util/GRTCommon.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
-class Neuron{
+class GRT_API Neuron{
 public:
     Neuron();
     ~Neuron();
     
     bool init(const UINT numInputs,const UINT actvationFunction);
     void clear();
-    double fire(const VectorDouble &x);
-	double getDerivative(const double &y);
+    Float fire(const VectorFloat &x);
+	Float getDerivative(const Float &y);
     static bool validateActivationFunction(const UINT actvationFunction);
     
-	double gamma;
-    double bias;
-    double previousBiasUpdate;
-    VectorDouble weights;
-	VectorDouble previousUpdate;
+	Float gamma;
+    Float bias;
+    Float previousBiasUpdate;
+    VectorFloat weights;
+	VectorFloat previousUpdate;
     UINT numInputs;
     UINT activationFunction;
     
     enum ActivationFunctions{LINEAR=0,SIGMOID,BIPOLAR_SIGMOID,NUMBER_OF_ACTIVATION_FUNCTIONS};
 };
 
-}//End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_NEURON_HEADER
 

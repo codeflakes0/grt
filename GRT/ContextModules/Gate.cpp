@@ -18,9 +18,10 @@
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define GRT_DLL_EXPORTS
 #include "Gate.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 	
 //Register the Gate module with the Context base class
 RegisterContextModule< Gate > Gate::registerModule("GATE");
@@ -48,4 +49,4 @@ bool Gate::reset(){
     return true;
 }
     
-}//End of namespace GRT
+GRT_END_NAMESPACE

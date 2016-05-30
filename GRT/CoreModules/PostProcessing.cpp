@@ -18,13 +18,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "PostProcessing.h"
-namespace GRT{
+
+GRT_BEGIN_NAMESPACE
     
 PostProcessing::StringPostProcessingMap* PostProcessing::stringPostProcessingMap = NULL;
 UINT PostProcessing::numPostProcessingInstances = 0;
     
-PostProcessing* PostProcessing::createInstanceFromString(string const &postProcessingType){
+PostProcessing* PostProcessing::createInstanceFromString(std::string const &postProcessingType){
     
     StringPostProcessingMap::iterator iter = getMap()->find( postProcessingType );
     if( iter == getMap()->end() ){
@@ -53,11 +55,11 @@ PostProcessing::~PostProcessing(void){
 bool PostProcessing::copyBaseVariables(const PostProcessing *postProcessingModule){
     
     if( postProcessingModule == NULL ){
-        errorLog << "copyBaseVariables(const PostProcessing *postProcessingModule) - postProcessingModule pointer is NULL!" << endl;
+        errorLog << "copyBaseVariables(const PostProcessing *postProcessingModule) - postProcessingModule pointer is NULL!" << std::endl;
         return false;
     }
     
-    if( !this->copyGRTBaseVariables( postProcessingModule ) ){
+    if( !this->copyMLBaseVariables( postProcessingModule ) ){
         return false;
     }
     
@@ -77,7 +79,7 @@ bool PostProcessing::copyBaseVariables(const PostProcessing *postProcessingModul
 bool PostProcessing::init(){
     
     if( numOutputDimensions == 0 ){
-        errorLog << "init() - Failed to init module, the number of output dimensions is zero!" << endl;
+        errorLog << "init() - Failed to init module, the number of output dimensions is zero!" << std::endl;
         initialized = false;
         return false;
     }
@@ -91,7 +93,7 @@ bool PostProcessing::init(){
     return true;
 }
     
-bool PostProcessing::saveModelToFile(string filename) const{
+bool PostProcessing::saveModelToFile(std::string filename) const{
     
     std::fstream file;
     file.open(filename.c_str(), std::ios::out);
@@ -105,7 +107,7 @@ bool PostProcessing::saveModelToFile(string filename) const{
     return true;
 }
 
-bool PostProcessing::loadModelFromFile(string filename){
+bool PostProcessing::loadModelFromFile(std::string filename){
     
     std::fstream file;
     file.open(filename.c_str(), std::ios::in);
@@ -120,24 +122,24 @@ bool PostProcessing::loadModelFromFile(string filename){
     return true;
 }
 
-bool PostProcessing::savePostProcessingSettingsToFile(fstream &file) const{
+bool PostProcessing::savePostProcessingSettingsToFile(std::fstream &file) const{
     
     if( !file.is_open() ){
-        errorLog << "savePostProcessingSettingsToFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "savePostProcessingSettingsToFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
     if( !MLBase::saveBaseSettingsToFile( file ) ) return false;
     
-    file << "Initialized: " << initialized << endl;
+    file << "Initialized: " << initialized << std::endl;
     
     return true;
 }
 
-bool PostProcessing::loadPostProcessingSettingsFromFile(fstream &file){
+bool PostProcessing::loadPostProcessingSettingsFromFile(std::fstream &file){
     
     if( !file.is_open() ){
-        errorLog << "loadPostProcessingSettingsFromFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "loadPostProcessingSettingsFromFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
@@ -146,12 +148,12 @@ bool PostProcessing::loadPostProcessingSettingsFromFile(fstream &file){
         return false;
     }
     
-    string word;
+    std::string word;
     
     //Load if the filter has been initialized
     file >> word;
     if( word != "Initialized:" ){
-        errorLog << "loadPostProcessingSettingsFromFile(fstream &file) - Failed to read Initialized header!" << endl;
+        errorLog << "loadPostProcessingSettingsFromFile(fstream &file) - Failed to read Initialized header!" << std::endl;
         clear();
         return false;
     }
@@ -169,7 +171,7 @@ PostProcessing* PostProcessing::createNewInstance() const{
     return createInstanceFromString(postProcessingType);
 }
 
-string PostProcessing::getPostProcessingType() const{ 
+std::string PostProcessing::getPostProcessingType() const{ 
     return postProcessingType;
 }
     
@@ -209,9 +211,9 @@ bool PostProcessing::getIsPostProcessingOutputModeClassLikelihoods() const{
     return postProcessingOutputMode==OUTPUT_MODE_CLASS_LIKELIHOODS; 
 }
     
-vector< double > PostProcessing::getProcessedData() const{ 
+VectorFloat PostProcessing::getProcessedData() const{ 
     return processedData; 
 }
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 

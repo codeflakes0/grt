@@ -18,13 +18,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "Regressifier.h"
-namespace GRT{
+
+GRT_BEGIN_NAMESPACE
     
 Regressifier::StringRegressifierMap* Regressifier::stringRegressifierMap = NULL;
 UINT Regressifier::numRegressifierInstances = 0;
     
-Regressifier* Regressifier::createInstanceFromString(string const &regressifierType){
+Regressifier* Regressifier::createInstanceFromString( const std::string &regressifierType ){
     
     StringRegressifierMap::iterator iter = getMap()->find( regressifierType );
     if( iter == getMap()->end() ){
@@ -67,7 +69,7 @@ Regressifier::~Regressifier(void){
 bool Regressifier::copyBaseVariables(const Regressifier *regressifier){
     
     if( regressifier == NULL ){
-        errorLog << "copyBaseVariables(Regressifier *regressifier) - regressifier pointer is NULL!" << endl;
+        errorLog << "copyBaseVariables(Regressifier *regressifier) - regressifier pointer is NULL!" << std::endl;
         return false;
     }
     
@@ -108,22 +110,22 @@ bool Regressifier::clear(){
     return true;
 }
 
-string Regressifier::getRegressifierType() const{ 
+std::string Regressifier::getRegressifierType() const{ 
     return regressifierType; 
 }
     
-VectorDouble Regressifier::getRegressionData() const{ 
+VectorFloat Regressifier::getRegressionData() const{ 
     if( trained ){ 
         return regressionData; 
     } 
-    return VectorDouble(); 
+    return VectorFloat(); 
 }
     
-vector< MinMax > Regressifier::getInputRanges() const{
+Vector< MinMax > Regressifier::getInputRanges() const{
     return inputVectorRanges;
 }
 
-vector< MinMax > Regressifier::getOutputRanges() const{
+Vector< MinMax > Regressifier::getOutputRanges() const{
     return targetVectorRanges;
 }
     
@@ -132,10 +134,10 @@ const Regressifier& Regressifier::getBaseRegressifier() const{
 }
     
     
-bool Regressifier::saveBaseSettingsToFile(fstream &file) const{
+bool Regressifier::saveBaseSettingsToFile( std::fstream &file ) const{
     
     if( !file.is_open() ){
-        errorLog << "saveBaseSettingsToFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "saveBaseSettingsToFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
@@ -145,12 +147,12 @@ bool Regressifier::saveBaseSettingsToFile(fstream &file) const{
     if( useScaling ){
 		file << "InputVectorRanges: \n";
 		for(UINT j=0; j<numInputDimensions; j++){
-			file << inputVectorRanges[j].minValue << "\t" << inputVectorRanges[j].maxValue << endl;
+			file << inputVectorRanges[j].minValue << "\t" << inputVectorRanges[j].maxValue << std::endl;
 		}
         
 		file << "OutputVectorRanges: \n";
 		for(UINT j=0; j<numOutputDimensions; j++){
-			file << targetVectorRanges[j].minValue << "\t" << targetVectorRanges[j].maxValue << endl;
+			file << targetVectorRanges[j].minValue << "\t" << targetVectorRanges[j].maxValue << std::endl;
 		}
     }
     
@@ -158,10 +160,10 @@ bool Regressifier::saveBaseSettingsToFile(fstream &file) const{
 }
 
 
-bool Regressifier::loadBaseSettingsFromFile(fstream &file){
+bool Regressifier::loadBaseSettingsFromFile( std::fstream &file ){
     
     if( !file.is_open() ){
-        errorLog << "loadBaseSettingsFromFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "loadBaseSettingsFromFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
@@ -170,13 +172,13 @@ bool Regressifier::loadBaseSettingsFromFile(fstream &file){
         return false;
     }
     
-    string word;
+    std::string word;
     
     if( useScaling ){
         //Load the ranges
         file >> word;
         if( word != "InputVectorRanges:" ){
-            errorLog << "loadBaseSettingsFromFile(fstream &file) - Failed to read InputVectorRanges header!" << endl;
+            errorLog << "loadBaseSettingsFromFile(fstream &file) - Failed to read InputVectorRanges header!" << std::endl;
             return false;
         }
         inputVectorRanges.resize(numInputDimensions);
@@ -187,7 +189,7 @@ bool Regressifier::loadBaseSettingsFromFile(fstream &file){
         
         file >> word;
         if( word != "OutputVectorRanges:" ){
-            errorLog << "loadBaseSettingsFromFile(fstream &file) - Failed to read OutputVectorRanges header!" << endl;
+            errorLog << "loadBaseSettingsFromFile(fstream &file) - Failed to read OutputVectorRanges header!" << std::endl;
             return false;
         }
         targetVectorRanges.resize(numOutputDimensions);
@@ -198,7 +200,7 @@ bool Regressifier::loadBaseSettingsFromFile(fstream &file){
     }
     
     if( trained ){
-        //Resize the regression data vector
+        //Resize the regression data Vector
         regressionData.clear();
         regressionData.resize(numOutputDimensions,0);
     }
@@ -206,5 +208,4 @@ bool Regressifier::loadBaseSettingsFromFile(fstream &file){
     return true;
 }
     
-} //End of namespace GRT
-
+GRT_END_NAMESPACE

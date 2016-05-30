@@ -21,7 +21,9 @@
 #ifndef GRT_PARTICLE_HEADER
 #define GRT_PARTICLE_HEADER
 
-namespace GRT{
+#include "../../Util/GRTTypedefs.h"
+
+GRT_BEGIN_NAMESPACE
 
 class Particle{
 public:
@@ -31,10 +33,12 @@ public:
             x.resize(numDimensions,0);
         }
     }
+    
     Particle(const Particle &rhs){
         this->w = rhs.w;
         this->x = rhs.x;
     }
+
     virtual ~Particle(){
         
     }
@@ -47,14 +51,18 @@ public:
         return *this;
     }
     
-    double& operator[](const unsigned int &i){
+    Float& operator[](const unsigned int &i){
+        return x[i];
+    }
+
+    const Float& operator[](const unsigned int &i) const {
         return x[i];
     }
     
-    double w;
-    VectorDouble x;
+    Float w;
+    VectorFloat x;
 };
 
-}
+GRT_END_NAMESPACE
 
 #endif //GRT_PARTICLE_HEADER

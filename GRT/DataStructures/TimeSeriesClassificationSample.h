@@ -29,14 +29,15 @@
 #ifndef GRT_TIME_SERIES_CLASSIFICATION_SAMPLE_HEADER
 #define GRT_TIME_SERIES_CLASSIFICATION_SAMPLE_HEADER
 
-#include "../Util/GRTCommon.h"
+#include "VectorFloat.h"
+#include "MatrixFloat.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
-class TimeSeriesClassificationSample{
+class GRT_API TimeSeriesClassificationSample{
 public:
 	TimeSeriesClassificationSample();
-	TimeSeriesClassificationSample(const UINT classLabel,const MatrixDouble &data);
+	TimeSeriesClassificationSample(const UINT classLabel,const MatrixFloat &data);
 	TimeSeriesClassificationSample(const TimeSeriesClassificationSample &rhs);
 	~TimeSeriesClassificationSample();
 
@@ -48,28 +49,28 @@ public:
 		return *this;
 	}
 
-	inline double* operator[] (const UINT &n){
+	inline Float* operator[] (const UINT &n){
 		return data[n];
 	}
     
-    inline const double* operator[] (const UINT &n) const {
+    inline const Float* operator[] (const UINT &n) const {
 		return data[n];
 	}
 
 	bool clear();
-    bool addSample(const UINT classLabel,const VectorDouble &sample);
-	bool setTrainingSample(const UINT classLabel,const MatrixDouble &data);
+    bool addSample( const UINT classLabel, const VectorFloat &sample );
+	bool setTrainingSample( const UINT classLabel, const MatrixFloat &data );
 	inline UINT getLength() const { return data.getNumRows(); }
     inline UINT getNumDimensions() const { return data.getNumCols(); }
     inline UINT getClassLabel() const { return classLabel; }
-    MatrixDouble &getData(){ return data; }
-    const MatrixDouble &getData() const { return data; }
+    MatrixFloat &getData(){ return data; }
+    const MatrixFloat &getData() const { return data; }
 
 protected:
 	UINT classLabel;
-	MatrixDouble data;
+	MatrixFloat data;
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_LABELLED_TIME_SERIES_CLASSIFICATION_SAMPLE_HEADER

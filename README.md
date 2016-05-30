@@ -9,10 +9,12 @@ Build Status:
   * ![Dev Build Status](https://travis-ci.org/nickgillian/grt.svg?branch=dev)
 
 Key things to know about the GRT:
-* The toolkit consists of two parts: a comprehensive **C++ API** and a front-end **graphical user interface (GUI)**. You can access the source code for both the C++ API and GUI in this repository, a precompiled version of the GUI can be downloaded [here](http://www.nickgillian.com/wiki/pmwiki.php/GRT/Download)
+* The toolkit consists of two parts: a comprehensive [C++ API](http://nickgillian.com/grt/api/0.1.0) and a front-end [graphical user interface (GUI)](http://www.nickgillian.com/wiki/pmwiki.php/GRT/GUI). You can access the source code for both the C++ API and GUI in this repository, a precompiled version of the GUI can be downloaded [here](http://www.nickgillian.com/wiki/pmwiki.php/GRT/Download)
 * Both the C++ API and GUI are designed to work with real-time sensor data, but they can also be used for more conventional offline machine-learning tasks 
 * The input to the GRT can be any *N*-dimensional floating-point vector - this means you can use the GRT with Cameras, Kinect, Leap Motion, accelerometers, or any other custom sensor you might have built
-* The toolkit reserves the class label value of zero as a special **null gesture** class label - you should therefore avoid using the gesture label of zero in your training data
+* The toolkit defines a generic [Float](#grt-floating-point-precision) type, this defaults to double precision float, but can easily be changed to single precision via the main GRT Typedefs header
+* The precision of the GRT [VectorFloat](#vectorfloat-and-matrixfloat-data-structures) and [MatrixFloat](#vectorfloat-and-matrixfloat-data-structures) classes is automatically updated based on the main Float precision
+* The toolkit reserves the class label value of zero as a special **null gesture** class label for automatic gesture spotting, so if you want to use gesture spotting avoid labelling any of your gestures with the class label of zero
 * Training data and models are saved as custom **.grt** files.  These consist of a simple header followed by the main dataset.  In addition to the grt files, you can also import/export data via CSV files by using the *.csv* file extension when saving/loading files
 * Almost all the GRT classes support the following functions: 
   * **predict( ... )**: uses the input data (...) and a pre-trained model to perform a prediction, such as classification or regression
@@ -35,7 +37,7 @@ Key things to know about the GRT:
 To support flexibility while maintaining consistency, the GRT uses an object-oriented modular architecture. This architecture is built around a set 
 of core **modules** and a central **gesture recognition pipeline**.
 
-The input to both the modules and pipeline consists of an **N-dimensional double-precision vector**, making the toolkit flexible to the type of input signal. 
+The input to both the modules and pipeline consists of an **N-dimensional floating-point vector**, making the toolkit flexible to the type of input signal. 
 The algorithms in each module can be used as standalone classes; alternatively a pipeline can be used to chain modules together to create a more sophisticated gesture-recognition system. The GRT includes modules for preprocessing, feature extraction, clustering, classification, regression and post processing.
 
 The toolkit's source code is structured as following:
@@ -68,20 +70,24 @@ You can find this source code and a large number of other examples and tutorials
 //Include the main GRT header
 #include <GRT/GRT.h>
 using namespace GRT;
+using namespace std;
 
 int main (int argc, const char * argv[])
 {
-    //Generate a basic dummy dataset with 1000 samples, 5 classes, and 3 dimensions
-    cout << "Generating dataset..." << endl;
-    ClassificationData::generateGaussDataset( "data.csv", 1000, 5, 3 );
-	
+    //Parse the training data filename from the command line
+    if( argc != 2 ){
+        cout << "Error: failed to parse data filename from command line. You should run this example with one argument pointing to a data file\n";
+        return EXIT_FAILURE;
+    }
+    const string filename = argv[1];
+
     //Load some training data from a file
     ClassificationData trainingData;
 
     cout << "Loading dataset..." << endl;
-    if( !trainingData.load( "data.csv" ) ){
-		cout << "ERROR: Failed to load training data from file\n";
-		return EXIT_FAILURE;
+    if( !trainingData.load( filename ) ){
+	   cout << "ERROR: Failed to load training data from file\n";
+	   return EXIT_FAILURE;
     }
 
     cout << "Data Loaded" << endl;
@@ -92,11 +98,13 @@ int main (int argc, const char * argv[])
     //Partition the training data into a training dataset and a test dataset. 80 means that 80%
     //of the data will be used for the training data and 20% will be returned as the test dataset
     cout << "Splitting data into training/test split..." << endl;
-    ClassificationData testData = trainingData.partition(80);
+    ClassificationData testData = trainingData.partition( 80 );
 
-    //Create a new Gesture Recognition Pipeline using an Adaptive Naive Bayes Classifier
+    //Create a new Gesture Recognition Pipeline
     GestureRecognitionPipeline pipeline;
-    pipeline.setClassifier( ANBC() );
+
+    //Add a Naive Bayes classifier to the pipeline
+    pipeline << ANBC();
 
     //Train the pipeline using the training data
     cout << "Training model..." << endl;
@@ -106,13 +114,13 @@ int main (int argc, const char * argv[])
     }
 
     //Save the pipeline to a file
-    if( !pipeline.save( "HelloWorldPipeline" ) ){
+    if( !pipeline.save( "HelloWorldPipeline.grt" ) ){
         cout << "ERROR: Failed to save the pipeline!\n";
         return EXIT_FAILURE;
     }
 
     //Load the pipeline from a file
-    if( !pipeline.load( "HelloWorldPipeline" ) ){
+    if( !pipeline.load( "HelloWorldPipeline.grt" ) ){
         cout << "ERROR: Failed to load the pipeline!\n";
         return EXIT_FAILURE;
     }
@@ -127,24 +135,29 @@ int main (int argc, const char * argv[])
     //Print some stats about the testing
     cout << "Test Accuracy: " << pipeline.getTestAccuracy() << endl;
    
-    vector< UINT > classLabels = pipeline.getClassLabels();
+    //Get the vector of class labels from the pipeline
+    Vector< UINT > classLabels = pipeline.getClassLabels();
 
+    //Print out the precision
     cout << "Precision: ";
     for(UINT k=0; k<pipeline.getNumClassesInModel(); k++){
         cout << "\t" << pipeline.getTestPrecision( classLabels[k] );
     }cout << endl;
 
+    //Print out the recall
     cout << "Recall: ";
     for(UINT k=0; k<pipeline.getNumClassesInModel(); k++){
          cout << "\t" << pipeline.getTestRecall( classLabels[k] );
     }cout << endl;
 
+    //Print out the f-measure
     cout << "FMeasure: ";
     for(UINT k=0; k<pipeline.getNumClassesInModel(); k++){
         cout << "\t" << pipeline.getTestFMeasure( classLabels[k] );
     }cout << endl;
 
-    MatrixDouble confusionMatrix = pipeline.getTestConfusionMatrix();
+    //Print out the confusion matrix
+    MatrixFloat confusionMatrix = pipeline.getTestConfusionMatrix();
     cout << "ConfusionMatrix: \n";
     for(UINT i=0; i<confusionMatrix.getNumRows(); i++){
         for(UINT j=0; j<confusionMatrix.getNumCols(); j++){
@@ -172,6 +185,62 @@ where *ExampleName* is the name of the example application you want to run.
 ##Forum
 
 You can find the main GRT forum at: [http://www.nickgillian.com/forum/](http://www.nickgillian.com/forum/)
+
+##GRT Floating Point Precision
+The GRT defaults to double precision floating point values.  The precision of the toolkit is defined by the following **Float** typedef:
+
+```C++
+typedef double Float; ///<This typedef is used to set floating-point precision throughout the GRT
+```
+
+This can easily be changed to single precision accuracy if needed by modifing the main GRT **Float** typedef value, defined in GRT/Util/GRTTypedefs.h header.
+
+##VectorFloat and MatrixFloat Data Structures
+The GRT uses two main data structures throughout the toolkit: *Vector* and *Matrix*.  These are templates and can therefore generalize to any C++ class.  The main things to know about these data types are:
+
+- **Vector:** this inherits from the [STL vector class](http://www.cplusplus.com/reference/vector/vector/)
+```C++
+//Create an integer vector with a size of 3 elements
+Vector< int > vec1(3);
+
+//Create a string vector with a size of 2 elements
+Vector< string > vec2(2);
+
+//Create a Foo vector with a size of 5 elements
+Vector< Foo > vec3(5);
+```
+- **Matrix:** this provides the base class for storing two dimensional arrays:
+```C++
+//Create an integer matrix with a size of 3x2
+Matrix< int > mat1(3,2);
+
+//Create a string matrix with a size of 2x2
+Matrix< string > mat2(2,2);
+
+//Create a Foo matrix with a size of 5x3
+Matrix< Foo > mat3(5,3);
+```
+- **VectorFloat:** this provides the main data structure for storing floating point vector data. The precision of VectorFloat will automatically match that of GRT Float.
+```C++
+//Create a new vector with 10 elements
+VectorFloat vector( 10 );
+for(UINT i=0; i<vector.getSize(); i++){ 
+    vector[i] = i*1.0; 
+}
+```
+- **MatrixFloat:** this provides the main data structure for storing floating point matrix data. The precision of MatrixFloat will automatically match that of GRT Float.
+```C++
+//Create a [5x2] floating point matrix
+MatrixFloat matrix(5,2);
+
+//Loop over the data and set the values to a basic incrementing value
+UINT counter = 0;
+for(UINT i=0; i<matrix.getNumRows(); i++){
+    for(UINT j=0; j<matrix.getNumCols(); j++){
+        matrix[i][j] = counter++;
+    }
+}
+```
 
 ##Building the GRT
 

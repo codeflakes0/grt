@@ -18,14 +18,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "FeatureExtraction.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 FeatureExtraction::StringFeatureExtractionMap* FeatureExtraction::stringFeatureExtractionMap = NULL;
 UINT FeatureExtraction::numFeatureExtractionInstances = 0;
     
-FeatureExtraction* FeatureExtraction::createInstanceFromString(string const &featureExtractionType){
+FeatureExtraction* FeatureExtraction::createInstanceFromString( const std::string &featureExtractionType){
     
     StringFeatureExtractionMap::iterator iter = getMap()->find( featureExtractionType );
     if( iter == getMap()->end() ){
@@ -44,6 +45,8 @@ FeatureExtraction::FeatureExtraction(){
     featureDataReady = false;
     numInputDimensions = 0;
     numOutputDimensions = 0;
+    inputType = DATA_TYPE_VECTOR;
+    outputType = DATA_TYPE_VECTOR;
     numFeatureExtractionInstances++;
     infoLog.setProceedingText("[FeatureExtraction]");
     warningLog.setProceedingText("[WARNING FeatureExtraction]");
@@ -60,11 +63,11 @@ FeatureExtraction::~FeatureExtraction(){
 bool FeatureExtraction::copyBaseVariables(const FeatureExtraction *featureExtractionModule){
     
     if( featureExtractionModule == NULL ){
-        errorLog << "copyBaseVariables(const FeatureExtraction *featureExtractionModule) - featureExtractionModule pointer is NULL!" << endl;
+        errorLog << "copyBaseVariables(const FeatureExtraction *featureExtractionModule) - featureExtractionModule pointer is NULL!" << std::endl;
         return false;
     }
     
-    if( !this->copyGRTBaseVariables( featureExtractionModule ) ){
+    if( !this->copyMLBaseVariables( featureExtractionModule ) ){
         return false;
     }
     
@@ -74,6 +77,7 @@ bool FeatureExtraction::copyBaseVariables(const FeatureExtraction *featureExtrac
     this->numInputDimensions = featureExtractionModule->numInputDimensions;
     this->numOutputDimensions = featureExtractionModule->numOutputDimensions;
     this->featureVector = featureExtractionModule->featureVector;
+    this->featureMatrix = featureExtractionModule->featureMatrix;
     this->debugLog = featureExtractionModule->debugLog;
     this->errorLog = featureExtractionModule->errorLog;
     this->warningLog = featureExtractionModule->warningLog;
@@ -84,7 +88,7 @@ bool FeatureExtraction::copyBaseVariables(const FeatureExtraction *featureExtrac
 bool FeatureExtraction::init(){
     
     if( numOutputDimensions == 0 ){
-        errorLog << "init() - Failed to init module, the number of output dimensions is zero!" << endl;
+        errorLog << "init() - Failed to init module, the number of output dimensions is zero!" << std::endl;
         initialized = false;
         return false;
     }
@@ -113,24 +117,24 @@ bool FeatureExtraction::clear(){
     return true;
 }
     
-bool FeatureExtraction::saveFeatureExtractionSettingsToFile(fstream &file) const{
+bool FeatureExtraction::saveFeatureExtractionSettingsToFile( std::fstream &file ) const{
     
     if( !file.is_open() ){
-        errorLog << "saveFeatureExtractionSettingsToFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "saveFeatureExtractionSettingsToFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
     if( !MLBase::saveBaseSettingsToFile( file ) ) return false;
     
-    file << "Initialized: " << initialized << endl;
+    file << "Initialized: " << initialized << std::endl;
     
     return true;
 }
 
-bool FeatureExtraction::loadFeatureExtractionSettingsFromFile(fstream &file){
+bool FeatureExtraction::loadFeatureExtractionSettingsFromFile( std::fstream &file ){
     
     if( !file.is_open() ){
-        errorLog << "loadFeatureExtractionSettingsFromFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "loadFeatureExtractionSettingsFromFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
@@ -139,12 +143,12 @@ bool FeatureExtraction::loadFeatureExtractionSettingsFromFile(fstream &file){
         return false;
     }
     
-    string word;
+    std::string word;
     
     //Load if the filter has been initialized
     file >> word;
     if( word != "Initialized:" ){
-        errorLog << "loadPreProcessingSettingsFromFile(fstream &file) - Failed to read Initialized header!" << endl;
+        errorLog << "loadPreProcessingSettingsFromFile(fstream &file) - Failed to read Initialized header!" << std::endl;
         clear();
         return false;
     }
@@ -158,7 +162,7 @@ bool FeatureExtraction::loadFeatureExtractionSettingsFromFile(fstream &file){
     return true;
 }
     
-string FeatureExtraction::getFeatureExtractionType() const{ 
+std::string FeatureExtraction::getFeatureExtractionType() const{ 
     return featureExtractionType; 
 }
 
@@ -178,10 +182,13 @@ bool FeatureExtraction::getFeatureDataReady() const{
     return featureDataReady;
 }
 
-VectorDouble FeatureExtraction::getFeatureVector() const{ 
+const VectorFloat& FeatureExtraction::getFeatureVector() const{ 
     return featureVector; 
 }
-    
 
-} //End of namespace GRT
+const MatrixFloat& FeatureExtraction::getFeatureMatrix() const {
+    return featureMatrix;
+}
+
+GRT_END_NAMESPACE
 

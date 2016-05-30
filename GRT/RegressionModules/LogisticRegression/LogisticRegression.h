@@ -35,15 +35,15 @@
 
 #include "../../CoreModules/Regressifier.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
-class LogisticRegression : public Regressifier
+class GRT_API LogisticRegression : public Regressifier
 {
 public:
     /**
      Default Constructor
 
-     @param const bool useScaling: sets if the training and real-time data should be scaled between [0 1]. Default value = true
+     @param useScaling: sets if the training and real-time data should be scaled between [0 1]. Default value = true
      */
 	LogisticRegression(const bool useScaling=true);
     
@@ -55,7 +55,7 @@ public:
     /**
      Defines how the data from the rhs LogisticRegression should be copied to this LogisticRegression
      
-     @param const LRC &rhs: another instance of a LogisticRegression
+     @param rhs: another instance of a LogisticRegression
      @return returns a pointer to this instance of the LogisticRegression
      */
 	LogisticRegression &operator=(const LogisticRegression &rhs);
@@ -64,7 +64,7 @@ public:
      This is required for the Gesture Recognition Pipeline for when the pipeline.setRegressifier(...) method is called.  
      It clones the data from the Base Class Regressifier pointer (which should be pointing to an Logistic Regression instance) into this instance
      
-     @param Regressifier *regressifier: a pointer to the Regressifier Base Class, this should be pointing to another Logistic Regression instance
+     @param regressifier: a pointer to the Regressifier Base Class, this should be pointing to another Logistic Regression instance
      @return returns true if the clone was successfull, false otherwise
     */
 	virtual bool deepCopyFrom(const Regressifier *regressifier);
@@ -73,7 +73,7 @@ public:
      This trains the Logistic Regression model, using the labelled regression data.
      This overrides the train function in the Regression base class.
      
-     @param RegressionData &trainingData: the training data that will be used to train the regression model
+     @param trainingData: the training data that will be used to train the regression model
      @return returns true if the LRC model was trained, false otherwise
     */
     virtual bool train_(RegressionData &trainingData);
@@ -82,28 +82,28 @@ public:
      This performs the regression by mapping the inputVector using the current Logistic Regression model.
      This overrides the predict function in the Regressifier base class.
      
-     @param VectorDouble &inputVector: the input vector to classify
+     @param inputVector: the input vector to classify
      @return returns true if the prediction was performed, false otherwise
     */
-    virtual bool predict_(VectorDouble &inputVector);
+    virtual bool predict_(VectorFloat &inputVector);
     
     /**
      This saves the trained Logistic Regression model to a file.
      This overrides the saveModelToFile function in the ML base class.
      
-     @param fstream &file: a reference to the file the Logistic Regression model will be saved to
+     @param file: a reference to the file the Logistic Regression model will be saved to
      @return returns true if the model was saved successfully, false otherwise
      */
-    virtual bool saveModelToFile(fstream &file) const;
+    virtual bool saveModelToFile( std::fstream &file ) const;
     
     /**
      This loads a trained Logistic Regression model from a file.
      This overrides the loadModelFromFile function in the Logistic Regression base class.
      
-     @param fstream &file: a reference to the file the Logistic Regression model will be loaded from
+     @param file: a reference to the file the Logistic Regression model will be loaded from
      @return returns true if the model was loaded successfully, false otherwise
      */
-    virtual bool loadModelFromFile(fstream &file);
+    virtual bool loadModelFromFile( std::fstream &file );
     
     /**
      Gets the current maxNumIterations value, this is the maximum number of iterations that can be run during the training phase.
@@ -116,7 +116,7 @@ public:
      Sets the maximum number of iterations that can be run during the training phase.
      The maxNumIterations value must be greater than zero.
      
-     @param UINT maxNumIterations: the maximum number of iterations value, must be greater than zero
+     @param maxNumIterations: the maximum number of iterations value, must be greater than zero
      @return returns true if the value was updated successfully, false otherwise
      */
     bool setMaxNumIterations(UINT maxNumIterations);
@@ -126,15 +126,15 @@ public:
     using MLBase::loadModelFromFile;
 
 protected:
-	inline double sigmoid(const double x) const;
-    bool loadLegacyModelFromFile( fstream &file );
+	inline Float sigmoid(const Float x) const;
+    bool loadLegacyModelFromFile( std::fstream &file );
 	
-    double w0;
-    VectorDouble w;
+    Float w0; ///<The bias
+    VectorFloat w; ///<The weights vector
     static RegisterRegressifierModule< LogisticRegression > registerModule;
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_LOGISTIC_REGRESSION_HEADER
 

@@ -43,6 +43,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifdef GRT_CXX11_ENABLED
 #include <atomic>
 #include <thread>
+#include <mutex>
 #endif //GRT_CXX11_ENABLED
 
 //Include the main GRT version and typedef headers
@@ -51,7 +52,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 //Include the common GRT classes
 #include "GRTException.h"
-#include "MatrixDouble.h"
 #include "MinMax.h"
 #include "ClassTracker.h"
 #include "IndexedDouble.h"
@@ -61,6 +61,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "TrainingLog.h"
 #include "TestingLog.h"
 #include "WarningLog.h"
+#include "../DataStructures/VectorFloat.h"
+#include "../DataStructures/MatrixFloat.h"
 #include "TrainingResult.h"
 #include "TestInstanceResult.h"
 #include "TestResult.h"
@@ -76,11 +78,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "FileParser.h"
 #include "ObserverManager.h"
 #include "ThreadPool.h"
+#include "DataType.h"
+
+GRT_BEGIN_NAMESPACE
 
 #if _MSC_VER >= 1600
-    inline double round( double d ) {
+    inline Float round( Float d ) {
         return floor( d + 0.5 );
     }
 #endif
+
+GRT_END_NAMESPACE
 
 #endif //GRT_COMMON_HEADER

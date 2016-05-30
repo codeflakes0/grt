@@ -35,7 +35,7 @@
 
 #include "../../CoreModules/MLBase.h"
 
-namespace GRT {
+GRT_BEGIN_NAMESPACE
 
 class MeanShift : public MLBase{
 public:
@@ -52,22 +52,22 @@ public:
         
     }
     
-    bool search( const VectorDouble &meanStart, const vector< VectorDouble > &points, const double searchRadius, const double sigma = 20.0 ){
+    bool search( const VectorFloat &meanStart, const Vector< VectorFloat > &points, const Float searchRadius, const Float sigma = 20.0 ){
         
         //clear the results from any previous search
         clear();
         
         const unsigned int numDimensions = (unsigned int)meanStart.size();
         const unsigned int numPoints = (unsigned int)points.size();
-        const double gamma = 1.0 / (2 * SQR(sigma) );
+        const Float gamma = 1.0 / (2 * SQR(sigma) );
         unsigned int iteration = 0;
-        VectorDouble numer(2,0);
-        VectorDouble denom(2,0);
-        VectorDouble kernelDist(2,0);
-        double pointsWithinSearchRadius = 0;
+        VectorFloat numer(2,0);
+        VectorFloat denom(2,0);
+        VectorFloat kernelDist(2,0);
+        Float pointsWithinSearchRadius = 0;
         
         mean = meanStart;
-        VectorDouble lastMean = mean;
+        VectorFloat lastMean = mean;
         
         //Start the search loop
         while( true ){
@@ -82,7 +82,7 @@ public:
             for(unsigned int i=0; i<numPoints; i++){
                 
                 //Compute the distance of the current point to the mean
-                double distToMean = euclideanDist( mean, points[i] );
+                Float distToMean = euclideanDist( mean, points[i] );
                 
                 //If the point is within the search radius then update numer and denom
                 if( distToMean < searchRadius ){
@@ -98,31 +98,31 @@ public:
             }
             
             //Update the mean
-            double change = 0;
+            Float change = 0;
             for(unsigned int j=0; j<numDimensions; j++){
                 
                 mean[j] = numer[j] / denom[j];
                 
-                change += SQR( mean[j] - lastMean[j] );
+                change += grt_sqr( mean[j] - lastMean[j] );
                 
                 lastMean[j] = mean[j];
             }
-            change = sqrt( change );
+            change = grt_sqrt( change );
             
             trainingLog << "iteration: " << iteration;
             trainingLog << " mean: ";
             for(unsigned int j=0; j<numDimensions; j++){
                 trainingLog << mean[j] << " ";
             }
-            trainingLog << " change: " << change << endl;
+            trainingLog << " change: " << change << std::endl;
             
             if( change < minChange ){
-                trainingLog << "min changed limit reached - stopping search" << endl;
+                trainingLog << "min changed limit reached - stopping search" << std::endl;
                 break;
             }
             
             if( ++iteration >= maxNumEpochs ){
-                trainingLog << "max number of iterations reached - stopping search." << endl;
+                trainingLog << "max number of iterations reached - stopping search." << std::endl;
                 break;
             }
             
@@ -133,30 +133,30 @@ public:
         return true;
     }
     
-    VectorDouble getMean() const {
+    VectorFloat getMean() const {
         return mean;
     }
     
-    double gaussKernel( const double &x, const double &mu, const double gamma ){
-        return exp( gamma * SQR(x-mu) );
+    Float gaussKernel( const Float &x, const Float &mu, const Float gamma ){
+        return exp( gamma * grt_sqr(x-mu) );
     }
     
-    double gaussKernel( const VectorDouble &x, const VectorDouble &mu, const double gamma ){
+    Float gaussKernel( const VectorFloat &x, const VectorFloat &mu, const Float gamma ){
         
-        double y = 0;
-        const size_t N = x.size();
-        for(size_t i=0; i<N; i++){
-            y += SQR(x[i]-mu[i]);
+        Float y = 0;
+        const UINT N = x.getSize();
+        for(UINT i=0; i<N; i++){
+            y += grt_sqr(x[i]-mu[i]);
         }
         return exp( gamma * y );
     }
     
-    double euclideanDist( const VectorDouble &x, const VectorDouble &y ){
+    Float euclideanDist( const VectorFloat &x, const VectorFloat &y ){
         
-        double z = 0;
-        const size_t N = x.size();
-        for(size_t i=0; i<N; i++){
-            z += SQR(x[i]-y[i]);
+        Float z = 0;
+        const UINT N = x.getSize();
+        for(UINT i=0; i<N; i++){
+            z += grt_sqr(x[i]-y[i]);
         }
         return sqrt( z );
         
@@ -164,10 +164,10 @@ public:
     
 protected:
 
-    VectorDouble mean;
+    VectorFloat mean;
     
 };
 
-}
+GRT_END_NAMESPACE
 
 #endif //GRT_MEAN_SHIFT_HEADER

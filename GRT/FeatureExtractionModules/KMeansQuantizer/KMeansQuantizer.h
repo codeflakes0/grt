@@ -7,11 +7,11 @@
  This value will be between [0 K-1], where K is the number of clusters used to create the quantization model. 
  Before you use the KMeansQuantizer, you need to train a quantization model. To do this, you select the number 
  of clusters you want your quantizer to have and then give it any training data in the following formats:
- - LabelledClassificationData
- - LabelledTimeSeriesClassificationData
- - LabelledContinuousTimeSeriesClassificationData
+ - ClassificationData
+ - TimeSeriesClassificationData
+ - TimeSeriesClassificationDataStream
  - UnlabelledClassificationData
- - MatrixDouble
+ - MatrixFloat
  */
 
 /**
@@ -40,25 +40,25 @@
 //Include the main GRT header to get access to the FeatureExtraction base class
 #include "../../CoreModules/FeatureExtraction.h"
 #include "../../ClusteringModules/KMeans/KMeans.h"
+#include "../../DataStructures/ClassificationDataStream.h"
 #include "../../DataStructures/TimeSeriesClassificationData.h"
-#include "../../DataStructures/TimeSeriesClassificationDataStream.h"
 #include "../../DataStructures/UnlabelledData.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
-class KMeansQuantizer : public FeatureExtraction{
+class GRT_API KMeansQuantizer : public FeatureExtraction{
 public:
     /**
      Default constructor. Initalizes the KMeansQuantizer, setting the number of input dimensions and the number of clusters to use in the quantization model.
 	
-    @param const UINT numClusters: the number of quantization clusters
+    @param numClusters: the number of quantization clusters
      */
     KMeansQuantizer(const UINT numClusters=10);
 	
     /**
      Copy constructor, copies the KMeansQuantizer from the rhs instance to this instance.
      
-     @param const KMeansQuantizer &rhs: another instance of this class from which the data will be copied to this instance
+     @param rhs: another instance of this class from which the data will be copied to this instance
      */
     KMeansQuantizer(const KMeansQuantizer &rhs);
     
@@ -70,7 +70,7 @@ public:
     /**
      Sets the equals operator, copies the data from the rhs instance to this instance.
      
-     @param const KMeansQuantizer &rhs: another instance of this class from which the data will be copied to this instance
+     @param rhs: another instance of this class from which the data will be copied to this instance
      @return a reference to this instance
      */
     KMeansQuantizer& operator=(const KMeansQuantizer &rhs);
@@ -80,7 +80,7 @@ public:
      This function is used to deep copy the values from the input pointer to this instance of the FeatureExtraction module.
      This function is called by the GestureRecognitionPipeline when the user adds a new FeatureExtraction module to the pipeleine.
      
-     @param const FeatureExtraction *featureExtraction: a pointer to another instance of this class, the values of that instance will be cloned to this instance
+     @param featureExtraction: a pointer to another instance of this class, the values of that instance will be cloned to this instance
      @return returns true if the deep copy was successful, false otherwise
      */
     virtual bool deepCopyFrom(const FeatureExtraction *featureExtraction);
@@ -89,10 +89,10 @@ public:
      Sets the FeatureExtraction computeFeatures function, overwriting the base FeatureExtraction function.
      This function is called by the GestureRecognitionPipeline when any new input data needs to be processed (during the prediction phase for example).
      
-     @param const VectorDouble &inputVector: the inputVector that should be processed.  Must have the same dimensionality as the FeatureExtraction module
+     @param inputVector: the inputVector that should be processed.  Must have the same dimensionality as the FeatureExtraction module
      @return returns true if the data was processed, false otherwise
      */
-    virtual bool computeFeatures(const VectorDouble &inputVector);
+    virtual bool computeFeatures(const VectorFloat &inputVector);
     
     /**
      Sets the FeatureExtraction reset function, overwriting the base FeatureExtraction function.
@@ -114,75 +114,75 @@ public:
      This overrides the saveSettingsToFile function in the FeatureExtraction base class.
      You should add your own custom code to this function to define how your feature extraction module is saved to a file.
      
-     @param fstream &file: a reference to the file to save the settings to
+     @param file: a reference to the file to save the settings to
      @return returns true if the settings were saved successfully, false otherwise
      */
-    virtual bool saveModelToFile(fstream &file) const;
+    virtual bool saveModelToFile( std::fstream &file ) const;
     
     /**
      This loads the feature extraction settings from a file.
      This overrides the loadSettingsFromFile function in the FeatureExtraction base class.
      
-     @param fstream &file: a reference to the file to load the settings from
+     @param file: a reference to the file to load the settings from
      @return returns true if the settings were loaded successfully, false otherwise
      */
-    virtual bool loadModelFromFile(fstream &file);
+    virtual bool loadModelFromFile( std::fstream &file );
 
     /**
      Trains the quantization model using the training dataset.
      
-     @param ClassificationData &trainingData: the training dataset that will be used to train the quantizer
+     @param trainingData: the training dataset that will be used to train the quantizer
      @return returns true if the quantizer was trained successfully, false otherwise
      */
-    bool train_(ClassificationData &trainingData);
+    virtual bool train_(ClassificationData &trainingData);
 
     /**
      Trains the quantization model using the training dataset.
      
-     @param TimeSeriesClassificationData &trainingData: the training dataset that will be used to train the quantizer
+     @param trainingData: the training dataset that will be used to train the quantizer
      @return returns true if the quantizer was trained successfully, false otherwise
      */
-    bool train_(TimeSeriesClassificationData &trainingData);
+    virtual bool train_(TimeSeriesClassificationData &trainingData);
 
     /**
      Trains the quantization model using the training dataset.
      
-     @param TimeSeriesClassificationDataStream &trainingData: the training dataset that will be used to train the quantizer
+     @param trainingData: the training dataset that will be used to train the quantizer
      @return returns true if the quantizer was trained successfully, false otherwise
      */
-    bool train_(TimeSeriesClassificationDataStream &trainingData);
+    virtual bool train_(ClassificationDataStream &trainingData);
 
     /**
      Trains the quantization model using the training dataset.
      
-     @param UnlabelledData &trainingData: the training dataset that will be used to train the quantizer
+     @param trainingData: the training dataset that will be used to train the quantizer
      @return returns true if the quantizer was trained successfully, false otherwise
      */
-    bool train_(UnlabelledData &trainingData);
+    virtual bool train_(UnlabelledData &trainingData);
 
     /**
      Trains the quantization model using the training dataset.
      
-     @param MatrixDouble &trainingData: the training dataset that will be used to train the quantizer
+     @param trainingData: the training dataset that will be used to train the quantizer
      @return returns true if the quantizer was trained successfully, false otherwise
      */
-    bool train_(MatrixDouble &trainingData);
+    virtual bool train_(MatrixFloat &trainingData);
 
     /**
      Quantizes the input value using the quantization model. The quantization model must be trained first before you call this function.
      
-     @param double inputValue: the value you want to quantize
+     @param inputValue: the value you want to quantize
      @return returns the quantized value
      */
-	UINT quantize(double inputValue);
+	UINT quantize(Float inputValue);
 	
 	/**
      Quantizes the input value using the quantization model. The quantization model must be trained first before you call this function.
      
-     @param const VectorDouble &inputVector: the vector you want to quantize
+     @param inputVector: the vector you want to quantize
      @return returns the quantized value
      */
-	UINT quantize(const VectorDouble &inputVector);
+	UINT quantize(const VectorFloat &inputVector);
     
 	/**
      Gets if the quantization model has been trained.
@@ -208,9 +208,9 @@ public:
 	/**
      Gets the quantization distances from the most recent quantization.
      
-     @return returns a VectorDouble containing the quantization distances from the most recent quantization
+     @return returns a VectorFloat containing the quantization distances from the most recent quantization
      */
-	VectorDouble getQuantizationDistances() const{
+	VectorFloat getQuantizationDistances() const{
 		return quantizationDistances;
 	}
 	
@@ -218,9 +218,9 @@ public:
      Gets the quantization model. This will be a [K N] matrix containing the quantization clusters, where K is the
      number of clusters and N is the number of dimensions in the input data.
      
-     @return returns a MatrixDouble containing the quantization model
+     @return returns a MatrixFloat containing the quantization model
      */
-	MatrixDouble getQuantizationModel() const{
+	MatrixFloat getQuantizationModel() const{
 		return clusters;
 	}
     
@@ -241,12 +241,12 @@ public:
     
 protected:
     UINT numClusters;
-    MatrixDouble clusters;
-    VectorDouble quantizationDistances;
+    MatrixFloat clusters;
+    VectorFloat quantizationDistances;
     
     static RegisterFeatureExtractionModule< KMeansQuantizer > registerModule;
 };
 
-}//End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_KMEANS_QUANTIZER_HEADER

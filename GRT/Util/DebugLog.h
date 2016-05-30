@@ -24,9 +24,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "Log.h"
 #include "ObserverManager.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
-class DebugLogMessage{
+class GRT_API DebugLogMessage{
 public:
     DebugLogMessage(std::string proceedingText = "",std::string message = ""){
         this->proceedingText = proceedingText;
@@ -91,6 +91,6 @@ protected:
     static bool debugLoggingEnabled;
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_DEBUG_LOG_HEADER

@@ -42,18 +42,28 @@
  This example shows you how to:
  - Create an initialize the AdaBoost algorithm
  - Set a DecisionStump as the WeakClassifer
- - Load some LabelledClassificationData from a file and partition the training data into a training dataset and a test dataset
+ - Load some ClassificationData from a file and partition the data into a training dataset and a test dataset
  - Train the AdaBoost algorithm using the training dataset
  - Test the AdaBoost algorithm using the test dataset
  - Manually compute the accuracy of the classifier
+
+ You should run this example with one argument pointing to the data you want to load. A good dataset to run this example is acc-orientation.grt, which can be found in the GRT data folder.
 */
 
 //You might need to set the specific path of the GRT header relative to your project
-#include "GRT.h"
+#include <GRT/GRT.h>
 using namespace GRT;
+using namespace std;
 
 int main (int argc, const char * argv[])
 {
+    //Parse the data filename from the argument list
+    if( argc != 2 ){
+        cout << "Error: failed to parse data filename from command line. You should run this example with one argument pointing to the data filename!\n";
+        return EXIT_FAILURE;
+    }
+    const string filename = argv[1];
+
     //Create a new AdaBoost instance
     AdaBoost adaBoost;
 
@@ -63,8 +73,8 @@ int main (int argc, const char * argv[])
     //Load some training data to train the classifier
     ClassificationData trainingData;
 
-    if( !trainingData.load("AdaBoostTrainingData.grt") ){
-        cout << "Failed to load training data!\n";
+    if( !trainingData.load( filename ) ){
+        cout << "Failed to load training data: " << filename << endl;
         return EXIT_FAILURE;
     }
 
@@ -94,7 +104,7 @@ int main (int argc, const char * argv[])
     for(UINT i=0; i<testData.getNumSamples(); i++){
         //Get the i'th test sample
         UINT classLabel = testData[i].getClassLabel();
-        vector< double > inputVector = testData[i].getSample();
+        VectorFloat inputVector = testData[i].getSample();
 
         //Perform a prediction using the classifier
         if( !adaBoost.predict( inputVector ) ){
@@ -105,8 +115,8 @@ int main (int argc, const char * argv[])
         //Get the predicted class label
         UINT predictedClassLabel = adaBoost.getPredictedClassLabel();
         double maximumLikelhood = adaBoost.getMaximumLikelihood();
-        vector< double > classLikelihoods = adaBoost.getClassLikelihoods();
-        vector< double > classDistances = adaBoost.getClassDistances();
+        VectorFloat classLikelihoods = adaBoost.getClassLikelihoods();
+        VectorFloat classDistances = adaBoost.getClassDistances();
 
         //Update the accuracy
         if( classLabel == predictedClassLabel ) accuracy++;

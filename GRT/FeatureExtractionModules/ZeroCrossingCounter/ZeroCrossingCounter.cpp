@@ -18,14 +18,15 @@
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define GRT_DLL_EXPORTS
 #include "ZeroCrossingCounter.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 //Register the ZeroCrossingCounter module with the FeatureExtraction base class
 RegisterFeatureExtractionModule< ZeroCrossingCounter > ZeroCrossingCounter::registerModule("ZeroCrossingCounter");
     
-ZeroCrossingCounter::ZeroCrossingCounter(UINT searchWindowSize,double deadZoneThreshold,UINT numDimensions,UINT featureMode){
+ZeroCrossingCounter::ZeroCrossingCounter(UINT searchWindowSize,Float deadZoneThreshold,UINT numDimensions,UINT featureMode){
     
     classType = "ZeroCrossingCounter";
     featureExtractionType = classType;
@@ -76,20 +77,20 @@ bool ZeroCrossingCounter::deepCopyFrom(const FeatureExtraction *featureExtractio
         return true;
     }
     
-    errorLog << "clone(FeatureExtraction *featureExtraction) -  FeatureExtraction Types Do Not Match!" << endl;
+    errorLog << "clone(FeatureExtraction *featureExtraction) -  FeatureExtraction Types Do Not Match!" << std::endl;
     
     return false;
 }
     
-bool ZeroCrossingCounter::computeFeatures(const VectorDouble &inputVector){
+bool ZeroCrossingCounter::computeFeatures(const VectorFloat &inputVector){
     
     if( !initialized ){
-        errorLog << "computeFeatures(const VectorDouble &inputVector) - Not initialized!" << endl;
+        errorLog << "computeFeatures(const VectorFloat &inputVector) - Not initialized!" << std::endl;
         return false;
     }
     
     if( inputVector.size() != numInputDimensions ){
-        errorLog << "computeFeatures(const VectorDouble &inputVector) - The size of the inputVector (" << inputVector.size() << ") does not match that of the filter (" << numInputDimensions << ")!" << endl;
+        errorLog << "computeFeatures(const VectorFloat &inputVector) - The size of the inputVector (" << inputVector.size() << ") does not match that of the filter (" << numInputDimensions << ")!" << std::endl;
         return false;
     }
     
@@ -105,7 +106,7 @@ bool ZeroCrossingCounter::reset(){
     return false;
 }
     
-bool ZeroCrossingCounter::saveModelToFile(string filename) const{
+bool ZeroCrossingCounter::saveModelToFile( std::string filename ) const{
 
     std::fstream file;
     file.open(filename.c_str(), std::ios::out);
@@ -119,7 +120,7 @@ bool ZeroCrossingCounter::saveModelToFile(string filename) const{
     return true;
 }
 
-bool ZeroCrossingCounter::loadModelFromFile(string filename){
+bool ZeroCrossingCounter::loadModelFromFile( std::string filename ){
     
     std::fstream file;
     file.open(filename.c_str(), std::ios::in);
@@ -134,69 +135,69 @@ bool ZeroCrossingCounter::loadModelFromFile(string filename){
     return true;
 }
     
-bool ZeroCrossingCounter::saveModelToFile(fstream &file) const{
+bool ZeroCrossingCounter::saveModelToFile( std::fstream &file ) const{
     
     if( !file.is_open() ){
-        errorLog << "saveModelToFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "saveModelToFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
     //Write the file header
-    file << "GRT_ZERO_CROSSING_COUNTER_FILE_V1.0" << endl;
+    file << "GRT_ZERO_CROSSING_COUNTER_FILE_V1.0" << std::endl;
     
     //Save the base settings to the file
     if( !saveFeatureExtractionSettingsToFile( file ) ){
-        errorLog << "saveFeatureExtractionSettingsToFile(fstream &file) - Failed to save base feature extraction settings to file!" << endl;
+        errorLog << "saveFeatureExtractionSettingsToFile(fstream &file) - Failed to save base feature extraction settings to file!" << std::endl;
         return false;
     }
     
     //Write the zero crossing counter settings
-    file << "SearchWindowSize: " << searchWindowSize << endl;
-    file << "FeatureMode: " << featureMode << endl;	
-    file << "DeadZoneThreshold: " << deadZoneThreshold << endl;		
+    file << "SearchWindowSize: " << searchWindowSize << std::endl;
+    file << "FeatureMode: " << featureMode << std::endl;	
+    file << "DeadZoneThreshold: " << deadZoneThreshold << std::endl;		
     
     return true;
 }
 
-bool ZeroCrossingCounter::loadModelFromFile(fstream &file){
+bool ZeroCrossingCounter::loadModelFromFile( std::fstream &file ){
     
     if( !file.is_open() ){
-        errorLog << "loadModelFromFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
-    string word;
+    std::string word;
     
     //Load the header
     file >> word;
     
     if( word != "GRT_ZERO_CROSSING_COUNTER_FILE_V1.0" ){
-        errorLog << "loadModelFromFile(fstream &file) - Invalid file format!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Invalid file format!" << std::endl;
         return false;     
     }
     
     if( !loadFeatureExtractionSettingsFromFile( file ) ){
-        errorLog << "loadFeatureExtractionSettingsFromFile(fstream &file) - Failed to load base feature extraction settings from file!" << endl;
+        errorLog << "loadFeatureExtractionSettingsFromFile(fstream &file) - Failed to load base feature extraction settings from file!" << std::endl;
         return false;
     }
     
     file >> word;
     if( word != "SearchWindowSize:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read SearchWindowSize header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read SearchWindowSize header!" << std::endl;
         return false;     
     }
     file >> searchWindowSize;
     
     file >> word;
     if( word != "FeatureMode:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read FeatureMode header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read FeatureMode header!" << std::endl;
         return false;     
     }
     file >> featureMode;
     
     file >> word;
     if( word != "DeadZoneThreshold:" ){
-        errorLog << "loadModelFromFile(fstream &file) - Failed to read DeadZoneThreshold header!" << endl;
+        errorLog << "loadModelFromFile(fstream &file) - Failed to read DeadZoneThreshold header!" << std::endl;
         return false;     
     }
     file >> deadZoneThreshold;
@@ -205,28 +206,28 @@ bool ZeroCrossingCounter::loadModelFromFile(fstream &file){
     return init(searchWindowSize,deadZoneThreshold,numInputDimensions,featureMode);
 }
     
-bool ZeroCrossingCounter::init(UINT searchWindowSize,double deadZoneThreshold,UINT numDimensions,UINT featureMode){
+bool ZeroCrossingCounter::init(UINT searchWindowSize,Float deadZoneThreshold,UINT numDimensions,UINT featureMode){
     
     initialized = false;
     featureDataReady = false;
     
     if( searchWindowSize == 0 ){
-        errorLog << "init(UINT searchWindowSize,double deadZoneThreshold,UINT numDimensions,UINT featureMode) - The searchWindowSize must be greater than zero!" << endl;
+        errorLog << "init(UINT searchWindowSize,Float deadZoneThreshold,UINT numDimensions,UINT featureMode) - The searchWindowSize must be greater than zero!" << std::endl;
         return false;
     }
     
     if( deadZoneThreshold < 0 ){
-        errorLog << "init(UINT searchWindowSize,double deadZoneThreshold,UINT numDimensions,UINT featureMode) - The deadZoneThreshold must be greater than zero!" << endl;
+        errorLog << "init(UINT searchWindowSize,Float deadZoneThreshold,UINT numDimensions,UINT featureMode) - The deadZoneThreshold must be greater than zero!" << std::endl;
         return false;
     }
     
     if( numDimensions == 0 ){
-        errorLog << "init(UINT searchWindowSize,double deadZoneThreshold,UINT numDimensions,UINT featureMode) - The numDimensions must be greater than zero!" << endl;
+        errorLog << "init(UINT searchWindowSize,Float deadZoneThreshold,UINT numDimensions,UINT featureMode) - The numDimensions must be greater than zero!" << std::endl;
         return false;
     }
     
     if( featureMode != INDEPENDANT_FEATURE_MODE && featureMode != COMBINED_FEATURE_MODE ){
-        errorLog << "init(UINT searchWindowSize,double deadZoneThreshold,UINT numDimensions,UINT featureMode) - Unkown feature mode!" << endl;
+        errorLog << "init(UINT searchWindowSize,Float deadZoneThreshold,UINT numDimensions,UINT featureMode) - Unkown feature mode!" << std::endl;
         return false;
     }
     
@@ -238,7 +239,7 @@ bool ZeroCrossingCounter::init(UINT searchWindowSize,double deadZoneThreshold,UI
     numOutputDimensions = (featureMode == INDEPENDANT_FEATURE_MODE ? TOTAL_NUM_ZERO_CROSSING_FEATURES * numInputDimensions : TOTAL_NUM_ZERO_CROSSING_FEATURES);
     derivative.init(Derivative::FIRST_DERIVATIVE, 1.0, numInputDimensions, true, 5);
     deadZone.init(-deadZoneThreshold,deadZoneThreshold,numInputDimensions);
-    dataBuffer.resize( searchWindowSize, vector< double >(numInputDimensions,NAN) );
+    dataBuffer.resize( searchWindowSize, VectorFloat(numInputDimensions,NAN) );
     featureVector.resize(numOutputDimensions,0);
     
     //Flag that the zero crossing counter has been initialized
@@ -248,20 +249,20 @@ bool ZeroCrossingCounter::init(UINT searchWindowSize,double deadZoneThreshold,UI
 }
 
 
-VectorDouble ZeroCrossingCounter::update(double x){
-	return update(VectorDouble(1,x));
+VectorFloat ZeroCrossingCounter::update(Float x){
+	return update(VectorFloat(1,x));
 }
     
-VectorDouble ZeroCrossingCounter::update(const VectorDouble &x){
+VectorFloat ZeroCrossingCounter::update(const VectorFloat &x){
     
     if( !initialized ){
-        errorLog << "update(const VectorDouble &x) - Not Initialized!" << endl;
-        return vector<double>();
+        errorLog << "update(const VectorFloat &x) - Not Initialized!" << std::endl;
+        return VectorFloat();
     }
     
-    if( x.size() != numInputDimensions ){
-        errorLog << "update(const VectorDouble &x)- The Number Of Input Dimensions (" << numInputDimensions << ") does not match the size of the input vector (" << x.size() << ")!" << endl;
-        return vector<double>();
+    if( x.getSize() != numInputDimensions ){
+        errorLog << "update(const VectorFloat &x)- The Number Of Input Dimensions (" << numInputDimensions << ") does not match the size of the input vector (" << x.getSize() << ")!" << std::endl;
+        return VectorFloat();
     }
     
     //Clear the feature vector
@@ -286,10 +287,10 @@ VectorDouble ZeroCrossingCounter::update(const VectorDouble &x){
                 featureVector[ NUM_ZERO_CROSSINGS_COUNTED + colIndex ]++;
                 
                 //Update the magnitude, search the last 5 values around the zero crossing to make sure we get the maxima of the peak
-                double maxValue = 0;
+                Float maxValue = 0;
                 UINT searchSize = i > 5 ? 5 : i;
                 for(UINT n=0; n<searchSize; n++){
-                    double value = fabs( dataBuffer[ i-n ][j] );
+                    Float value = fabs( dataBuffer[ i-n ][j] );
                     if( value > maxValue ) maxValue = value;
                 }
                 featureVector[ ZERO_CROSSING_MAGNITUDE + colIndex ] += maxValue;
@@ -309,17 +310,7 @@ bool ZeroCrossingCounter::setSearchWindowSize(UINT searchWindowSize){
         if( initialized ) return reset();
         return true;
     }
-    errorLog << "setSearchWindowSize(UINT searchWindowSize) - The searchWindowSize must be larger than zero!" << endl;
-    return false;
-}
-
-bool ZeroCrossingCounter::setDeadZoneThreshold(UINT deadZoneThreshold){
-    if( deadZoneThreshold > 0 ){
-        this->deadZoneThreshold = deadZoneThreshold;
-        if( initialized ) return reset();
-        return true;
-    }
-    errorLog << "setDeadZoneThreshold(UINT deadZoneThreshold) - The deadZoneThreshold must be larger than zero!" << endl;
+    errorLog << "setSearchWindowSize(UINT searchWindowSize) - The searchWindowSize must be larger than zero!" << std::endl;
     return false;
 }
     
@@ -329,9 +320,18 @@ bool ZeroCrossingCounter::setFeatureMode(UINT featureMode){
         if( initialized ) return reset();
         return true;
     }
-    errorLog << "setFeatureMode(UINT featureMode) - Unkown feature mode!" << endl;
+    errorLog << "setFeatureMode(UINT featureMode) - Unkown feature mode!" << std::endl;
     return false;
+}
 
+bool ZeroCrossingCounter::setDeadZoneThreshold(Float deadZoneThreshold){
+    if( deadZoneThreshold > 0 ){
+        this->deadZoneThreshold = deadZoneThreshold;
+        if( initialized ) return reset();
+        return true;
+    }
+    errorLog << "setDeadZoneThreshold(Float deadZoneThreshold) - The deadZoneThreshold must be larger than zero!" << std::endl;
+    return false;
 }
     
-}//End of namespace GRT
+GRT_END_NAMESPACE

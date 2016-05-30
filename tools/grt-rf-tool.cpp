@@ -3,8 +3,10 @@
  @brief This file implements a basic tool for processing data files and training a random forest model.
 */
 
+//You might need to set the specific path of the GRT header relative to your project
 #include <GRT/GRT.h>
 using namespace GRT;
+using namespace std;
 
 InfoLog infoLog("[grt-rf-tool]");
 WarningLog warningLog("[WARNING grt-rf-tool]");
@@ -28,6 +30,7 @@ bool printUsage(){
     infoLog << "\t--min-node-size: sets the minimum number of training samples allowed per node, only used for 'train-model'\n";
     infoLog << "\t--num-splits: sets the number of random splits allowed per node, only used for 'train-model'\n";
     infoLog << "\t--remove-features: sets if features should be removed at each split [1=true,0=false], only used for 'train-model'\n";
+    infoLog << "\t--bootstrap-weight: sets the size of the dataset used to train each tree in the RF model, only used for 'train-model'\n";
     infoLog << "\t--combine-weights: 1/0 if true, then the random forest weights will be combined across all trees in the forest, only used for 'compute-weights' mode\n";
     infoLog << endl;
     return true;
@@ -63,6 +66,7 @@ int main(int argc, char * argv[])
     parser.addOption( "--min-node-size", "min-node-size" );
     parser.addOption( "--num-splits", "num-splits" );
     parser.addOption( "--remove-features", "remove-features" );
+    parser.addOption( "--bootstrap-weight", "bootstrap-weight" );
     parser.addOption( "--combine-weights", "combine-weights" );
 
     //Parse the command line
@@ -133,6 +137,7 @@ bool train( CommandLineParser &parser ){
     unsigned int defaultNumSplits = 100;
     bool removeFeatures = false;
     bool defaultRemoveFeatures = false;
+    double bootstrapWeight = 0.0;
 
     //Get the filename
     if( !parser.get("filename",trainDatasetFilename) ){
@@ -158,6 +163,9 @@ bool train( CommandLineParser &parser ){
     
     //Get the remove features
     parser.get("remove-features",removeFeatures,defaultRemoveFeatures);
+   
+    //Get the bootstrap weight 
+    parser.get("bootstrap-weight",bootstrapWeight,0.5);
 
     //Load some training data to train the classifier
     ClassificationData trainingData;
@@ -169,12 +177,12 @@ bool train( CommandLineParser &parser ){
     }
 
     const unsigned int N = trainingData.getNumDimensions();
-    std::vector< ClassTracker > tracker = trainingData.getClassTracker();
+    Vector< ClassTracker > tracker = trainingData.getClassTracker();
     infoLog << "- Num training samples: " << trainingData.getNumSamples() << endl;
     infoLog << "- Num dimensions: " << N << endl;
     infoLog << "- Num classes: " << trainingData.getNumClasses() << endl;
     infoLog << "- Class stats: " << endl;
-    for(size_t i=0; i<tracker.size(); i++){
+    for(unsigned int i=0; i<tracker.getSize(); i++){
         infoLog << "- class " << tracker[i].classLabel << " number of samples: " << tracker[i].counter << endl;
     }
     
@@ -199,11 +207,14 @@ bool train( CommandLineParser &parser ){
     //Set if selected features should be removed at each node
     forest.setRemoveFeaturesAtEachSpilt( removeFeatures );
 
+    //Set the bootstrap weight
+    forest.setBootstrappedDatasetWeight( bootstrapWeight );
+
     //Add the classifier to a pipeline
     GestureRecognitionPipeline pipeline;
     pipeline.setClassifier( forest );
 
-    infoLog << "- Training model...\n";
+    infoLog << "- Training model..." << endl;
 
     //Train the classifier
     if( !pipeline.train( trainingData ) ){
@@ -212,15 +223,14 @@ bool train( CommandLineParser &parser ){
     }
 
     infoLog << "- Model trained!" << endl;
+    infoLog << "- Training time: " << (pipeline.getTrainingTime() * 0.001) / 60.0 << " (minutes)" << endl;
 
     infoLog << "- Saving model to: " << modelFilename << endl;
 
     //Save the pipeline
-    if( pipeline.save( modelFilename ) ){
-        infoLog << "- Model saved." << endl;
-    }else warningLog << "Failed to save model to file: " << modelFilename << endl;
-
-    infoLog << "- TrainingTime: " << pipeline.getTrainingTime() << endl;
+    if( !pipeline.save( modelFilename ) ){
+        warningLog << "Failed to save model to file: " << modelFilename << endl;
+    } 
 
     return true;
 }
@@ -245,7 +255,7 @@ bool combineModels( CommandLineParser &parser ){
         return false;
     }
 
-    vector< string > files;
+    Vector< string > files;
 
     infoLog << "- Parsing data directory: " << directoryPath << endl;
 
@@ -257,9 +267,9 @@ bool combineModels( CommandLineParser &parser ){
 
     RandomForests forest; //Used to validate the random forest type
     GestureRecognitionPipeline *mainPipeline = NULL; // Points to the first valid pipeline that all the models will be merged to
-    std::vector< GestureRecognitionPipeline* > pipelineBuffer; //Stores the pipeline for each file that is loaded
+    Vector< GestureRecognitionPipeline* > pipelineBuffer; //Stores the pipeline for each file that is loaded
     unsigned int inputVectorSize = 0; //Set to zero to mark we haven't loaded any models yet
-    const unsigned int numFiles = (unsigned int)files.size();
+    const unsigned int numFiles = files.getSize();
     bool mainPipelineSet = false;
     bool combineModelsSuccessful = false;
 
@@ -304,7 +314,7 @@ bool combineModels( CommandLineParser &parser ){
     if( mainPipelineSet ){
 
         //Combine the random forest models with the main pipeline model
-        const unsigned int numPipelines = (unsigned int)pipelineBuffer.size();
+        const unsigned int numPipelines = pipelineBuffer.getSize();
         RandomForests *mainForest = mainPipeline->getClassifier< RandomForests >();
 
         for(unsigned int i=0; i<numPipelines; i++){
@@ -328,7 +338,7 @@ bool combineModels( CommandLineParser &parser ){
     }
 
     //Cleanup the pipeline buffer
-    for(size_t i=0; i<pipelineBuffer.size(); i++){
+    for(unsigned int i=0; i<pipelineBuffer.getSize(); i++){
         delete pipelineBuffer[i];
         pipelineBuffer[i] = NULL;
     }
@@ -387,8 +397,8 @@ bool computeFeatureWeights( CommandLineParser &parser ){
 
     //Compute the feature weights
     if( combineWeights ){
-        VectorDouble weights = forest->getFeatureWeights();
-        if( weights.size() == 0 ){
+        VectorFloat weights = forest->getFeatureWeights();
+        if( weights.getSize() == 0 ){
             errorLog << "Failed to compute feature weights!" << endl;
             printUsage();
             return false;
@@ -398,7 +408,7 @@ bool computeFeatureWeights( CommandLineParser &parser ){
         fstream file;
         file.open( resultsFilename.c_str(), fstream::out );
         
-        const size_t N = weights.size();
+        const unsigned int N = weights.getSize();
         for(unsigned int i=0; i<N; i++){
             file << weights[i] << endl;
         }
@@ -409,7 +419,7 @@ bool computeFeatureWeights( CommandLineParser &parser ){
         double norm = 0.0;
         const unsigned int K = forest->getForestSize();
         const unsigned int N = forest->getNumInputDimensions();
-        VectorDouble tmp( N, 0.0 );
+        VectorFloat tmp( N, 0.0 );
         MatrixDouble weights(K,N);
 
         for(unsigned int i=0; i<K; i++){

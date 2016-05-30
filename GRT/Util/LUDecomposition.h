@@ -23,36 +23,37 @@
 #ifndef GRT_LUDCMP_HEADER
 #define GRT_LUDCMP_HEADER
 
-#include "MatrixDouble.h"
+#include "../DataStructures/VectorFloat.h"
+#include "../DataStructures/MatrixFloat.h"
 
-namespace GRT {
+GRT_BEGIN_NAMESPACE
     
-class LUDecomposition{
+class GRT_API LUDecomposition{
 	
 public:
-    LUDecomposition(const MatrixDouble &a);
+    LUDecomposition(const MatrixFloat &a);
 	~LUDecomposition();
-	bool solve_vector(const VectorDouble &b,VectorDouble &x);
-	bool solve(const MatrixDouble &b,MatrixDouble &x);
-	bool inverse(MatrixDouble &ainv);
-	double det();
-	bool mprove(const VectorDouble &b,VectorDouble &x);
+	bool solve_vector(const VectorFloat &b,VectorFloat &x);
+	bool solve(const MatrixFloat &b,MatrixFloat &x);
+	bool inverse(MatrixFloat &ainv);
+	Float det();
+	bool mprove(const VectorFloat &b,VectorFloat &x);
 	bool getIsSingular();
-	MatrixDouble getLU();
+	MatrixFloat getLU();
 	
 private:
 	unsigned int N;
-	double d;
+	Float d;
 	bool sing;
-	vector< int > indx;
-	MatrixDouble aref;
-	MatrixDouble lu;
+	Vector< int > indx;
+	MatrixFloat aref;
+	MatrixFloat lu;
     
     DebugLog debugLog;
     ErrorLog errorLog;
     WarningLog warningLog;
 };
 
-}//End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_LUDCMP_HEADER

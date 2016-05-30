@@ -18,13 +18,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#define GRT_DLL_EXPORTS
 #include "Clusterer.h"
-namespace GRT{
+
+GRT_BEGIN_NAMESPACE
     
 Clusterer::StringClustererMap* Clusterer::stringClustererMap = NULL;
 UINT Clusterer::numClustererInstances = 0;
     
-Clusterer* Clusterer::createInstanceFromString(string const &clustererType){
+Clusterer* Clusterer::createInstanceFromString( std::string const &clustererType ){
     
     StringClustererMap::iterator iter = getMap()->find( clustererType );
     if( iter == getMap()->end() ){
@@ -44,13 +46,14 @@ Clusterer* Clusterer::deepCopy() const{
     
     if( !newInstance->deepCopyFrom( this ) ){
         delete newInstance;
+        newInstance = NULL;
         return NULL;
     }
     return newInstance;
 }
 
-vector< string > Clusterer::getRegisteredClusterers(){
-	vector< string > registeredClusterers;
+Vector< std::string > Clusterer::getRegisteredClusterers(){
+	Vector< std::string > registeredClusterers;
 	
 	StringClustererMap::iterator iter = getMap()->begin();
 	while( iter != getMap()->end() ){
@@ -84,7 +87,7 @@ Clusterer::~Clusterer(void){
 bool Clusterer::copyBaseVariables(const Clusterer *clusterer){
     
     if( clusterer == NULL ){
-        errorLog << "copyBaseVariables(const Clusterer *clusterer) - clusterer is NULL!" << endl;
+        errorLog << "copyBaseVariables(const Clusterer *clusterer) - clusterer is NULL!" << std::endl;
         return false;
     }
     
@@ -108,17 +111,17 @@ bool Clusterer::copyBaseVariables(const Clusterer *clusterer){
     return true;
 }
 
-bool Clusterer::train_(MatrixDouble &trainingData){
+bool Clusterer::train_(MatrixFloat &trainingData){
     return false;
 }
     
 bool Clusterer::train_(ClassificationData &trainingData){
-    MatrixDouble data = trainingData.getDataAsMatrixDouble();
+    MatrixFloat data = trainingData.getDataAsMatrixFloat();
     return train_( data );
 }
     
 bool Clusterer::train_(UnlabelledData &trainingData){
-    MatrixDouble data = trainingData.getDataAsMatrixDouble();
+    MatrixFloat data = trainingData.getDataAsMatrixFloat();
     return train_( data );
 }
     
@@ -151,32 +154,32 @@ bool Clusterer::clear(){
     return true;
 }
     
-bool Clusterer::saveClustererSettingsToFile(fstream &file) const{
+bool Clusterer::saveClustererSettingsToFile( std::fstream &file ) const{
 	
     if( !file.is_open() ){
-        errorLog << "saveClustererSettingsToFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "saveClustererSettingsToFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
     if( !MLBase::saveBaseSettingsToFile( file ) ) return false;
     
-    file << "NumClusters: " << numClusters << endl;
+    file << "NumClusters: " << numClusters << std::endl;
 	
 	if( trained ){
-    	file << "Ranges: " << endl;
+    	file << "Ranges: " << std::endl;
     
     	for(UINT i=0; i<ranges.size(); i++){
-        	file << ranges[i].minValue << "\t" << ranges[i].maxValue << endl;
+        	file << ranges[i].minValue << "\t" << ranges[i].maxValue << std::endl;
     	}
 	}
     
     return true;
 }
 
-bool Clusterer::loadClustererSettingsFromFile(fstream &file){
+bool Clusterer::loadClustererSettingsFromFile( std::fstream &file ){
     
     if( !file.is_open() ){
-        errorLog << "loadClustererSettingsFromFile(fstream &file) - The file is not open!" << endl;
+        errorLog << "loadClustererSettingsFromFile(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
@@ -185,12 +188,12 @@ bool Clusterer::loadClustererSettingsFromFile(fstream &file){
         return false;
     }
     
-    string word;
+    std::string word;
     
     //Load if the number of clusters
     file >> word;
     if( word != "NumClusters:" ){
-        errorLog << "loadClustererSettingsFromFile(fstream &file) - Failed to read NumClusters header!" << endl;
+        errorLog << "loadClustererSettingsFromFile(fstream &file) - Failed to read NumClusters header!" << std::endl;
         clear();
         return false;
     }
@@ -200,7 +203,7 @@ bool Clusterer::loadClustererSettingsFromFile(fstream &file){
 	if( trained ){
     	file >> word;
     	if( word != "Ranges:" ){
-        	errorLog << "loadClustererSettingsFromFile(fstream &file) - Failed to read Ranges header!" << endl;
+        	errorLog << "loadClustererSettingsFromFile(fstream &file) - Failed to read Ranges header!" << std::endl;
         	clear();
         	return false;
     	}
@@ -234,27 +237,27 @@ UINT Clusterer::getNumClusters() const { return numClusters; }
 UINT Clusterer::getPredictedClusterLabel() const { return predictedClusterLabel; }
     
 
-double Clusterer::getMaximumLikelihood() const{
+Float Clusterer::getMaximumLikelihood() const{
     return maxLikelihood;
 }
 
-double Clusterer::getBestDistance() const{
+Float Clusterer::getBestDistance() const{
     return bestDistance;
 }
 
-VectorDouble Clusterer::getClusterLikelihoods() const{
+VectorFloat Clusterer::getClusterLikelihoods() const{
     return clusterLikelihoods;
 }
 
-VectorDouble Clusterer::getClusterDistances() const{
+VectorFloat Clusterer::getClusterDistances() const{
     return clusterDistances;
 }
     
-vector< UINT > Clusterer::getClusterLabels() const{
+Vector< UINT > Clusterer::getClusterLabels() const{
     return clusterLabels;
 }
 
-string Clusterer::getClustererType() const{ return clustererType; }
+std::string Clusterer::getClustererType() const{ return clustererType; }
     
 const Clusterer& Clusterer::getBaseClusterer() const{
     return *this;
@@ -267,5 +270,5 @@ bool Clusterer::setNumClusters(const UINT numClusters){
     return true;
 }
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 

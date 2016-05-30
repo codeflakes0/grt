@@ -18,11 +18,12 @@
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define GRT_DLL_EXPORTS
 #include "ThresholdCrossingDetector.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
-ThresholdCrossingDetector::ThresholdCrossingDetector(UINT analysisMode,UINT thresholdCrossingMode,UINT detectionTimeoutMode,double lowerThreshold,double upperThreshold,double hysteresisThreshold,UINT searchWindowSize,UINT searchTimeoutDuration,UINT offsetFilterSize){
+ThresholdCrossingDetector::ThresholdCrossingDetector(UINT analysisMode,UINT thresholdCrossingMode,UINT detectionTimeoutMode,Float lowerThreshold,Float upperThreshold,Float hysteresisThreshold,UINT searchWindowSize,UINT searchTimeoutDuration,UINT offsetFilterSize){
     
     this->analysisMode = analysisMode;
     this->thresholdCrossingMode = thresholdCrossingMode;
@@ -88,12 +89,12 @@ ThresholdCrossingDetector& ThresholdCrossingDetector::operator=(const ThresholdC
     return *this;
 }
 
-bool ThresholdCrossingDetector::update( const double x ){
+bool ThresholdCrossingDetector::update( const Float x ){
 	
     thresholdCrossingDetected = false;
     
-    double deriv = derivative.computeDerivative( x );
-    double offset = movingAverageFilter.filter( x );
+    Float deriv = derivative.computeDerivative( x );
+    Float offset = movingAverageFilter.filter( x );
     
     //If the search is disabled then we stop here
     if( !enableSearch ){ return thresholdCrossingDetected; }
@@ -299,7 +300,7 @@ UINT ThresholdCrossingDetector::getSearchWindowIndex() const{
     return searchWindowIndex;
 }
 
-UINT ThresholdCrossingDetector::getSearchTimeoutCounter() const{
+UINT ThresholdCrossingDetector::getSearchTimeoutCounter() {
     return (UINT)searchTimeoutCounter.getMilliSeconds();
 }
 
@@ -307,19 +308,19 @@ UINT ThresholdCrossingDetector::getSearchTimeoutDuration() const{
     return searchTimeoutDuration;
 }
     
-double ThresholdCrossingDetector::getAnalysisValue() const{
+Float ThresholdCrossingDetector::getAnalysisValue() const{
     return analysisValue;
 }
     
-double ThresholdCrossingDetector::getUpperThreshold() const{
+Float ThresholdCrossingDetector::getUpperThreshold() const{
     return upperThreshold;
 }
 
-double ThresholdCrossingDetector::getLowerThreshold() const{
+Float ThresholdCrossingDetector::getLowerThreshold() const{
     return lowerThreshold;
 }
 
-double ThresholdCrossingDetector::getHysteresisThreshold() const{
+Float ThresholdCrossingDetector::getHysteresisThreshold() const{
     return hysteresisThreshold;
 }
     
@@ -358,19 +359,19 @@ bool ThresholdCrossingDetector::setSearchTimeoutDuration(const UINT searchTimeou
     return reset();
 }
 
-bool ThresholdCrossingDetector::setLowerThreshold(const double lowerThreshold){ 
+bool ThresholdCrossingDetector::setLowerThreshold(const Float lowerThreshold){ 
     this->lowerThreshold = lowerThreshold; 
     return reset();
 } 
 
-bool ThresholdCrossingDetector::setUpperThreshold(const double upperThreshold){ 
+bool ThresholdCrossingDetector::setUpperThreshold(const Float upperThreshold){ 
     this->upperThreshold = upperThreshold; 
     return reset(); 
 }
     
-bool ThresholdCrossingDetector::setHysteresisThreshold(const double hysteresisThreshold){
+bool ThresholdCrossingDetector::setHysteresisThreshold(const Float hysteresisThreshold){
     this->hysteresisThreshold = hysteresisThreshold;
     return reset();
 }
 
-}//End of namespace GRT
+GRT_END_NAMESPACE

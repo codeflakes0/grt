@@ -33,9 +33,9 @@
 
 #include "MLBase.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
 
-class Context : public MLBase
+class GRT_API Context : public MLBase
 {
 public:
 	Context(void){ 
@@ -60,7 +60,7 @@ public:
     bool copyBaseVariables(const Context *context){
         
         if( context == NULL ){
-            errorLog << "copyBaseVariables(const Context *context) - context pointer is NULL!" << endl;
+            errorLog << "copyBaseVariables(const Context *context) - context pointer is NULL!" << std::endl;
             return false;
         }
         
@@ -81,32 +81,32 @@ public:
         return true;
     }
 
-    virtual bool process(VectorDouble inputVector){ return false; }
+    virtual bool process(VectorFloat inputVector){ return false; }
 
     virtual bool reset(){ return false; }
     
     virtual bool updateContext(bool value){ return false; }
     
     //Getters
-	string getContextType() const { return contextType; }
+	std::string getContextType() const { return contextType; }
 	UINT getNumInputDimensions() const { return numInputDimensions; }
 	UINT getNumOutputDimensions() const { return numOutputDimensions; }
 	bool getInitialized() const { return initialized; }
 	bool getOK() const { return okToContinue; }
-	VectorDouble getProcessedData() const { return data; }
+	VectorFloat getProcessedData() const { return data; }
     
     /**
      Defines a map between a string (which will contain the name of the context module, such as Gate) and a function returns a new instance of that context
      */
-    typedef std::map< string, Context*(*)() > StringContextMap;
+    typedef std::map< std::string, Context*(*)() > StringContextMap;
     
     /**
      Creates a new context instance based on the input string (which should contain the name of a valid context module such as Gate).
      
-     @param string const &contextType: the name of the context module
+     @param contextType: the name of the context module
      @return Context*: a pointer to the new instance of the context module
      */
-    static Context* createInstanceFromString(string const &contextType);
+    static Context* createInstanceFromString( const std::string &contextType);
     
     /**
      Creates a new context instance based on the current contextType string value.
@@ -128,19 +128,19 @@ protected:
      
      @return returns true if the base settings were saved, false otherwise
      */
-    bool saveContextSettingsToFile(fstream &file) const;
+    bool saveContextSettingsToFile( std::fstream &file ) const;
     
     /**
      Loads the core context settings from a file.
      
      @return returns true if the base settings were loaded, false otherwise
      */
-    bool loadContextSettingsFromFile(fstream &file);
+    bool loadContextSettingsFromFile( std::fstream &file );
 
-    string contextType;
+    std::string contextType;
     bool initialized;
     bool okToContinue;
-    VectorDouble data;
+    VectorFloat data;
 
 	static StringContextMap *getMap(){
         if( !stringContextMap ){ stringContextMap = new StringContextMap; }
@@ -158,11 +158,11 @@ template< typename T >  Context *newContextModuleInstance() { return new T; }
 template< typename T > 
 class RegisterContextModule : Context { 
 public:
-    RegisterContextModule(string const &newContextModuleName) { 
-        getMap()->insert( std::pair<string, Context*(*)()>(newContextModuleName, &newContextModuleInstance< T > ) );
+    RegisterContextModule( const std::string &newContextModuleName ) { 
+        getMap()->insert( std::pair< std::string, Context*(*)() >(newContextModuleName, &newContextModuleInstance< T > ) );
     }
 };
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_CONTEXT_HEADER

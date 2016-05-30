@@ -45,25 +45,25 @@
 #include "../../PreProcessingModules/Derivative.h"
 #include "../../PreProcessingModules/DeadZone.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
-class ZeroCrossingCounter : public FeatureExtraction{
+class GRT_API ZeroCrossingCounter : public FeatureExtraction{
 public:
     /**
      Constructor, sets the search window size, deadZoneThreshold, and the dimensionality of the input data.
      The search window size sets how much data should be held in memory and searched each time the update function is called.
      
-     @param UINT searchWindowSize: sets how much data should be held in memory and searched each time the update function is called. Default value = 20
-     @param double deadZoneThreshold: sets the dead zone threshold. Default value = 0.01
-     @param UINT numDimensions: the dimensionality of the input data to filter.  Default numDimensions = 1
-     @param UINT featureMode: sets how the features are added to the feature vector, shoule be either INDEPENDANT_FEATURE_MODE or COMBINED_FEATURE_MODE.  Default is featureMode = INDEPENDANT_FEATURE_MODE
+     @param searchWindowSize: sets how much data should be held in memory and searched each time the update function is called. Default value = 20
+     @param deadZoneThreshold: sets the dead zone threshold. Default value = 0.01
+     @param numDimensions: the dimensionality of the input data to filter.  Default numDimensions = 1
+     @param featureMode: sets how the features are added to the feature vector, shoule be either INDEPENDANT_FEATURE_MODE or COMBINED_FEATURE_MODE.  Default is featureMode = INDEPENDANT_FEATURE_MODE
      */
-    ZeroCrossingCounter(UINT searchWindowSize = 20,double deadZoneThreshold = 0.01,UINT numDimensions = 1,UINT featureMode = INDEPENDANT_FEATURE_MODE);
+    ZeroCrossingCounter(UINT searchWindowSize = 20,Float deadZoneThreshold = 0.01,UINT numDimensions = 1,UINT featureMode = INDEPENDANT_FEATURE_MODE);
 	
     /**
      Copy constructor, copies the ZeroCrossingCounter from the rhs instance to this instance.
      
-     @param const ZeroCrossingCounter &rhs: another instance of the ZeroCrossingCounter class from which the data will be copied to this instance
+     @param rhs: another instance of the ZeroCrossingCounter class from which the data will be copied to this instance
      */
     ZeroCrossingCounter(const ZeroCrossingCounter &rhs);
     
@@ -75,7 +75,7 @@ public:
     /**
      Sets the equals operator, copies the data from the rhs instance to this instance.
      
-     @param const ZeroCrossingCounter &rhs: another instance of the ZeroCrossingCounter class from which the data will be copied to this instance
+     @param rhs: another instance of the ZeroCrossingCounter class from which the data will be copied to this instance
      @return a reference to this instance of ZeroCrossingCounter
      */
     ZeroCrossingCounter& operator=(const ZeroCrossingCounter &rhs);
@@ -85,7 +85,7 @@ public:
      This function is used to deep copy the values from the input pointer to this instance of the FeatureExtraction module.
      This function is called by the GestureRecognitionPipeline when the user adds a new FeatureExtraction module to the pipeleine.
      
-     @param const FeatureExtraction *featureExtraction: a pointer to another instance of a ZeroCrossingCounter, the values of that instance will be cloned to this instance
+     @param featureExtraction: a pointer to another instance of a ZeroCrossingCounter, the values of that instance will be cloned to this instance
      @return returns true if the deep copy was successful, false otherwise
      */
     virtual bool deepCopyFrom(const FeatureExtraction *featureExtraction);
@@ -95,10 +95,10 @@ public:
      This function is called by the GestureRecognitionPipeline when any new input data needs to be processed (during the prediction phase for example).
      This function calls the ZeroCrossingCounter's update function.
      
-     @param const VectorDouble &inputVector: the inputVector that should be processed.  Must have the same dimensionality as the FeatureExtraction module
+     @param inputVector: the inputVector that should be processed.  Must have the same dimensionality as the FeatureExtraction module
      @return returns true if the data was processed, false otherwise
      */
-    virtual bool computeFeatures(const VectorDouble &inputVector);
+    virtual bool computeFeatures(const VectorFloat &inputVector);
     
     /**
      Sets the FeatureExtraction reset function, overwriting the base FeatureExtraction function.
@@ -112,92 +112,92 @@ public:
     /**
      This saves the feature extraction settings to a file.
      
-     @param const string filename: the filename to save the settings to
+     @param filename: the filename to save the settings to
      @return returns true if the settings were saved successfully, false otherwise
      */
-    virtual bool saveModelToFile(string filename) const;
+    virtual bool saveModelToFile( std::string filename ) const;
     
     /**
      This saves the feature extraction settings to a file.
      
-     @param fstream &file: a reference to the file to save the settings to
+     @param file: a reference to the file to save the settings to
      @return returns true if the settings were saved successfully, false otherwise
      */
-    virtual bool loadModelFromFile(string filename);
+    virtual bool loadModelFromFile( std::string filename );
     
     /**
      This saves the feature extraction settings to a file.
      This overrides the saveSettingsToFile function in the FeatureExtraction base class.
      
-     @param fstream &file: a reference to the file to save the settings to
+     @param file: a reference to the file to save the settings to
      @return returns true if the settings were saved successfully, false otherwise
      */
-    virtual bool saveModelToFile(fstream &file) const;
+    virtual bool saveModelToFile( std::fstream &file ) const;
     
     /**
      This loads the feature extraction settings from a file.
      This overrides the loadSettingsFromFile function in the FeatureExtraction base class.
      
-     @param fstream &file: a reference to the file to load the settings from
+     @param file: a reference to the file to load the settings from
      @return returns true if the settings were loaded successfully, false otherwise
      */
-    virtual bool loadModelFromFile(fstream &file);
+    virtual bool loadModelFromFile( std::fstream &file );
 
     /**
      Initializes the ZeroCrossingCounter, setting the searchWindowSize, deadZoneThreshold, and dimensionality of the data it will filter.
      The search window size, deadZoneThreshold, and numDimensions values must be larger than 0.
      Sets all the data buffer values to zero.
      
-     @param UINT searchWindowSize: sets how much data should be held in memory and searched each time the update function is called
-     @param double deadZoneThreshold: sets the dead zone threshold value
-     @param UINT numDimensions: the dimensionality of the input data to filter
-     @param UINT featureMode: sets how the features are added to the feature vector, shoule be either INDEPENDANT_FEATURE_MODE or COMBINED_FEATURE_MODE
+     @param searchWindowSize: sets how much data should be held in memory and searched each time the update function is called
+     @param deadZoneThreshold: sets the dead zone threshold value
+     @param numDimensions: the dimensionality of the input data to filter
+     @param featureMode: sets how the features are added to the feature vector, shoule be either INDEPENDANT_FEATURE_MODE or COMBINED_FEATURE_MODE
 	 @return true if the filter was initiliazed, false otherwise
      */
-    bool init(UINT searchWindowSize,double deadZoneThreshold,UINT numDimensions,UINT featureMode);
+    bool init(UINT searchWindowSize,Float deadZoneThreshold,UINT numDimensions,UINT featureMode);
     
     /**
      Computes the ZeroCrossingCounter features from the input, this should only be called if the dimensionality of this instance was set to 1.
      
-     @param double x: the value to compute features from, this should only be called if the dimensionality of the filter was set to 1
+     @param x: the value to compute features from, this should only be called if the dimensionality of the filter was set to 1
 	 @return a vector containing the ZeroCrossingCounter features, an empty vector will be returned if the features were not computed
      */
-	VectorDouble update(double x);
+	VectorFloat update(Float x);
     
     /**
      Computes the ZeroCrossingCounter features from the input, the dimensionality of x should match that of this instance.
      
-     @param const VectorDouble &x: a vector containing the values to be processed, must be the same size as the numInputDimensions
+     @param x: a vector containing the values to be processed, must be the same size as the numInputDimensions
 	 @return a vector containing the ZeroCrossingCounter features, an empty vector will be returned if the features were not computed
      */
-    VectorDouble update(const VectorDouble &x);
+    VectorFloat update(const VectorFloat &x);
     
     /**
      Sets the search window size.  The search window size must be larger than zero.
      Calling this function will reset the feature extraction.
      
-     @param UINT searchWindowSize: sets how much data should be held in memory and searched each time the update function is called
+     @param searchWindowSize: sets how much data should be held in memory and searched each time the update function is called
 	 @return true if the searchWindowSize value was updated, false otherwise
      */
     bool setSearchWindowSize(UINT searchWindowSize);
+
+    /**
+     Sets the featureMode, this should be either INDEPENDANT_FEATURE_MODE (0) or COMBINED_FEATURE_MODE (1).
+     Calling this function will reset the feature extraction.
+     
+     @param featureMode: sets the featureMode, options are either INDEPENDANT_FEATURE_MODE (0) or COMBINED_FEATURE_MODE (1)
+     @return true if the featureMode value was updated, false otherwise
+     */
+    bool setFeatureMode(UINT featureMode);
     
     /**
      Sets the deadZoneThreshold.  The deadZoneThreshold must be larger than zero.
      Calling this function will reset the feature extraction.
      
-     @param double deadZoneThreshold: sets the dead zone threshold value
+     @param deadZoneThreshold: sets the dead zone threshold value
 	 @return true if the deadZoneThreshold value was updated, false otherwise
      */
-    bool setDeadZoneThreshold(UINT deadZoneThreshold);
-    
-    /**
-     Sets the featureMode, this should be either INDEPENDANT_FEATURE_MODE (0) or COMBINED_FEATURE_MODE (1).
-     Calling this function will reset the feature extraction.
-     
-     @param UINT featureMode: sets the featureMode, options are either INDEPENDANT_FEATURE_MODE (0) or COMBINED_FEATURE_MODE (1)
-	 @return true if the featureMode value was updated, false otherwise
-     */
-    bool setFeatureMode(UINT featureMode);
+    bool setDeadZoneThreshold(Float deadZoneThreshold);
 
     /**
      Gets the search window size.
@@ -224,9 +224,9 @@ public:
     /**
      Gets the deadZoneThreshold value.
      
-     @return returns a double representing the deadZoneThreshold, returns zero if the feature extraction module has not been initialized
+     @return returns a Float representing the deadZoneThreshold, returns zero if the feature extraction module has not been initialized
      */
-    double getDeadZoneThreshold(){ if( initialized ){ return deadZoneThreshold; } return 0; }
+    Float getDeadZoneThreshold(){ if( initialized ){ return deadZoneThreshold; } return 0; }
     
     /** 
      Gets the current values in the data buffer.  
@@ -234,7 +234,7 @@ public:
      
      @return returns a curcular buffer containing the data buffer values, an empty circular buffer will be returned if the ZeroCrossingCounter has not been initialized
      */
-    CircularBuffer< VectorDouble > getDataBuffer(){ if( initialized ){ return dataBuffer; } return CircularBuffer< VectorDouble >(); }
+    CircularBuffer< VectorFloat > getDataBuffer(){ if( initialized ){ return dataBuffer; } return CircularBuffer< VectorFloat >(); }
     
     //Tell the compiler we are using the following functions from the MLBase class to stop hidden virtual function warnings
     using FeatureExtraction::saveModelToFile;
@@ -247,10 +247,10 @@ public:
 protected:
     UINT searchWindowSize;                                  ///< The size of the search window, i.e. the amount of previous data stored and searched
     UINT featureMode;                                       ///< The featureMode controls how the features are added to the feature vector
-    double deadZoneThreshold;                               ///< The threshold value used for the dead zone filter
+    Float deadZoneThreshold;                               ///< The threshold value used for the dead zone filter
     Derivative derivative;                                  ///< Used to compute the derivative of the input signal
     DeadZone deadZone;                                      ///< Used to remove small amounts of noise from the data
-    CircularBuffer< VectorDouble > dataBuffer;              ///< A buffer used to store the previous derivative data
+    CircularBuffer< VectorFloat > dataBuffer;              ///< A buffer used to store the previous derivative data
     
     static RegisterFeatureExtractionModule< ZeroCrossingCounter > registerModule;
     
@@ -259,6 +259,6 @@ public:
     enum FeatureModes{INDEPENDANT_FEATURE_MODE=0,COMBINED_FEATURE_MODE};
 };
 
-}//End of namespace GRT
+GRT_END_NAMESPACE
 
 #endif //GRT_ZERO_CROSSING_COUNTER_HEADER

@@ -23,7 +23,7 @@
 
 #include "../../Util/GRTCommon.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 class Individual{
 public:
@@ -47,10 +47,10 @@ public:
         return *this;
     }
     
-    double fitness;
-    VectorDouble gene;
+    Float fitness;
+    VectorFloat gene;
 };
     
-}
+GRT_END_NAMESPACE
 
 #endif //GRT_INDIVIDUAL_HEADER

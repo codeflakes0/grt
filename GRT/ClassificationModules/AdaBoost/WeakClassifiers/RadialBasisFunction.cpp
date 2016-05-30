@@ -25,14 +25,15 @@
  @section DESCRIPTION
  */
 
+#define GRT_DLL_EXPORTS
 #include "RadialBasisFunction.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 //Register the RadialBasisFunction module with the WeakClassifier base class
 RegisterWeakClassifierModule< RadialBasisFunction > RadialBasisFunction::registerModule("RadialBasisFunction");
     
-RadialBasisFunction::RadialBasisFunction(UINT numSteps,double positiveClassificationThreshold,double minAlphaSearchRange,double maxAlphaSearchRange){
+RadialBasisFunction::RadialBasisFunction(UINT numSteps,Float positiveClassificationThreshold,Float minAlphaSearchRange,Float maxAlphaSearchRange){
     this->numSteps = numSteps;
     this->positiveClassificationThreshold = positiveClassificationThreshold;
     this->minAlphaSearchRange = minAlphaSearchRange;
@@ -80,7 +81,7 @@ bool RadialBasisFunction::deepCopyFrom(const WeakClassifier *weakClassifer){
     return false;
 }
 
-bool RadialBasisFunction::train(ClassificationData &trainingData, VectorDouble &weights){
+bool RadialBasisFunction::train(ClassificationData &trainingData, VectorFloat &weights){
     
     trained = false;
     numInputDimensions = trainingData.getNumDimensions();
@@ -88,13 +89,13 @@ bool RadialBasisFunction::train(ClassificationData &trainingData, VectorDouble &
     
     //There should only be two classes in the dataset, the positive class (classLable==1) and the negative class (classLabel==2)
     if( trainingData.getNumClasses() != 2 ){
-        errorLog << "train(ClassificationData &trainingData, VectorDouble &weights) - There should only be 2 classes in the training data, but there are : " << trainingData.getNumClasses() << endl;
+        errorLog << "train(ClassificationData &trainingData, VectorFloat &weights) - There should only be 2 classes in the training data, but there are : " << trainingData.getNumClasses() << std::endl;
         return false;
     }
     
     //There should be one weight for every training sample
-    if( trainingData.getNumSamples() != weights.size() ){
-        errorLog << "train(ClassificationData &trainingData, VectorDouble &weights) - There number of examples in the training data (" << trainingData.getNumSamples() << ") does not match the lenght of the weights vector (" << weights.size() << ")" << endl;
+    if( trainingData.getNumSamples() != weights.getSize() ){
+        errorLog << "train(ClassificationData &trainingData, VectorFloat &weights) - There number of examples in the training data (" << trainingData.getNumSamples() << ") does not match the lenght of the weights vector (" << weights.size() << ")" << std::endl;
         return false;
     }
 
@@ -103,8 +104,8 @@ bool RadialBasisFunction::train(ClassificationData &trainingData, VectorDouble &
     rbfCentre.resize(numInputDimensions,0);
     
     //Search for the sample(s) with the maximum weight(s)
-    double maxWeight = 0;
-    vector< UINT > bestWeights;
+    Float maxWeight = 0;
+    Vector< UINT > bestWeights;
     for(UINT i=0; i<M; i++){
         if( trainingData[i].getClassLabel() == WEAK_CLASSIFIER_POSITIVE_CLASS_LABEL ){
             if( weights[i] > maxWeight ){
@@ -121,7 +122,7 @@ bool RadialBasisFunction::train(ClassificationData &trainingData, VectorDouble &
     const UINT N = (UINT)bestWeights.size();
     
     if( N == 0 ){
-        errorLog << "train(ClassificationData &trainingData, VectorDouble &weights) - There are no positive class weigts!" << endl;
+        errorLog << "train(ClassificationData &trainingData, VectorFloat &weights) - There are no positive class weigts!" << std::endl;
         return false;
     }
     
@@ -133,25 +134,25 @@ bool RadialBasisFunction::train(ClassificationData &trainingData, VectorDouble &
     
     //Normalize the RBF centre by the positiveWeightSum so we get the weighted mean 
     for(UINT j=0; j<numInputDimensions; j++){
-        rbfCentre[j] /= double(N);
+        rbfCentre[j] /= Float(N);
     }
     
     //STEP 2: Estimate the best value for alpha
-    double step = (maxAlphaSearchRange-minAlphaSearchRange)/numSteps;
-    double bestAlpha = 0;
-    double minError = numeric_limits<double>::max();
+    Float step = (maxAlphaSearchRange-minAlphaSearchRange)/numSteps;
+    Float bestAlpha = 0;
+    Float minError = grt_numeric_limits< Float >::max();
     
     alpha = minAlphaSearchRange;
     while( alpha <= maxAlphaSearchRange ){
         
         //Update gamma (this is used in the rbf function)
-        gamma = -1.0/(2.0*SQR(alpha));
+        gamma = -1.0/(2.0*grt_sqr(alpha));
         
         //Compute the weighted error over all the training samples given the current alpha value
-        double error = 0;
+        Float error = 0;
         for(UINT i=0; i<M; i++){
             bool positiveSample = trainingData[ i ].getClassLabel() == WEAK_CLASSIFIER_POSITIVE_CLASS_LABEL;
-            double v = rbf(trainingData[ i ].getSample(),rbfCentre);
+            Float v = rbf(trainingData[ i ].getSample(),rbfCentre);
             
             if( (v >= positiveClassificationThreshold && !positiveSample) || (v<positiveClassificationThreshold && positiveSample) ){
                 error += weights[i];
@@ -173,92 +174,92 @@ bool RadialBasisFunction::train(ClassificationData &trainingData, VectorDouble &
     }
     
     alpha = bestAlpha;
-    gamma = -1.0/(2.0*SQR(alpha));
+    gamma = -1.0/(2.0*grt_sqr(alpha));
     trained = true;
     
-    cout << "BestAlpha: " << bestAlpha << " Error: " << minError << endl;
+    std::cout << "BestAlpha: " << bestAlpha << " Error: " << minError << std::endl;
     
     return true;
 }
 
-double RadialBasisFunction::predict(const VectorDouble &x){
+Float RadialBasisFunction::predict(const VectorFloat &x){
     if( rbf(x,rbfCentre) >= positiveClassificationThreshold ) return 1;
     return -1;
 }
     
-double RadialBasisFunction::rbf(const VectorDouble &a,const VectorDouble &b){
+Float RadialBasisFunction::rbf(const VectorFloat &a,const VectorFloat &b){
     const UINT N = (UINT)a.size();
     //Compute the RBF distance, this uses the squared euclidean distance
-    double r = 0;
+    Float r = 0;
     for(UINT i=0; i<N; i++){
         r += SQR(a[i]-b[i]);
     }
     return exp( gamma * r );
 }
     
-bool RadialBasisFunction::saveModelToFile(fstream &file) const{
+bool RadialBasisFunction::saveModelToFile( std::fstream &file ) const{
     
     if(!file.is_open())
 	{
-		errorLog <<"saveModelToFile(fstream &file) - The file is not open!" << endl;
+		errorLog <<"saveModelToFile(fstream &file) - The file is not open!" << std::endl;
 		return false;
 	}
     
 	//Write the WeakClassifierType data
-    file << "WeakClassifierType: " << weakClassifierType << endl;
-	file << "Trained: "<< trained << endl;
-    file << "NumInputDimensions: " << numInputDimensions << endl;
+    file << "WeakClassifierType: " << weakClassifierType << std::endl;
+	file << "Trained: "<< trained << std::endl;
+    file << "NumInputDimensions: " << numInputDimensions << std::endl;
     
     //Write the RadialBasisFunction data
-    file << "NumSteps: " << numSteps << endl;
-    file << "PositiveClassificationThreshold: " << positiveClassificationThreshold << endl;
-    file << "Alpha: " << alpha << endl;
-    file << "MinAlphaSearchRange: " << minAlphaSearchRange << endl;
-    file << "MaxAlphaSearchRange: " << maxAlphaSearchRange << endl;
+    file << "NumSteps: " << numSteps << std::endl;
+    file << "PositiveClassificationThreshold: " << positiveClassificationThreshold << std::endl;
+    file << "Alpha: " << alpha << std::endl;
+    file << "MinAlphaSearchRange: " << minAlphaSearchRange << std::endl;
+    file << "MaxAlphaSearchRange: " << maxAlphaSearchRange << std::endl;
     file << "RBF: ";
     for(UINT i=0; i<numInputDimensions; i++){
         if( trained ){
             file << rbfCentre[i] << "\t";
         }else file << 0 << "\t";
     }
-    file << endl;
+    file << std::endl;
     
     //We don't need to close the file as the function that called this function should handle that
     return true;
 }
 
-bool RadialBasisFunction::loadModelFromFile(fstream &file){
+bool RadialBasisFunction::loadModelFromFile( std::fstream &file ){
     
     if(!file.is_open())
 	{
-		errorLog <<"loadModelFromFile(fstream &file) - The file is not open!" << endl;
+		errorLog <<"loadModelFromFile(fstream &file) - The file is not open!" << std::endl;
 		return false;
 	}
     
-    string word;
+    std::string word;
     
     file >> word;
     if( word != "WeakClassifierType:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read WeakClassifierType header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read WeakClassifierType header!" << std::endl;
 		return false;
     }
     file >> word;
     
     if( word != weakClassifierType ){
-        errorLog <<"loadModelFromFile(fstream &file) - The weakClassifierType:" << word << " does not match: " << weakClassifierType << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - The weakClassifierType:" << word << " does not match: " << weakClassifierType << std::endl;
 		return false;
     }
     
     file >> word;
     if( word != "Trained:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read Trained header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read Trained header!" << std::endl;
 		return false;
     }
     file >> trained;
     
     file >> word;
     if( word != "NumInputDimensions:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read NumInputDimensions header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read NumInputDimensions header!" << std::endl;
 		return false;
     }
     file >> numInputDimensions;
@@ -266,42 +267,42 @@ bool RadialBasisFunction::loadModelFromFile(fstream &file){
     
     file >> word;
     if( word != "NumSteps:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read NumSteps header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read NumSteps header!" << std::endl;
 		return false;
     }
     file >> numSteps;
     
     file >> word;
     if( word != "PositiveClassificationThreshold:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read PositiveClassificationThreshold header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read PositiveClassificationThreshold header!" << std::endl;
 		return false;
     }
     file >> positiveClassificationThreshold;
     
     file >> word;
     if( word != "Alpha:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read Alpha header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read Alpha header!" << std::endl;
 		return false;
     }
     file >> alpha;
     
     file >> word;
     if( word != "MinAlphaSearchRange:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read MinAlphaSearchRange header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read MinAlphaSearchRange header!" << std::endl;
 		return false;
     }
     file >> minAlphaSearchRange;
     
     file >> word;
     if( word != "MaxAlphaSearchRange:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read MaxAlphaSearchRange header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read MaxAlphaSearchRange header!" << std::endl;
 		return false;
     }
     file >> maxAlphaSearchRange;
     
     file >> word;
     if( word != "RBF:" ){
-        errorLog <<"loadModelFromFile(fstream &file) - Failed to read RBF header!" << endl;
+        errorLog <<"loadModelFromFile(fstream &file) - Failed to read RBF header!" << std::endl;
 		return false;
     }
     rbfCentre.resize(numInputDimensions);
@@ -320,7 +321,7 @@ bool RadialBasisFunction::loadModelFromFile(fstream &file){
 void RadialBasisFunction::print() const{
 }
     
-VectorDouble RadialBasisFunction::getRBFCentre() const{
+VectorFloat RadialBasisFunction::getRBFCentre() const{
     return rbfCentre;
 }
     
@@ -328,21 +329,21 @@ UINT RadialBasisFunction::getNumSteps() const{
     return numSteps;
 }
 
-double RadialBasisFunction::getPositiveClassificationThreshold() const{
+Float RadialBasisFunction::getPositiveClassificationThreshold() const{
     return positiveClassificationThreshold;
 }
 
-double RadialBasisFunction::getAlpha() const{
+Float RadialBasisFunction::getAlpha() const{
     return alpha;
 }
 
-double RadialBasisFunction::getMinAlphaSearchRange() const{
+Float RadialBasisFunction::getMinAlphaSearchRange() const{
     return minAlphaSearchRange;
 }
 
-double RadialBasisFunction::getMaxAlphaSearchRange() const{
+Float RadialBasisFunction::getMaxAlphaSearchRange() const{
     return maxAlphaSearchRange;
 }
 
-} //End of namespace GRT
+GRT_END_NAMESPACE
 
