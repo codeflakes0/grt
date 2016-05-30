@@ -35,7 +35,8 @@ TimeSeriesClassificationDataStream::TimeSeriesClassificationDataStream(const UIN
     debugLog.setProceedingText("[DEBUG LTSCD]");
     errorLog.setProceedingText("[ERROR LTSCD]");
     warningLog.setProceedingText("[WARNING LTSCD]");
-    
+    infoLog.setProceedingText("");
+
     if( numDimensions > 0 ){
         setNumDimensions(numDimensions);
     }
@@ -748,32 +749,32 @@ bool TimeSeriesClassificationDataStream::loadDatasetFromCSVFile(const string &fi
     
 bool TimeSeriesClassificationDataStream::printStats() const {
     
-    cout << "DatasetName:\t" << datasetName << endl;
-    cout << "DatasetInfo:\t" << infoText << endl;
-    cout << "Number of Dimensions:\t" << numDimensions << endl;
-    cout << "Number of Samples:\t" << totalNumSamples << endl;
-    cout << "Number of Classes:\t" << getNumClasses() << endl;
-    cout << "ClassStats:\n";
+    infoLog << "DatasetName:\t" << datasetName << endl;
+    infoLog << "DatasetInfo:\t" << infoText << endl;
+    infoLog << "Number of Dimensions:\t" << numDimensions << endl;
+    infoLog << "Number of Samples:\t" << totalNumSamples << endl;
+    infoLog << "Number of Classes:\t" << getNumClasses() << endl;
+    infoLog << "ClassStats:\n";
     
     for(UINT k=0; k<getNumClasses(); k++){
-        cout << "ClassLabel:\t" << classTracker[k].classLabel;
-        cout << "\tNumber of Samples:\t" << classTracker[k].counter;
-        cout << "\tClassName:\t" << classTracker[k].className << endl;
+        infoLog << "ClassLabel:\t" << classTracker[k].classLabel;
+        infoLog << "\tNumber of Samples:\t" << classTracker[k].counter;
+        infoLog << "\tClassName:\t" << classTracker[k].className << endl;
     }
     
-    cout << "TimeSeriesMarkerStats:\n";
+    infoLog << "TimeSeriesMarkerStats:\n";
     for(UINT i=0; i<timeSeriesPositionTracker.size(); i++){
-        cout << "ClassLabel: " << timeSeriesPositionTracker[i].getClassLabel();
-        cout << "\tStartIndex: " << timeSeriesPositionTracker[i].getStartIndex();
-        cout << "\tEndIndex: " << timeSeriesPositionTracker[i].getEndIndex();
-        cout << "\tLength: " << timeSeriesPositionTracker[i].getLength() << endl;
+        infoLog << "ClassLabel: " << timeSeriesPositionTracker[i].getClassLabel();
+        infoLog << "\tStartIndex: " << timeSeriesPositionTracker[i].getStartIndex();
+        infoLog << "\tEndIndex: " << timeSeriesPositionTracker[i].getEndIndex();
+        infoLog << "\tLength: " << timeSeriesPositionTracker[i].getLength() << endl;
     }
     
     vector< MinMax > ranges = getRanges();
     
-    cout << "Dataset Ranges:\n";
+    infoLog << "Dataset Ranges:\n";
     for(UINT j=0; j<ranges.size(); j++){
-        cout << "[" << j+1 << "] Min:\t" << ranges[j].minValue << "\tMax: " << ranges[j].maxValue << endl;
+        infoLog << "[" << j+1 << "] Min:\t" << ranges[j].minValue << "\tMax: " << ranges[j].maxValue << endl;
     }
     
     return true;

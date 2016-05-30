@@ -1,12 +1,17 @@
 #include "AndroidBuf.h"
 #include <iostream>
+#include <sys/system_properties.h>
+#include "Log.h"
 
 using namespace std;
 
 namespace GRT{
 
 AndroidBuf::AndroidBuf() {
-    __android_log_print(ANDROID_LOG_INFO, "GRT", "init AndroidBuf()");
+    static char prop[PROP_VALUE_MAX] = "NOT_SET";
+    __system_property_get("log.tag.GRT_C", prop);
+
+    __android_log_print(ANDROID_LOG_INFO, "GRT", "init AndroidBuf() prop=%s", prop);
     this->setp(buffer, buffer + bufsize - 1);
 }
 
@@ -46,5 +51,12 @@ void disableAndroidLog() {
         bAndroidLogEnabled = false;
     }
 }
+
+std::ostream& operator<<(std::ostream& os, const Log& l) {
+    //if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+    os << "test";
+    return os;
+}
+
 
 }

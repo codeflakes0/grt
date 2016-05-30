@@ -455,6 +455,7 @@ protected:
     DebugLog debugLog;                                      ///< Default debugging log
     ErrorLog errorLog;                                      ///< Default error log
     WarningLog warningLog;                                  ///< Default warning log
+    InfoLog infoLog;
 };
 
 } //End of namespace GRT

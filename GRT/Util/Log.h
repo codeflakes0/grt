@@ -49,212 +49,34 @@ public:
 
     virtual ~Log(){}
     
-    const Log& operator<< (const bool val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << proceedingText.c_str() << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;
-    }
+    const Log& operator<< (const bool val ) const;
     
-    const Log& operator<< (const short val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+    const Log& operator<< (const short val ) const;
 
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;
-    }
+    const Log& operator<< (const unsigned short val ) const;
 
-    const Log& operator<< (const unsigned short val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+    const Log& operator<< (const int val ) const;
 
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;
-    }
+    const Log& operator<< (const unsigned int val ) const;
 
-    const Log& operator<< (const int val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+    const Log& operator<< (const long val ) const;
 
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;
-    }
+    const Log& operator<< (const unsigned long val ) const;
 
-    const Log& operator<< (const unsigned int val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+    const Log& operator<< (const unsigned long long val ) const;
 
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;
-    }
+    const Log& operator<< (const float val ) const;
 
-    const Log& operator<< (const long val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+    const Log& operator<< (const double val ) const;
 
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;    }
+    const Log& operator<< (const long double val ) const;
 
-    const Log& operator<< (const unsigned long val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;    
-    }
-
-    const Log& operator<< (const unsigned long long val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;    
-    }
-
-    const Log& operator<< (const float val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;    }
-
-    const Log& operator<< (const double val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;
-    }
-
-    const Log& operator<< (const long double val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-            *lastMessagePtr += Util::toString(val);
-        }
-        return *this;    }
-
-    const Log& operator<< (const void* val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val;
-        }
-        return *this;
-    }
+    const Log& operator<< (const void* val ) const;
     
-    const Log& operator<< (const std::string val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                *lastMessagePtr = "";
-                std::cout << proceedingText.c_str();
-            }
-            std::cout << val.c_str();
-            *lastMessagePtr += val;
-        }
-        return *this;
-    }
+    const Log& operator<< (const std::string val ) const;
     
-    const Log& operator<< (const char* val ) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+    const Log& operator<< (const char* val ) const;
 
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            if( *writeProceedingTextPtr ){
-                *writeProceedingTextPtr = false;
-                std::cout << proceedingText.c_str();
-                *lastMessagePtr = "";
-            }
-            std::cout << val;
-            *lastMessagePtr += val;
-        }
-        return *this;
-    }
-    
     // this is the type of std::cout
     typedef std::basic_ostream<char, std::char_traits<char> > CoutType;
     
@@ -262,20 +84,7 @@ public:
     typedef CoutType& (*StandardEndLine)(CoutType&);
     
     // define an operator<< to take in std::endl
-    const Log& operator<<(const StandardEndLine manip) const{
-        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
-
-        if( *loggingEnabledPtr && instanceLoggingEnabled ){
-            // call the function, but we cannot return it's value
-            manip(std::cout);
-            *writeProceedingTextPtr = true;
-            
-            //Trigger any logging callbacks
-            triggerCallback( lastMessage );
-        }
-        
-        return *this;
-    }
+    const Log& operator<<(const StandardEndLine manip) const;
 
     //Getters
     virtual bool getLoggingEnabled() const{ return false; }
@@ -340,6 +149,7 @@ protected:
 
     // TBE
     int androidLogLevel; // default ANDROID_LOG_VERBOSE
+    friend std::ostream& operator<<(std::ostream& os, const Log& l);
 };
 
 } //End of namespace GRT

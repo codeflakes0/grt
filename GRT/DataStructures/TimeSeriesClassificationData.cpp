@@ -44,7 +44,8 @@ TimeSeriesClassificationData::TimeSeriesClassificationData(const TimeSeriesClass
     debugLog.setProceedingText("[DEBUG TSCD]");
     errorLog.setProceedingText("[ERROR TSCD]");
     warningLog.setProceedingText("[WARNING TSCD]");
-    
+    infoLog.setProceedingText("");
+
     *this = rhs;
 }
 
@@ -676,7 +677,7 @@ bool TimeSeriesClassificationData::loadDatasetFromCSVFile(const string &filename
     
 bool TimeSeriesClassificationData::printStats() const {
 
-    debugLog << getStatsAsString() << endl;
+    infoLog << getStatsAsString() << endl;
     
     return true;
 }

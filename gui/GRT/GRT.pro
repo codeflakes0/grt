@@ -274,7 +274,8 @@ SOURCES += main.cpp\
         timeseriesgraph.cpp \
         bargraph.cpp \
         versioninfo.cpp \
-        featureplot.cpp
+        featureplot.cpp \
+    ../../GRT/Util/log.c
 
 HEADERS  += mainwindow.h \
         OSC/OSCMessage.h \

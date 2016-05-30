@@ -324,6 +324,7 @@ protected:
     WarningLog warningLog;
     ErrorLog errorLog;
     InfoLog infoLog;
+    DebugLog debugLog;
 };
     
 } //End of namespace GRT

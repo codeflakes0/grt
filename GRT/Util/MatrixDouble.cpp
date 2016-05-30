@@ -34,9 +34,10 @@ MatrixDouble::MatrixDouble(const unsigned int rows,const unsigned int cols){
     infoLog.setProceedingText("[INFO MatrixDouble]");
     warningLog.setProceedingText("[WARNING MatrixDouble]");
     errorLog.setProceedingText("[ERROR MatrixDouble]");
+    debugLog.setProceedingText("[DEBUG MatrixDouble]");
     this->dataPtr = NULL;
     if( rows > 0 && cols > 0 ){
-        infoLog << "new MatrixDouble " << rows << " " << cols << endl;
+        debugLog << "new MatrixDouble " << rows << " " << cols << endl;
         resize(rows, cols);
     }
 }
