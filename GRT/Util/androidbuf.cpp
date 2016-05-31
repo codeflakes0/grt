@@ -40,6 +40,8 @@ int AndroidBuf::sync() {
 static bool bAndroidLogEnabled = false;
 
 void enableAndroidLog() {
+    if(bAndroidLogEnabled) return;
+
     bAndroidLogEnabled = true;
     __android_log_print(ANDROID_LOG_INFO, "GRT", "enableAndroidLog");
     std::cout.rdbuf(new GRT::AndroidBuf); // leak AndroidBuf memory if disableAndroidLog is not called

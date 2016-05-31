@@ -192,7 +192,8 @@ public:
      */
     virtual bool saveModelToFile( std::fstream &file ) const;
     
-    virtual bool saveModelToFile(std::string filename) const;
+    // TBE
+	virtual bool saveModelToFile(std::string filename) const;
 
     /**
      This loads a trained DTW model from a file.
@@ -203,7 +204,8 @@ public:
      */
     virtual bool loadModelFromFile( std::fstream &file );
     
-    virtual bool loadModelFromFile(std::string filename);
+    // TBE
+	virtual bool loadModelFromFile(std::string filename);
 
     /**
      This recomputes the null rejection thresholds for each of the classes in the DTW model.

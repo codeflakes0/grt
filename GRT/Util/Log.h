@@ -56,6 +56,8 @@ public:
     template < class T >
 	    const Log& operator<< (const T val ) const{
 
+        if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
+
 #ifdef GRT_CXX11_ENABLED
         std::unique_lock<std::mutex> lock( logMutex );
 #endif

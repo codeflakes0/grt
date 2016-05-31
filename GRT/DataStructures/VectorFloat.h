@@ -86,7 +86,7 @@ public:
      @param rhs: a vector of VectorFloats
      @return returns a reference to this instance of the VectorFloat
      */
-    GRT_API VectorFloat& operator=(const vector< VectorFloat > &rhs);
+    //GRT_API VectorFloat& operator=(const vector< VectorFloat > &rhs);
     
     /**
      Saves the vector to a CSV file.  This replaces the deprecated saveToCSVFile function.
