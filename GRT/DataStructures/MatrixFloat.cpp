@@ -38,7 +38,7 @@ MatrixFloat::MatrixFloat(const unsigned int rows,const unsigned int cols){
     debugLog.setProceedingText("[DEBUG MatrixFloat]");
     this->dataPtr = NULL;
     if( rows > 0 && cols > 0 ){
-        debugLog << "new MatrixFloat " << rows << " " << cols << std::endl;
+        //debugLog << "new MatrixFloat " << rows << " " << cols << std::endl;
         resize(rows, cols);
     }
 }
