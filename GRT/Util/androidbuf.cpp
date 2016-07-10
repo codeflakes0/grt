@@ -1,5 +1,6 @@
 #include "AndroidBuf.h"
 #include <iostream>
+#ifdef __ANDROID__
 #include <sys/system_properties.h>
 #include "Log.h"
 
@@ -59,6 +60,5 @@ std::ostream& operator<<(std::ostream& os, const Log& l) {
     os << "test";
     return os;
 }
-
-
 }
+#endif

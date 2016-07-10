@@ -275,7 +275,7 @@ SOURCES += main.cpp\
         bargraph.cpp \
         versioninfo.cpp \
         featureplot.cpp \
-    ../../GRT/Util/log.c
+        ../../GRT/Util/Log.cpp
 
 HEADERS  += mainwindow.h \
         OSC/OSCMessage.h \
