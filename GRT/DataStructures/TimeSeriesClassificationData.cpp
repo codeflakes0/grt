@@ -57,6 +57,7 @@ TimeSeriesClassificationData& TimeSeriesClassificationData::operator=(const Time
         this->datasetName = rhs.datasetName;
         this->infoText = rhs.infoText;
         this->numDimensions = rhs.numDimensions;
+        this->dimensionsName = rhs.dimensionsName;
         this->useExternalRanges = rhs.useExternalRanges;
         this->allowNullGestureClass = rhs.allowNullGestureClass;
         this->crossValidationSetup = rhs.crossValidationSetup;
@@ -88,6 +89,9 @@ bool TimeSeriesClassificationData::setNumDimensions(const UINT numDimensions){
 
         useExternalRanges = false;
         externalRanges.clear();
+
+        dimensionsName.clear();
+        dimensionsName.resize(numDimensions);
 
         return true;
     }
@@ -193,7 +197,7 @@ UINT TimeSeriesClassificationData::eraseAllSamplesWithClassLabel(const UINT clas
 		}
 	}
 
-	totalNumSamples = (UINT)data.size();
+    totalNumSamples = (UINT)data.size();
 
 	return numExamplesRemoved;
 }
@@ -344,6 +348,10 @@ bool TimeSeriesClassificationData::saveDatasetToFile(const std::string fileName)
     file << "DatasetName: " << datasetName << std::endl;
     file << "InfoText: " << infoText << std::endl;
 	file << "NumDimensions: "<<numDimensions << std::endl;
+    file << "DimensionNames: ";
+    for (int d=0; d<numDimensions; d++)
+        file << dimensionsName[d] << " ";
+    file << std::endl;
 	file << "TotalNumTrainingExamples: "<<totalNumSamples << std::endl;
 	file << "NumberOfClasses: "<<classTracker.size() << std::endl;
 	file << "ClassIDsAndCounters: " << std::endl;
@@ -435,6 +443,23 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const std::string filenam
 		return false;
 	}
 	file >> numDimensions;
+
+    dimensionsName.resize(numDimensions);
+    dimensionsName.clear();
+
+    file >> word;
+    //Get the number of dimensions in the training data
+    if(word != "DimensionNames:"){
+        file.close();
+        clear();
+        errorLog << "loadDatasetFromFile(std::string filename) - Failed to find DimensionNames!" << std::endl;
+        return false;
+    }
+
+    for (int d=0; d<numDimensions; d++) {
+        file >> word;
+        dimensionsName.push_back(word);
+    }
 
 	//Get the total number of training examples in the training data
 	file >> word;
@@ -691,6 +716,10 @@ std::string TimeSeriesClassificationData::getStatsAsString() const{
     stats += "DatasetName:\t" + datasetName + "\n";
     stats += "DatasetInfo:\t" + infoText + "\n";
     stats += "Number of Dimensions:\t" + Util::toString(numDimensions) + "\n";
+    stats += "Dimension Names:\t";
+    for (int d=0; d<numDimensions; d++)
+        stats += dimensionsName[d] + " ";
+    stats += "\n";
     stats += "Number of Samples:\t" + Util::toString(totalNumSamples) + "\n";
     stats += "Number of Classes:\t" + Util::toString(getNumClasses()) + "\n";
     stats += "Registered classes:\n";
@@ -1054,6 +1083,13 @@ UINT TimeSeriesClassificationData::getClassLabelIndexValue(const UINT classLabel
     return 0;
 }
 
+UINT TimeSeriesClassificationData::getClassLabelAtIndexValue(const UINT index) const {
+    for(UINT k=0; k<classTracker.size(); k++){
+        if(k==index) return classTracker[index].classLabel;
+    }
+    return -1;
+}
+
 std::string TimeSeriesClassificationData::getClassNameForCorrespondingClassLabel(const UINT classLabel) const {
 
     for(UINT i=0; i<classTracker.size(); i++){
@@ -1108,6 +1144,45 @@ MatrixFloat TimeSeriesClassificationData::getDataAsMatrixFloat() const {
     }
     return matrixData;
 }
+
+
+MatrixFloat TimeSeriesClassificationData::getSampleData(UINT classLabel, UINT recordID) const {
+
+    int record = 0;
+    for(UINT x=0; x<totalNumSamples; x++){
+        if( data[x].getClassLabel() == classLabel ){
+            if(record == recordID) {
+                return data[x].getData();
+            } else
+                record++;
+        }
+    }
+    return MatrixFloat();
+}
+
+
+UINT TimeSeriesClassificationData::getNumSamplesForClassLabel(UINT classLabel) const {
+    for(UINT i=0; i<classTracker.size(); i++){
+        if( classTracker[i].classLabel == classLabel ){
+            return classTracker[i].counter;
+        }
+    }
+    return -1;
+}
+
+Vector<std::string> TimeSeriesClassificationData::getDimensionNames() const {
+    return dimensionsName;
+}
+
+void TimeSeriesClassificationData::setDimensionNames(Vector<std::string> names) {
+    if(names.size() != numDimensions) {
+        errorLog << "dimensionNames size differ from numDimension" << std::endl;
+    }
+    dimensionsName.clear();
+    for (int d=0; d<numDimensions; d++)
+        dimensionsName.push_back(names[d]);
+}
+
 
 GRT_END_NAMESPACE
 

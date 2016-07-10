@@ -381,6 +381,9 @@ public:
      */
 	UINT inline getNumDimensions() const { return numDimensions; }
 	
+    Vector<std::string> getDimensionNames()  const; // CDF
+    void setDimensionNames(Vector<std::string> names);
+
 	/**
      Gets the number of samples in the classification data across all the classes.
      
@@ -388,6 +391,10 @@ public:
      */
 	UINT inline getNumSamples() const { return totalNumSamples; }
 	
+    UINT getNumSamplesForClassLabel(UINT classLabel) const; // CDF
+
+    MatrixFloat getSampleData(UINT classLabel, UINT recordID) const; // CDF
+
 	/**
      Gets the number of classes.
      
@@ -416,6 +423,8 @@ public:
      */
     UINT getClassLabelIndexValue(const UINT classLabel) const;
     
+    UINT getClassLabelAtIndexValue(const UINT index) const; // CDF
+
     /**
      Gets the name of the class with a given class label.  If the class label does not exist then the std::string "CLASS_LABEL_NOT_FOUND" will be returned.
      
@@ -442,7 +451,7 @@ public:
      
 	 @return a vector of TimeSeriesClassificationSample
      */
-	Vector< TimeSeriesClassificationSample > getClassificationData() const { return data; }
+    Vector< TimeSeriesClassificationSample > getClassificationData() const { return data; }
     
     /**
      Gets the data as a MatrixFloat. This returns just the data, not the labels.
@@ -466,7 +475,8 @@ protected:
 	Vector< ClassTracker > classTracker;					///< A vector of ClassTracker, which keeps track of the number of samples of each class
 	Vector< TimeSeriesClassificationSample > data;          ///< The labelled time series classification data
     Vector< Vector< UINT > >  crossValidationIndexs;        ///< A vector to hold the indexs of the dataset for the cross validation
-     
+    Vector<std::string> dimensionsName;
+
     DebugLog debugLog;                                      ///< Default debugging log
     ErrorLog errorLog;                                      ///< Default error log
     WarningLog warningLog;                                  ///< Default warning log
