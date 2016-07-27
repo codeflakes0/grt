@@ -65,10 +65,15 @@ public:
     inline UINT getClassLabel() const { return classLabel; }
     MatrixFloat &getData(){ return data; }
     const MatrixFloat &getData() const { return data; }
+    MatrixFloat &getEnabledData(Vector<bool> enabledDimensions);
+    const MatrixFloat &getEnabledData(Vector<bool> enabledDimensions) const;
 
 protected:
 	UINT classLabel;
 	MatrixFloat data;
+    MatrixFloat enabledData;
+
+    DebugLog debugLog;                                      ///< Default debugging log
 };
 
 GRT_END_NAMESPACE

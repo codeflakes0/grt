@@ -604,10 +604,26 @@ bool RegressionData::loadDatasetFromFile(const std::string &filename){
 	}
 	file >> numTargetDimensions;
 
+    /*
+    file >> word;
+    //Get the number of dimensions in the training data
+    if(word != "DimensionNames:"){
+        file.close();
+        clear();
+        errorLog << "loadDatasetFromFile(std::string filename) - Failed to find DimensionNames!" << std::endl;
+        return false;
+    }
+
+    for (int d=0; d<numDimensions; d++) {
+        file >> word;
+        dimensionsName.push_back(word);
+        infoLog << "load dimension name: " << word << std::endl;
+    }*/
+
 	//Get the total number of training examples in the training data
 	file >> word;
 	if(word != "TotalNumTrainingExamples:"){
-        errorLog << "loadDatasetFromFile(const string &filename) - Failed to find TotalNumTrainingExamples!" << std::endl;
+        errorLog << "loadDatasetFromFile(const string &filename) - Failed to find TotalNumTrainingExamples! 1" << std::endl;
 		file.close();
 		return false;
 	}

@@ -2612,7 +2612,7 @@ bool GestureRecognitionPipeline::preProcessData(VectorFloat inputVector,bool com
         for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
             
             if( inputVector.size() != preProcessingModules[ moduleIndex ]->getNumInputDimensions() ){
-                errorLog << "preProcessData(VectorFloat inputVector) - The size of the input Vector (" << preProcessingModules[ moduleIndex ]->getNumInputDimensions() << ") does not match that of the PreProcessing Module at moduleIndex: " << moduleIndex << std::endl;
+                errorLog << "preProcessData(VectorFloat inputVector) - The size of the input Vector (" << inputVector.size() << ") does not match " << preProcessingModules[ moduleIndex ]->getNumInputDimensions() << " of the PreProcessing Module at moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             

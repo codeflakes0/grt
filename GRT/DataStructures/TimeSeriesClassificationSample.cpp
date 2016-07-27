@@ -27,12 +27,16 @@ GRT_BEGIN_NAMESPACE
 TimeSeriesClassificationSample::TimeSeriesClassificationSample():classLabel(0){};
 
 TimeSeriesClassificationSample::TimeSeriesClassificationSample(const UINT classLabel,const MatrixFloat &data){
-	this->classLabel = classLabel;
+    debugLog.setProceedingText("[DEBUG TSCS]");
+
+    this->classLabel = classLabel;
 	this->data = data;
 }
 
 TimeSeriesClassificationSample::TimeSeriesClassificationSample(const TimeSeriesClassificationSample &rhs){
-	this->classLabel = rhs.classLabel;
+    debugLog.setProceedingText("[DEBUG TSCS]");
+
+    this->classLabel = rhs.classLabel;
 	this->data = rhs.data;
 }
 
@@ -41,6 +45,7 @@ TimeSeriesClassificationSample::~TimeSeriesClassificationSample(){};
 bool TimeSeriesClassificationSample::clear(){
 	classLabel = 0;
 	data.clear();
+    enabledData.clear();
     return true;
 }
 
@@ -54,6 +59,21 @@ bool TimeSeriesClassificationSample::setTrainingSample(const UINT classLabel,con
 	this->classLabel = classLabel;
 	this->data = data;
     return true;
+}
+
+MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<bool> enabledDimensions) {
+    UINT enabledCol = 0;
+    for (UINT d=0; d<enabledDimensions.size(); d++)
+        enabledCol++;
+
+    enabledData.resize(data.getNumRows(), enabledCol);
+    debugLog << "getEnabledData from " << data.getNumRows() << "x" << data.getNumCols() << " to " <<
+             enabledData.getNumRows() << "x" << enabledData.getNumCols() << std::endl;
+    return data;
+}
+
+const MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<bool> enabledDimensions) const {
+    return data;
 }
 
 GRT_END_NAMESPACE

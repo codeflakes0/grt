@@ -379,10 +379,14 @@ public:
      
 	 @return an unsigned int representing the number of dimensions in the classification data
      */
-	UINT inline getNumDimensions() const { return numDimensions; }
-	
+    UINT /*inline*/ getNumDimensions() const;// { return numDimensions; }
+
     Vector<std::string> getDimensionNames()  const; // CDF
     void setDimensionNames(Vector<std::string> names);
+
+    void enableDimension(UINT index, bool state);
+    bool isDimensionEnabled(UINT index) const;
+    Vector<bool> getEnabledDimensions() const;
 
 	/**
      Gets the number of samples in the classification data across all the classes.
@@ -465,7 +469,7 @@ protected:
     
     std::string datasetName;                                     ///< The name of the dataset
     std::string infoText;                                        ///< Some infoText about the dataset
-	UINT numDimensions;										///< The number of dimensions in the dataset
+    UINT numDimensions;										///< The number of dimensions in the dataset
 	UINT totalNumSamples;                                   ///< The total number of samples in the dataset
     UINT kFoldValue;                                        ///< The number of folds the dataset has been spilt into for cross valiation
     bool crossValidationSetup;                              ///< A flag to show if the dataset is ready for cross validation
@@ -476,6 +480,7 @@ protected:
 	Vector< TimeSeriesClassificationSample > data;          ///< The labelled time series classification data
     Vector< Vector< UINT > >  crossValidationIndexs;        ///< A vector to hold the indexs of the dataset for the cross validation
     Vector<std::string> dimensionsName;
+    Vector<bool> enabledDimensions;
 
     DebugLog debugLog;                                      ///< Default debugging log
     ErrorLog errorLog;                                      ///< Default error log

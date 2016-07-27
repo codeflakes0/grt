@@ -148,6 +148,8 @@ bool DTW::train_(TimeSeriesClassificationData &labelledTrainingData){
 	trained = false;
     continuousInputDataBuffer.clear();
 
+    Vector<bool> enabledDimensions = labelledTrainingData.getEnabledDimensions();
+
     if( trimTrainingData ){
         TimeSeriesClassificationSampleTrimmer timeSeriesTrimmer(trimThreshold,maximumTrimPercentage);
         TimeSeriesClassificationData tempData;
@@ -155,7 +157,7 @@ bool DTW::train_(TimeSeriesClassificationData &labelledTrainingData){
 
         for(UINT i=0; i<labelledTrainingData.getNumSamples(); i++){
             if( timeSeriesTrimmer.trimTimeSeries( labelledTrainingData[i] ) ){
-                tempData.addSample(labelledTrainingData[i].getClassLabel(), labelledTrainingData[i].getData());
+                tempData.addSample(labelledTrainingData[i].getClassLabel(), labelledTrainingData[i].getEnabledData(enabledDimensions));
                 UINT l = labelledTrainingData[i].getClassLabel();
                 tempData.setClassNameForCorrespondingClassLabel(labelledTrainingData.getClassNameForCorrespondingClassLabel(l), l);
             }else{
@@ -237,11 +239,11 @@ bool DTW::train_(TimeSeriesClassificationData &labelledTrainingData){
 
 		switch (trainingMethod) {
 			case(0)://Standard Training
-				templatesBuffer[k].timeSeries = classData[bestIndex].getData();
+                templatesBuffer[k].timeSeries = classData[bestIndex].getEnabledData(enabledDimensions);
 				break;
 			case(1)://Training using Smoothing
 				//Smooth the data, reducing its size by a factor set by smoothFactor
-				smoothData(classData[ bestIndex ].getData(),smoothingFactor,templatesBuffer[k].timeSeries);
+                smoothData(classData[ bestIndex ].getEnabledData(enabledDimensions),smoothingFactor,templatesBuffer[k].timeSeries);
 				break;
 			default:
 				errorLog << "Can not train model: Unknown training method "  << std::endl;
@@ -283,6 +285,8 @@ bool DTW::train_NDDTW(TimeSeriesClassificationData &trainingData,DTWTemplate &dt
    MatrixFloat distanceResults(numExamples,numExamples);
    dtwTemplate.averageTemplateLength = 0;
     
+   Vector<bool> enabledDimensions = trainingData.getEnabledDimensions();
+
    for(UINT m=0; m<numExamples; m++){
        
 	   MatrixFloat templateA; //The m'th template
@@ -290,8 +294,8 @@ bool DTW::train_NDDTW(TimeSeriesClassificationData &trainingData,DTWTemplate &dt
 	   dtwTemplate.averageTemplateLength += trainingData[m].getLength();
 
 	   //Smooth the data if required
-	   if( useSmoothing ) smoothData(trainingData[m].getData(),smoothingFactor,templateA);
-	   else templateA = trainingData[m].getData();
+       if( useSmoothing ) smoothData(trainingData[m].getEnabledData(enabledDimensions),smoothingFactor,templateA);
+       else templateA = trainingData[m].getEnabledData(enabledDimensions);
        
        if( offsetUsingFirstSample ){
            offsetTimeseries(templateA);
@@ -300,8 +304,8 @@ bool DTW::train_NDDTW(TimeSeriesClassificationData &trainingData,DTWTemplate &dt
 	   for(UINT n=0; n<numExamples; n++){
 		if(m!=n){
 		    //Smooth the data if required
-		    if( useSmoothing ) smoothData(trainingData[n].getData(),smoothingFactor,templateB);
-		    else templateB = trainingData[n].getData();
+            if( useSmoothing ) smoothData(trainingData[n].getEnabledData(enabledDimensions),smoothingFactor,templateB);
+            else templateB = trainingData[n].getEnabledData(enabledDimensions);
             
             if( offsetUsingFirstSample ){
                 offsetTimeseries(templateB);
@@ -805,9 +809,11 @@ inline Float DTW::MIN_(Float a,Float b, Float c){
 
 void DTW::scaleData(TimeSeriesClassificationData &trainingData){
 
+    Vector<bool> enabledDimensions = trainingData.getEnabledDimensions();
+
 	//Scale the data using the min and max values
     for(UINT i=0; i<trainingData.getNumSamples(); i++){
-        scaleData( trainingData[i].getData(), trainingData[i].getData() );
+        scaleData( trainingData[i].getEnabledData(enabledDimensions), trainingData[i].getEnabledData(enabledDimensions) );
     }
 
 }
@@ -830,8 +836,10 @@ void DTW::scaleData(MatrixFloat &data,MatrixFloat &scaledData){
 
 void DTW::znormData(TimeSeriesClassificationData &trainingData){
 
+    Vector<bool> enabledDimensions = trainingData.getEnabledDimensions();
+
     for(UINT i=0; i<trainingData.getNumSamples(); i++){
-        znormData( trainingData[i].getData(), trainingData[i].getData() );
+        znormData( trainingData[i].getEnabledData(enabledDimensions), trainingData[i].getEnabledData(enabledDimensions) );
     }
 
 }

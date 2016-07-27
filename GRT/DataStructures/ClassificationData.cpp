@@ -490,6 +490,15 @@ bool ClassificationData::loadDatasetFromFile(const std::string &filename){
 	}
 	file >> numDimensions;
 
+    file >> word;
+    if( word != "DimensionNames:" ){
+        errorLog << "loadDatasetFromFile(const std::string &filename) - failed to find DimensionNames header!" << std::endl;
+        file.close();
+        return false;
+    }
+    for (int i=0; i<numDimensions; i++)
+        file >> word;
+
 	//Get the total number of training examples in the training data
 	file >> word;
 	if( word != "TotalNumTrainingExamples:" && word != "TotalNumExamples:" ){

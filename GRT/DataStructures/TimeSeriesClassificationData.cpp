@@ -93,6 +93,12 @@ bool TimeSeriesClassificationData::setNumDimensions(const UINT numDimensions){
         dimensionsName.clear();
         dimensionsName.resize(numDimensions);
 
+        enabledDimensions.clear();
+        enabledDimensions.resize(numDimensions);
+        for (UINT d=0; d<numDimensions; d++) {
+            enabledDimensions[d] = true;
+        }
+
         return true;
     }
 
@@ -447,6 +453,10 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const std::string filenam
     dimensionsName.resize(numDimensions);
     dimensionsName.clear();
 
+    enabledDimensions.resize(numDimensions);
+    for (int i=0; i<numDimensions; i++)
+        enabledDimensions[i] = true;
+
     file >> word;
     //Get the number of dimensions in the training data
     if(word != "DimensionNames:"){
@@ -459,14 +469,16 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const std::string filenam
     for (int d=0; d<numDimensions; d++) {
         file >> word;
         dimensionsName.push_back(word);
+        infoLog << "load dimension name: " << word << std::endl;
     }
 
 	//Get the total number of training examples in the training data
 	file >> word;
+    infoLog << word << std::endl;
 	if(word != "TotalNumTrainingExamples:"){
 		file.close();
         clear();
-        errorLog << "loadDatasetFromFile(std::string filename) - Failed to find TotalNumTrainingExamples!" << std::endl;
+        errorLog << "loadDatasetFromFile(std::string filename) - Failed to find TotalNumTrainingExamples! 2" << std::endl;
 		return false;
 	}
 	file >> totalNumSamples;
@@ -529,6 +541,7 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const std::string filenam
 	}
 
 	//Reset the memory
+    infoLog << "totalNumSamples:" << totalNumSamples << std::endl;
 	data.resize( totalNumSamples, TimeSeriesClassificationSample() );
 
 	//Load each of the time series
@@ -536,6 +549,8 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const std::string filenam
 		UINT classLabel = 0;
 		UINT timeSeriesLength = 0;
         std::string className;
+
+        infoLog << "load sample:" << x << std::endl;
 
 		file >> word;
 		if( word != "************TIME_SERIES************" ){
@@ -591,7 +606,9 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const std::string filenam
 		data[x].setTrainingSample(classLabel,trainingExample);
     }
 
+    infoLog << "loading done" << std::endl;
 	file.close();
+    infoLog << "loading closed" << std::endl;
 	return true;
 }
     
@@ -719,6 +736,10 @@ std::string TimeSeriesClassificationData::getStatsAsString() const{
     stats += "Dimension Names:\t";
     for (int d=0; d<numDimensions; d++)
         stats += dimensionsName[d] + " ";
+    stats += "\n";
+    stats += "Enabled dimensions:\t";
+    for (int d=0; d<numDimensions; d++)
+        stats += (enabledDimensions[d] ? "on " : "off " );
     stats += "\n";
     stats += "Number of Samples:\t" + Util::toString(totalNumSamples) + "\n";
     stats += "Number of Classes:\t" + Util::toString(getNumClasses()) + "\n";
@@ -1183,6 +1204,34 @@ void TimeSeriesClassificationData::setDimensionNames(Vector<std::string> names) 
         dimensionsName.push_back(names[d]);
 }
 
+void TimeSeriesClassificationData::enableDimension(UINT index, bool state) {
+    if(index >= enabledDimensions.size()) {
+        errorLog << "bad dimension index " << index << " vs " << enabledDimensions.size() << std::endl;
+        return;
+    }
+    enabledDimensions[index] = state;
+}
+
+bool TimeSeriesClassificationData::isDimensionEnabled(UINT index) const {
+    if(index >= enabledDimensions.size()) {
+        errorLog << "bad dimension index " << index << " vs " << enabledDimensions.size() << std::endl;
+        return false;
+    }
+    return enabledDimensions[index];
+}
+
+Vector<bool> TimeSeriesClassificationData::getEnabledDimensions() const {
+    return enabledDimensions;
+}
+
+UINT TimeSeriesClassificationData::getNumDimensions() const
+{
+    UINT num = 0;
+    for (int d=0; d<enabledDimensions.size(); d++)
+        if(enabledDimensions[d]) num++;
+    return num;
+    //return numDimensions; // before enabledDimensions
+}
 
 GRT_END_NAMESPACE
 
