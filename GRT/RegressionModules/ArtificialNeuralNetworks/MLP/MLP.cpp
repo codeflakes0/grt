@@ -225,11 +225,11 @@ bool MLP::init(const UINT numInputNeurons, const UINT numHiddenNeurons, const UI
 }
 
 bool MLP::init(const UINT numInputNeurons,
-const UINT numHiddenNeurons,
-const UINT numOutputNeurons,
-const UINT inputLayerActivationFunction,
-const UINT hiddenLayerActivationFunction,
-const UINT outputLayerActivationFunction){
+                const UINT numHiddenNeurons,
+                const UINT numOutputNeurons,
+                const Neuron::Type inputLayerActivationFunction,
+                const Neuron::Type hiddenLayerActivationFunction,
+                const Neuron::Type outputLayerActivationFunction){
     
     //Clear any previous models
     clear();
@@ -279,13 +279,13 @@ const UINT outputLayerActivationFunction){
     
     for(UINT i=0; i<numHiddenNeurons; i++){
         //The number of inputs to a neuron in the output layer will always match the number of input neurons
-        hiddenLayer[i].init(numInputNeurons,hiddenLayerActivationFunction);
+        hiddenLayer[i].init(numInputNeurons,hiddenLayerActivationFunction,-0.2,0.2);
         hiddenLayer[i].gamma = gamma;
     }
     
     for(UINT i=0; i<numOutputNeurons; i++){
         //The number of inputs to a neuron in the output layer will always match the number of hidden neurons
-        outputLayer[i].init(numHiddenNeurons,outputLayerActivationFunction);
+        outputLayer[i].init(numHiddenNeurons,outputLayerActivationFunction,-0.5,0.5);
         outputLayer[i].gamma = gamma;
     }
     
@@ -410,15 +410,16 @@ bool MLP::trainOnlineGradientDescentClassification(const RegressionData &trainin
     //Setup the training loop
     MLP bestNetwork;
     totalSquaredTrainingError = 0;
-    rootMeanSquaredTrainingError = 0;
+    rmsTrainingError = 0;
+    rmsValidationError = 0;
     trainingError = 0;
     bool keepTraining = true;
     UINT epoch = 0;
     UINT bestIter = 0;
     UINT bestIndex = 0;
     UINT classLabel = 0;
-    Float alpha = learningRate;
-    Float beta = momentum;
+    Float lRate = learningRate;
+    Float lMomentum = momentum;
     Float error = 0;
     Float lastError = 0;
     Float accuracy = 0;
@@ -467,7 +468,7 @@ bool MLP::trainOnlineGradientDescentClassification(const RegressionData &trainin
                 const VectorFloat &targetVector = trainingData[ indexList[i] ].getTargetVector();
                 
                 //Perform the back propagation
-                backPropError = back_prop(trainingExample,targetVector,alpha,beta);
+                backPropError = back_prop(trainingExample,targetVector,lRate,lMomentum);
                 
                 //debugLog << "i: " << i << " backPropError: " << backPropError << std::endl;
                 
@@ -569,11 +570,11 @@ bool MLP::trainOnlineGradientDescentClassification(const RegressionData &trainin
                 }
                 
                 accuracy = (accuracy/Float(numValidationSamples))*Float(numValidationSamples);
-                rootMeanSquaredTrainingError = sqrt( totalSquaredTrainingError / Float(numValidationSamples) );
+                rmsValidationError = sqrt( totalSquaredTrainingError / Float(numValidationSamples) );
                 
             }else{//We are not using a validation set
                 accuracy = (accuracy/Float(M))*Float(M);
-                rootMeanSquaredTrainingError = sqrt( totalSquaredTrainingError / Float(M) );
+                rmsTrainingError = sqrt( totalSquaredTrainingError / Float(M) );
             }
             
             //Store the errors
@@ -612,7 +613,7 @@ bool MLP::trainOnlineGradientDescentClassification(const RegressionData &trainin
             bestIter = iter;
             bestError = lastError;
             bestTSError = totalSquaredTrainingError;
-            bestRMSError = rootMeanSquaredTrainingError;
+            bestRMSError = rmsTrainingError;
             bestAccuracy = accuracy;
             bestNetwork = *this;
             trainingErrorLog = tempTrainingErrorLog;
@@ -702,7 +703,7 @@ bool MLP::trainOnlineGradientDescentRegression(const RegressionData &trainingDat
     UINT bestIter = 0;
     MLP bestNetwork;
     totalSquaredTrainingError = 0;
-    rootMeanSquaredTrainingError = 0;
+    rmsTrainingError = 0;
     trainingError = 0;
     Float error = 0;
     Float lastError = 0;
@@ -740,9 +741,11 @@ bool MLP::trainOnlineGradientDescentRegression(const RegressionData &trainingDat
             totalSquaredTrainingError = 0;
             
             for(UINT i=0; i<M; i++){
+
                 //Get the i'th training and target Vectors
-                const VectorFloat &trainingExample = trainingData[ indexList[i] ].getInputVector();
-                const VectorFloat &targetVector = trainingData[ indexList[i] ].getTargetVector();
+                const UINT randomIndex = indexList[i];
+                const VectorFloat &trainingExample = trainingData[ randomIndex ].getInputVector();
+                const VectorFloat &targetVector = trainingData[ randomIndex ].getTargetVector();
                 
                 //Perform the back propagation
                 Float backPropError = back_prop(trainingExample,targetVector,alpha,beta);
@@ -770,9 +773,9 @@ bool MLP::trainOnlineGradientDescentRegression(const RegressionData &trainingDat
                 totalSquaredTrainingError = 0;
                 
                 //Iterate over the validation samples
-                for(UINT i=0; i<numValidationSamples; i++){
-                    const VectorFloat &trainingExample = validationData[i].getInputVector();
-                    const VectorFloat &targetVector = validationData[i].getTargetVector();
+                for(UINT n=0; n<numValidationSamples; n++){
+                    const VectorFloat &trainingExample = validationData[n].getInputVector();
+                    const VectorFloat &targetVector = validationData[n].getTargetVector();
                     
                     VectorFloat y = feedforward(trainingExample);
                     
@@ -783,22 +786,22 @@ bool MLP::trainOnlineGradientDescentRegression(const RegressionData &trainingDat
                     
                 }
                 
-                rootMeanSquaredTrainingError = sqrt( totalSquaredTrainingError / Float(numValidationSamples) );
+                rmsTrainingError = sqrt( totalSquaredTrainingError / Float(numValidationSamples) );
                 
             }else{//We are not using a validation set
-                rootMeanSquaredTrainingError = sqrt( totalSquaredTrainingError / Float(M) );
+                rmsTrainingError = sqrt( totalSquaredTrainingError / Float(M) );
             }
             
             //Store the errors
             VectorFloat temp(2);
             temp[0] = trainingSetTotalSquaredError;
-            temp[1] = rootMeanSquaredTrainingError;
+            temp[1] = rmsTrainingError;
             tempTrainingErrorLog.push_back( temp );
             
-            error = rootMeanSquaredTrainingError;
+            error = rmsTrainingError;
             
             //Store the training results
-            result.setRegressionResult(iter,totalSquaredTrainingError,rootMeanSquaredTrainingError,this);
+            result.setRegressionResult(iter,totalSquaredTrainingError,rmsTrainingError,this);
             trainingResults.push_back( result );
             
             delta = fabs( error - lastError );
@@ -826,7 +829,7 @@ bool MLP::trainOnlineGradientDescentRegression(const RegressionData &trainingDat
             bestIter = iter;
             bestError = lastError;
             bestTSError = totalSquaredTrainingError;
-            bestRMSError = rootMeanSquaredTrainingError;
+            bestRMSError = rmsTrainingError;
             bestNetwork = *this;
             trainingErrorLog = tempTrainingErrorLog;
         }
@@ -849,92 +852,76 @@ bool MLP::trainOnlineGradientDescentRegression(const RegressionData &trainingDat
     return true;
 }
 
-Float MLP::back_prop(const VectorFloat &trainingExample,const VectorFloat &targetVector,const Float alpha,const Float beta){
+Float MLP::back_prop(const VectorFloat &trainingExample,const VectorFloat &targetVector,const Float learningRate,const Float learningMomentum){
     
+    UINT i,j,k = 0;
     Float update = 0;
-    Float sum = 0;
-    Float omBeta = 1.0 - beta;
+    Float error = 0;
+    Float sqrError = 0;
     
-    //Forward propagation
+    //Forward propagation based on the current weights
     feedforward(trainingExample,inputNeuronsOuput,hiddenNeuronsOutput,outputNeuronsOutput);
     
-    //Compute the error of the output layer: the derivative of the function times the error of the output
-    for(UINT i=0; i<numOutputNeurons; i++){
-        deltaO[i] = outputLayer[i].getDerivative( outputNeuronsOutput[i] ) * (targetVector[i]-outputNeuronsOutput[i]);
+    //Compute the error of the output layer: the derivative of the output neuron, times the error of the output
+    for(k=0; k<numOutputNeurons; k++){
+        error = targetVector[k]-outputNeuronsOutput[k];
+        sqrError += 0.5 * SQR( error );
+        deltaO[k] = outputLayer[k].getDerivative( outputNeuronsOutput[k] ) * error;
     }
     
-    //Compute the error of the hidden layer
-    for(UINT i=0; i<numHiddenNeurons; i++){
-        sum = 0;
-        for(UINT j=0; j<numOutputNeurons; j++){
-            sum += outputLayer[j].weights[i] * deltaO[j];
+    //Compute the error of the hidden layer: the derivative of the hidden neuron, times the total error of the hidden output 
+    for(j=0; j<numHiddenNeurons; j++){
+        error = 0;
+        for(k=0; k<numOutputNeurons; k++){
+            error += outputLayer[k].weights[j] * deltaO[k];
         }
-        deltaH[i] = hiddenLayer[i].getDerivative( hiddenNeuronsOutput[i] ) * sum;
+        deltaH[j] = hiddenLayer[j].getDerivative( hiddenNeuronsOutput[j] ) * error;
     }
-    
-    //Update the hidden weights: old hidden weights + (learningRate * inputToTheHiddenNeuron * deltaHidden )
-    for(UINT i=0; i<numHiddenNeurons; i++){
-        for(UINT j=0; j<numInputNeurons; j++){
-            //Compute the update
-            //update = alpha * ((beta * hiddenLayer[i].previousUpdate[j]) + (omBeta * inputNeuronsOuput[j])) * deltaH[i];
-            update = alpha * inputNeuronsOuput[j] * deltaH[i];
-            
-            //Update the weights
-            hiddenLayer[i].weights[j] += update;
-            
-            //Store the previous update
-            hiddenLayer[i].previousUpdate[j] = update;
+
+    //Update the output weights, new weight = old weight + (learningRate * change) + (momenutum * previousChange)
+    for(j=0; j<numHiddenNeurons; j++){
+        for(k=0; k<numOutputNeurons; k++){
+            update = deltaO[k] * hiddenNeuronsOutput[j];
+            outputLayer[k].weights[j] += learningRate*update + learningMomentum*outputLayer[k].previousUpdate[j];
+            outputLayer[k].previousUpdate[j] = update;
         }
     }
-    
-    //Update the output weights
-    for(UINT i=0; i<numOutputNeurons; i++){
-        for(UINT j=0; j<numHiddenNeurons; j++){
-            //Compute the update
-            //update = alpha * ((beta * outputLayer[i].previousUpdate[j]) + (omBeta * hiddenNeuronsOutput[j])) * deltaO[i];
-            update = alpha * hiddenNeuronsOutput[j] * deltaO[i];
-            
-            //Update the weights
-            outputLayer[i].weights[j] += update;
-            
-            //Store the update
-            outputLayer[i].previousUpdate[j] = update;
+
+    //Update the hidden weights, new weight = old weight + (learningRate * change) + (momenutum * previousChange)
+    for(i=0; i<numInputNeurons; i++){
+        for(j=0; j<numHiddenNeurons; j++){
+            update = deltaH[j] * inputNeuronsOuput[i];
+            hiddenLayer[j].weights[i] += learningRate*update + learningMomentum*hiddenLayer[j].previousUpdate[i];
+            hiddenLayer[j].previousUpdate[i] = update;
         }
     }
     
-    //Update the hidden bias
-    for(UINT i=0; i<numHiddenNeurons; i++){
+    //Update the output bias, new weight = old weight + (learningRate * change) + (momenutum * previousChange)
+    for(k=0; k<numOutputNeurons; k++){
         //Compute the update
-        //update = alpha * ((beta * hiddenLayer[i].previousBiasUpdate) + (omBeta * deltaH[i]));
-        update = alpha * deltaH[i];
+        update = learningRate*deltaO[k] + learningMomentum*outputLayer[k].previousBiasUpdate;
         
         //Update the bias
-        hiddenLayer[i].bias += update;
+        outputLayer[k].bias += update;
         
         //Store the update
-        hiddenLayer[i].previousBiasUpdate = update;
+        outputLayer[k].previousBiasUpdate = update;
     }
-    
-    //Update the output bias
-    for(UINT i=0; i<numOutputNeurons; i++){
+
+    //Update the hidden bias, new weight = old weight + (learningRate * change) + (momenutum * previousChange)
+    for(j=0; j<numHiddenNeurons; j++){
         //Compute the update
-        //update = alpha * (beta * outputLayer[i].previousBiasUpdate) + (omBeta * deltaO[i]);
-        update = alpha * deltaO[i];
+        update = learningRate*deltaH[j] + learningMomentum*hiddenLayer[j].previousBiasUpdate;
         
         //Update the bias
-        outputLayer[i].bias += update;
+        hiddenLayer[j].bias += update;
         
         //Store the update
-        outputLayer[i].previousBiasUpdate = update;
+        hiddenLayer[j].previousBiasUpdate = update;
     }
     
-    //Compute the squared error between the output of the network and the target Vector
-    Float error = 0;
-    for(UINT i=0; i<numOutputNeurons; i++){
-        error += SQR( targetVector[i] - outputNeuronsOutput[i] );
-    }
-    
-    return error;
+    //Return the squared error between the output of the network and the target Vector
+    return sqrError;
 }
 
 VectorFloat MLP::feedforward(VectorFloat trainingExample){
@@ -942,40 +929,41 @@ VectorFloat MLP::feedforward(VectorFloat trainingExample){
     if( inputNeuronsOuput.size() != numInputNeurons ) inputNeuronsOuput.resize(numInputNeurons,0);
     if( hiddenNeuronsOutput.size() != numHiddenNeurons ) hiddenNeuronsOutput.resize(numHiddenNeurons,0);
     if( outputNeuronsOutput.size() != numOutputNeurons ) outputNeuronsOutput.resize(numOutputNeurons,0);
+
+    UINT i,j,k=0;
     
-    //Scale the input Vector if required
+    //Scale the input vector if required
     if( useScaling ){
-        for(UINT i=0; i<numInputNeurons; i++){
+        for(i=0; i<numInputNeurons; i++){
             trainingExample[i] = scale(trainingExample[i],inputVectorRanges[i].minValue,inputVectorRanges[i].maxValue,MLP_NEURON_MIN_TARGET,MLP_NEURON_MAX_TARGET);
         }
     }
     
     //Input layer
     VectorFloat input(1);
-    for(UINT i=0; i<numInputNeurons; i++){
+    for(i=0; i<numInputNeurons; i++){
         input[0] = trainingExample[i];
         inputNeuronsOuput[i] = inputLayer[i].fire( input );
     }
     
     //Hidden Layer
-    for(UINT i=0; i<numHiddenNeurons; i++){
-        hiddenNeuronsOutput[i] = hiddenLayer[i].fire( inputNeuronsOuput );
+    for(j=0; j<numHiddenNeurons; j++){
+        hiddenNeuronsOutput[j] = hiddenLayer[j].fire( inputNeuronsOuput );
     }
     
     //Output Layer
-    for(UINT i=0; i<numOutputNeurons; i++){
-        outputNeuronsOutput[i] = outputLayer[i].fire( hiddenNeuronsOutput );
+    for(k=0; k<numOutputNeurons; k++){
+        outputNeuronsOutput[k] = outputLayer[k].fire( hiddenNeuronsOutput );
     }
     
-    //Scale the output Vector if required
+    //Scale the output vector if required
     if( useScaling ){
-        for(UINT i=0; i<numOutputNeurons; i++){
-            outputNeuronsOutput[i] = scale(outputNeuronsOutput[i],MLP_NEURON_MIN_TARGET,MLP_NEURON_MAX_TARGET,targetVectorRanges[i].minValue,targetVectorRanges[i].maxValue);
+        for(k=0; k<numOutputNeurons; k++){
+            outputNeuronsOutput[k] = scale(outputNeuronsOutput[k],MLP_NEURON_MIN_TARGET,MLP_NEURON_MAX_TARGET,targetVectorRanges[k].minValue,targetVectorRanges[k].maxValue);
         }
     }
     
     return outputNeuronsOutput;
-    
 }
 
 void MLP::feedforward(const VectorFloat &data,VectorFloat &inputNeuronsOuput,VectorFloat &hiddenNeuronsOutput,VectorFloat &outputNeuronsOutput){
@@ -983,22 +971,24 @@ void MLP::feedforward(const VectorFloat &data,VectorFloat &inputNeuronsOuput,Vec
     if( inputNeuronsOuput.size() != numInputNeurons ) inputNeuronsOuput.resize(numInputNeurons,0);
     if( hiddenNeuronsOutput.size() != numHiddenNeurons ) hiddenNeuronsOutput.resize(numHiddenNeurons,0);
     if( outputNeuronsOutput.size() != numOutputNeurons ) outputNeuronsOutput.resize(numOutputNeurons,0);
+
+    UINT i,j,k=0;
     
     //Input layer
     VectorFloat input(1);
-    for(UINT i=0; i<numInputNeurons; i++){
+    for(i=0; i<numInputNeurons; i++){
         input[0] = data[i];
         inputNeuronsOuput[i] = inputLayer[i].fire( input );
     }
     
     //Hidden Layer
-    for(UINT i=0; i<numHiddenNeurons; i++){
-        hiddenNeuronsOutput[i] = hiddenLayer[i].fire( inputNeuronsOuput );
+    for(j=0; j<numHiddenNeurons; j++){
+        hiddenNeuronsOutput[j] = hiddenLayer[j].fire( inputNeuronsOuput );
     }
     
     //Output Layer
-    for(UINT i=0; i<numOutputNeurons; i++){
-        outputNeuronsOutput[i] = outputLayer[i].fire( hiddenNeuronsOutput );
+    for(k=0; k<numOutputNeurons; k++){
+        outputNeuronsOutput[k] = outputLayer[k].fire( hiddenNeuronsOutput );
     }
     
 }
@@ -1008,6 +998,20 @@ void MLP::printNetwork() const{
     std::cout<<"NumInputNeurons: "<<numInputNeurons<< std::endl;
     std::cout<<"NumHiddenNeurons: "<<numHiddenNeurons<< std::endl;
     std::cout<<"NumOutputNeurons: "<<numOutputNeurons<< std::endl;
+
+    std::cout << "ScalingEnabled: " << useScaling << std::endl;
+
+    if( useScaling ){
+        std::cout << "InputRanges: " << std::endl;
+        for(UINT i=0; i<numInputNeurons; i++){
+            std::cout << "Input: " << i << "\t" << inputVectorRanges[i].minValue << "\t" << inputVectorRanges[i].maxValue << std::endl;
+        }
+
+        std::cout << "OutputRanges: " << std::endl;
+        for(UINT i=0; i<numOutputNeurons; i++){
+            std::cout << "Output: " << i << "\t" << targetVectorRanges[i].minValue << "\t" << targetVectorRanges[i].maxValue << std::endl;
+        }
+    }
     
     std::cout<<"InputWeights:\n";
     for(UINT i=0; i<numInputNeurons; i++){
@@ -1504,15 +1508,15 @@ UINT MLP::getNumOutputNeurons() const{
     return numOutputNeurons;
 }
 
-UINT MLP::getInputLayerActivationFunction() const{
+Neuron::Type MLP::getInputLayerActivationFunction() const{
     return inputLayerActivationFunction;
 }
 
-UINT MLP::getHiddenLayerActivationFunction() const{
+Neuron::Type MLP::getHiddenLayerActivationFunction() const{
     return hiddenLayerActivationFunction;
 }
 
-UINT MLP::getOutputLayerActivationFunction() const{
+Neuron::Type MLP::getOutputLayerActivationFunction() const{
     return outputLayerActivationFunction;
 }
 
@@ -1593,7 +1597,7 @@ UINT MLP::getPredictedClassLabel() const{
     return 0;
 }
 
-std::string MLP::activationFunctionToString(const UINT activationFunction) const{
+std::string MLP::activationFunctionToString(const Neuron::Type activationFunction) const{
     std::string activationName;
     
     switch(activationFunction){
@@ -1606,6 +1610,9 @@ std::string MLP::activationFunctionToString(const UINT activationFunction) const
         case(Neuron::BIPOLAR_SIGMOID):
         activationName = "BIPOLAR_SIGMOID";
         break;
+        case(Neuron::TANH):
+        activationName = "TANH";
+        break;
         default:
         activationName = "UNKNOWN";
         break;
@@ -1614,33 +1621,37 @@ std::string MLP::activationFunctionToString(const UINT activationFunction) const
     return activationName;
 }
 
-UINT MLP::activationFunctionFromString(const std::string activationName) const{
-    UINT activationFunction = 0;
+Neuron::Type MLP::activationFunctionFromString(const std::string activationName) const{
+    Neuron::Type activationFunction = Neuron::LINEAR;
     
     if(activationName == "LINEAR" ){
-        activationFunction = 0;
+        activationFunction = Neuron::LINEAR;
         return activationFunction;
     }
     if(activationName == "SIGMOID" ){
-        activationFunction = 1;
+        activationFunction = Neuron::SIGMOID;
         return activationFunction;
     }
     if(activationName == "BIPOLAR_SIGMOID" ){
-        activationFunction = 2;
+        activationFunction = Neuron::BIPOLAR_SIGMOID;
+        return activationFunction;
+    }
+    if(activationName == "TANH" ){
+        activationFunction = Neuron::TANH;
         return activationFunction;
     }
     return activationFunction;
 }
 
-bool MLP::validateActivationFunction(const UINT actvationFunction) const{
+bool MLP::validateActivationFunction(const Neuron::Type actvationFunction) const{
     if( actvationFunction >= Neuron::LINEAR && actvationFunction < Neuron::NUMBER_OF_ACTIVATION_FUNCTIONS ) return true;
     return false;
 }
 
-bool MLP::setInputLayerActivationFunction(const UINT activationFunction){
+bool MLP::setInputLayerActivationFunction(const Neuron::Type activationFunction){
     
     if( !validateActivationFunction(activationFunction) ){
-        warningLog << "setInputLayerActivationFunction(const UINT activationFunction) - The activation function is not valid. It should be one of the Neuron ActivationFunctions enums." << std::endl;
+        warningLog << "setInputLayerActivationFunction(const Neuron::Type activationFunction) - The activation function is not valid. It should be one of the Neuron ActivationFunctions enums." << std::endl;
     }
     
     this->inputLayerActivationFunction = activationFunction;
@@ -1653,10 +1664,10 @@ bool MLP::setInputLayerActivationFunction(const UINT activationFunction){
 }
 
 
-bool MLP::setHiddenLayerActivationFunction(const UINT activationFunction){
+bool MLP::setHiddenLayerActivationFunction(const Neuron::Type activationFunction){
     
     if( !validateActivationFunction(activationFunction) ){
-        warningLog << "setHiddenLayerActivationFunction(const UINT activationFunction) - The activation function is not valid. It should be one of the Neuron ActivationFunctions enums." << std::endl;
+        warningLog << "setHiddenLayerActivationFunction(const Neuron::Type activationFunction) - The activation function is not valid. It should be one of the Neuron ActivationFunctions enums." << std::endl;
     }
     
     this->hiddenLayerActivationFunction = activationFunction;
@@ -1669,10 +1680,10 @@ bool MLP::setHiddenLayerActivationFunction(const UINT activationFunction){
 }
 
 
-bool MLP::setOutputLayerActivationFunction(const UINT activationFunction){
+bool MLP::setOutputLayerActivationFunction(const Neuron::Type activationFunction){
     
     if( !validateActivationFunction(activationFunction) ){
-        warningLog << "setOutputLayerActivationFunction(const UINT activationFunction) - The activation function is not valid. It should be one of the Neuron ActivationFunctions enums." << std::endl;
+        warningLog << "setOutputLayerActivationFunction(const Neuron::Type activationFunction) - The activation function is not valid. It should be one of the Neuron ActivationFunctions enums." << std::endl;
     }
     
     this->outputLayerActivationFunction = activationFunction;

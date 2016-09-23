@@ -47,7 +47,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "GRTTypedefs.h"
 
-namespace GRT{
+GRT_BEGIN_NAMESPACE
     
 class GRT_API ThreadPool {
 public:
@@ -140,6 +140,6 @@ template<class F, class... Args> auto ThreadPool::enqueue(F&& func, Args&&... ar
 }
 #endif //GRT_CXX11_ENABLED
     
-}
+GRT_END_NAMESPACE
 
 #endif //GRT_THREAD_POOL_HEADER

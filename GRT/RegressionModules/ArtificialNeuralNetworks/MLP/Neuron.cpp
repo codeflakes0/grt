@@ -31,9 +31,33 @@ Neuron::Neuron(){
     previousBiasUpdate = 0;
 }
 
+Neuron::Neuron( const Neuron &rhs ){
+    this->gamma = rhs.gamma;
+    this->bias = rhs.bias;
+    this->previousBiasUpdate = rhs.previousBiasUpdate;
+    this->weights = rhs.weights;
+    this->previousUpdate = rhs.previousUpdate;
+    this->numInputs = rhs.numInputs;
+    this->activationFunction = rhs.activationFunction;
+}
+
 Neuron::~Neuron(){}
 
-bool Neuron::init(const UINT numInputs,const UINT activationFunction){
+Neuron& Neuron::operator=(const Neuron &rhs){
+    if( this != &rhs ){
+        this->gamma = rhs.gamma;
+        this->bias = rhs.bias;
+        this->previousBiasUpdate = rhs.previousBiasUpdate;
+        this->weights = rhs.weights;
+        this->previousUpdate = rhs.previousUpdate;
+        this->numInputs = rhs.numInputs;
+        this->activationFunction = rhs.activationFunction;
+    }
+
+    return *this;
+}
+
+bool Neuron::init(const UINT numInputs,const Type activationFunction,const Float minWeightRange, const Float maxWeightRange){
     
     if( !validateActivationFunction(activationFunction) ){
         return false;
@@ -52,12 +76,12 @@ bool Neuron::init(const UINT numInputs,const UINT activationFunction){
     //Randomise the weights between [-0.1 0.1]
     //Note, it's better to set the random values using small weights rather than [-1.0 1.0]
     for(unsigned int i=0; i<numInputs; i++){
-        weights[i] = random.getRandomNumberUniform(-0.1,0.1);
+        weights[i] = random.getRandomNumberUniform(minWeightRange,maxWeightRange);
 		previousUpdate[i] = 0;
     }
 
 	//Randomise the bias between [-0.1 0.1]
-    bias = random.getRandomNumberUniform(-0.1,0.1);
+    bias = random.getRandomNumberUniform(minWeightRange,maxWeightRange);
     
     return true;
 }
@@ -89,11 +113,14 @@ Float Neuron::fire(const VectorFloat &x){
             }
             
             //Trick for stopping overflow
+            /*
 			if( y < -45.0 ){ y = 0; }
 			else if( y > 45.0 ){ y = 1.0; }
 			else{
 				y = 1.0/(1.0+exp(-y));
 			}
+            */
+            y = 1.0/(1.0+exp(-y));
             break;
         case(BIPOLAR_SIGMOID):
             y = bias;
@@ -101,11 +128,21 @@ Float Neuron::fire(const VectorFloat &x){
                 y += x[i] * weights[i];
             }
 	
+            /*
             if( y < -45.0 ){ y = 0; }
 			else if( y > 45.0 ){ y = 1.0; }
 			else{
 				y = (2.0 / (1.0 + exp(-gamma * y))) - 1.0;
 			}
+            */
+            y = (2.0 / (1.0 + exp(-gamma * y))) - 1.0;
+            break;
+        case(TANH):
+            y = bias;
+            for(i=0; i<numInputs; i++){
+                y += x[i] * weights[i];
+            }
+            y = tanh( y );
             break;
     }
     return y;
@@ -125,11 +162,14 @@ Float Neuron::getDerivative(const Float &y){
         case(BIPOLAR_SIGMOID):
 			yy = (gamma * (1.0 - (y*y))) / 2.0;
             break;
+        case(TANH):
+            yy = 1.0 - (y*y);
+            break;
     }
     return yy;
 }
     
-bool Neuron::validateActivationFunction(const UINT actvationFunction){
+bool Neuron::validateActivationFunction(const Type actvationFunction){
     if( actvationFunction >= LINEAR && actvationFunction < NUMBER_OF_ACTIVATION_FUNCTIONS ) return true;
     return false;
 }

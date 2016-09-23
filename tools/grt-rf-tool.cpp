@@ -32,6 +32,7 @@ bool printUsage(){
     infoLog << "\t--remove-features: sets if features should be removed at each split [1=true,0=false], only used for 'train-model'\n";
     infoLog << "\t--bootstrap-weight: sets the size of the dataset used to train each tree in the RF model, only used for 'train-model'\n";
     infoLog << "\t--combine-weights: 1/0 if true, then the random forest weights will be combined across all trees in the forest, only used for 'compute-weights' mode\n";
+    infoLog << "\t--node: sets the node algorithm used in the DecisionTree. Options: cluster-node (default), threshold-node\n";
     infoLog << endl;
     return true;
 }
@@ -59,15 +60,14 @@ int main(int argc, char * argv[])
     parser.addOption( "-m", "mode" );
     parser.addOption( "-f", "filename" );
     parser.addOption( "-d", "data-dir" );
-    parser.addOption( "--model", "model-filename" );
-    parser.addOption( "--results", "results-filename" );
-    parser.addOption( "--forest-size", "forest-size" );
-    parser.addOption( "--max-depth", "max-depth" );
-    parser.addOption( "--min-node-size", "min-node-size" );
-    parser.addOption( "--num-splits", "num-splits" );
-    parser.addOption( "--remove-features", "remove-features" );
-    parser.addOption( "--bootstrap-weight", "bootstrap-weight" );
-    parser.addOption( "--combine-weights", "combine-weights" );
+    parser.addOption( "--model", "model-filename", "rf-model.grt" ); //Set the default model filename to rf-model.grt
+    parser.addOption( "--forest-size", "forest-size", 5 ); //Set the default forest size to 5
+    parser.addOption( "--max-depth", "max-depth", 10 ); //Set the default max depth to 10
+    parser.addOption( "--min-node-size", "min-node-size", 10 ); //Set the default min-node-size to 10
+    parser.addOption( "--num-splits", "num-splits", 100 ); //Set the default num-splits to 100
+    parser.addOption( "--remove-features", "remove-features", false ); //Set the default remove-features option to false
+    parser.addOption( "--bootstrap-weight", "bootstrap-weight", 0.8 ); //Set the default bootstrap-weight to 0.8
+    parser.addOption( "--combine-weights", "combine-weights", true );
 
     //Parse the command line
     parser.parse( argc, argv );
@@ -125,18 +125,12 @@ bool train( CommandLineParser &parser ){
 
     string trainDatasetFilename = "";
     string modelFilename = "";
-    string defaultFilename = "rf-model.grt";
     unsigned int numThreads = 0;
     unsigned int forestSize = 0;
     unsigned int maxDepth = 0;
     unsigned int minNodeSize = 0;
     unsigned int numSplits = 0;
-    unsigned int defaultForestSize = 5;
-    unsigned int defaultMaxDepth = 10;
-    unsigned int defaultMinNodeSize = 50;
-    unsigned int defaultNumSplits = 100;
     bool removeFeatures = false;
-    bool defaultRemoveFeatures = false;
     double bootstrapWeight = 0.0;
 
     //Get the filename
@@ -147,25 +141,25 @@ bool train( CommandLineParser &parser ){
     }
 
     //Get the model filename
-    parser.get("model-filename",modelFilename,defaultFilename);
+    parser.get("model-filename",modelFilename);
 
     //Get the forest size
-    parser.get("forest-size",forestSize,defaultForestSize);
+    parser.get("forest-size",forestSize);
 
     //Get the max depth
-    parser.get("max-depth",maxDepth,defaultMaxDepth);
+    parser.get("max-depth",maxDepth);
 
     //Get the min node size
-    parser.get("min-node-size",minNodeSize,defaultMinNodeSize);
+    parser.get("min-node-size",minNodeSize);
 
     //Get the number of random splits
-    parser.get("num-splits",numSplits,defaultNumSplits);
+    parser.get("num-splits",numSplits);
     
     //Get the remove features
-    parser.get("remove-features",removeFeatures,defaultRemoveFeatures);
+    parser.get("remove-features",removeFeatures);
    
     //Get the bootstrap weight 
-    parser.get("bootstrap-weight",bootstrapWeight,0.5);
+    parser.get("bootstrap-weight",bootstrapWeight);
 
     //Load some training data to train the classifier
     ClassificationData trainingData;
@@ -190,7 +184,14 @@ bool train( CommandLineParser &parser ){
     RandomForests forest;
 
     //Set the decision tree node that will be used for each tree in the forest
-    forest.setDecisionTreeNode( DecisionTreeClusterNode() );
+    string nodeType = "cluster-node"; //TODO: make this a command line option in the future
+    if( nodeType == "cluster-node" ){
+        forest.setDecisionTreeNode( DecisionTreeClusterNode() );
+    }
+    if( nodeType == "threshold-node" ){
+        forest.setTrainingMode( Tree::BEST_RANDOM_SPLIT );
+        forest.setDecisionTreeNode( DecisionTreeThresholdNode() );
+    }
 
     //Set the number of trees in the forest
     forest.setForestSize( forestSize );
@@ -224,7 +225,6 @@ bool train( CommandLineParser &parser ){
 
     infoLog << "- Model trained!" << endl;
     infoLog << "- Training time: " << (pipeline.getTrainingTime() * 0.001) / 60.0 << " (minutes)" << endl;
-
     infoLog << "- Saving model to: " << modelFilename << endl;
 
     //Save the pipeline
@@ -369,7 +369,7 @@ bool computeFeatureWeights( CommandLineParser &parser ){
     }
 
     //Get the results filename
-    parser.get("combine-weights",combineWeights,true);
+    parser.get("combine-weights",combineWeights);
 
     //Load the model
     GestureRecognitionPipeline pipeline;

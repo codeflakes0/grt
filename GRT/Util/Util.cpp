@@ -20,6 +20,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define GRT_DLL_EXPORTS
 #include "Util.h"
+#include "TimeStamp.h"
 
 namespace GRT {
 
@@ -47,7 +48,8 @@ bool Util::sleep(const unsigned int &numMilliseconds){
     usleep( numMilliseconds * 1000 );
     return true;
 #endif
-    
+
+    return false;
 }
     
 Float Util::scale(const Float &x,const Float &minSource,const Float &maxSource,const Float &minTarget,const Float &maxTarget,const bool constrain){
@@ -57,6 +59,11 @@ Float Util::scale(const Float &x,const Float &minSource,const Float &maxSource,c
     }
     if( minSource == maxSource ) return minTarget;
     return (((x-minSource)*(maxTarget-minTarget))/(maxSource-minSource))+minTarget;
+}
+
+std::string Util::timeAsString(const bool includeDate){
+    TimeStamp timestamp("now");
+    return timestamp.getTimeStampAsString( includeDate );
 }
     
 std::string Util::intToString(const int &i){
@@ -194,6 +201,16 @@ Float Util::euclideanDistance(const VectorFloat &a,const VectorFloat &b){
 		d += (a[i]-b[i])*(a[i]-b[i]);
 	}
 	return sqrt( d );
+}
+
+Float Util::squaredEuclideanDistance(const VectorFloat &a,const VectorFloat &b){
+    if( a.size() != b.size() ) return std::numeric_limits< Float >::max();
+    std::size_t N = a.size();
+    Float d = 0;
+    for(std::size_t i=0; i<N; i++){
+        d += (a[i]-b[i])*(a[i]-b[i]);
+    }
+    return d;
 }
 
 Float Util::manhattanDistance(const VectorFloat &a,const VectorFloat &b){

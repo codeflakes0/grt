@@ -41,35 +41,45 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
-using namespace LIBSVM;
-
 #define SVM_MIN_SCALE_RANGE -1.0
 #define SVM_MAX_SCALE_RANGE 1.0
 
+typedef struct SVMModel{
+    unsigned int numInputDimensions;
+    unsigned int numClasses;
+    unsigned int totalSV;
+    Vector<unsigned int> classLabels;
+    Vector<unsigned int> numSVPerClass;
+    VectorFloat rho;
+    Vector< MatrixFloat > sv;
+    Vector< VectorFloat > svCoeff;
+
+} SVMModel;
+
 class GRT_API SVM : public Classifier{
 public:
-    enum SVMTypes{ C_SVC = 0, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR };
-    enum SVMKernelTypes{ LINEAR_KERNEL = 0, POLY_KERNEL, RBF_KERNEL, SIGMOID_KERNEL, PRECOMPUTED_KERNEL };
-    
+    enum SVMType{ C_SVC = 0, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR };
+    enum KernelType{ LINEAR_KERNEL = 0, POLY_KERNEL, RBF_KERNEL, SIGMOID_KERNEL, PRECOMPUTED_KERNEL };
+
     /**
-    Default constructor.
-    
-    Set the initial SVM settings, although these can be changed at any time using either init(...) function of the set... functions.
-    
-    @param kernelType: this sets the SVM kernelType. Options are LINEAR_KERNEL, POLY_KERNEL, RBF_KERNEL, SIGMOID_KERNEL, PRECOMPUTED_KERNEL. The default kernelType is kernelType=LINEAR_KERNEL
-    @param svmType: this sets the SVM type. Options are C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR. The default svmType is svmType=C_SVC
-    @param useScaling: sets if the training/prediction data will be scaled to the default range of [-1. 1.]. The SVM algorithm commonly achieves a better classification result if scaling is turned on. The default useScaling value is useScaling=true
-    @param useNullRejection: sets if a predicted class will be rejected if the classes' probability is below the classificationThreshold. The default value is useNullRejection=false
-    @param useAutoGamma: sets if the SVM gamma parameter will automatically be computed, if set to true then gamma will be set to (1.0/numFeatures), where numFeatures is the number of features in the training data. The default value is useAutoGamma=true
-    @param gamma: sets the SVM gamma parameter. The default value is gamma=0.1
-    @param degree: sets the SVM degree parameter. The default value is degree=3
-    @param coef0: sets the SVM coef0 parameter. The default value is coef0=0
-    @param nu: sets the SVM nu parameter. The default value is nu=0.5
-    @param C: sets the SVM C parameter. The default value is C=1
-    @param useCrossValidation: sets if the SVM model will be trained using cross validation. The default value is useCrossValidation=false
-    @param kFoldValue: sets the number of folds that will be used for cross validation. The default value is kFoldValue=10
-    */
-    SVM(UINT kernelType = LINEAR_KERNEL,UINT svmType = C_SVC,bool useScaling = true,bool useNullRejection = false,bool useAutoGamma = true,Float gamma = 0.1,UINT degree = 3,Float coef0 = 0,Float nu = 0.5,Float C = 1,bool useCrossValidation = false,UINT kFoldValue = 10);
+     Default constructor.
+     
+     Set the initial SVM settings, although these can be changed at any time using either init(...) function of the set... functions.
+     
+     @param kernelType: this sets the SVM kernelType. Options are LINEAR_KERNEL, POLY_KERNEL, RBF_KERNEL, SIGMOID_KERNEL, PRECOMPUTED_KERNEL. The default kernelType is kernelType=LINEAR_KERNEL
+     @param svmType: this sets the SVM type. Options are C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR. The default svmType is svmType=C_SVC
+     @param useScaling: sets if the training/prediction data will be scaled to the default range of [-1. 1.]. The SVM algorithm commonly achieves a better classification result if scaling is turned on. The default useScaling value is useScaling=true
+     @param useNullRejection: sets if a predicted class will be rejected if the classes' probability is below the classificationThreshold. The default value is useNullRejection=false
+     @param useAutoGamma: sets if the SVM gamma parameter will automatically be computed, if set to true then gamma will be set to (1.0/numFeatures), where numFeatures is the number of features in the training data. The default value is useAutoGamma=true
+     @param gamma: sets the SVM gamma parameter. The default value is gamma=0.1
+     @param degree: sets the SVM degree parameter. The default value is degree=3
+     @param coef0: sets the SVM coef0 parameter. The default value is coef0=0
+     @param nu: sets the SVM nu parameter. The default value is nu=0.5
+     @param C: sets the SVM C parameter. The default value is C=1
+     @param useCrossValidation: sets if the SVM model will be trained using cross validation. The default value is useCrossValidation=false
+     @param kFoldValue: sets the number of folds that will be used for cross validation. The default value is kFoldValue=10
+     */
+	SVM(KernelType kernelType = LINEAR_KERNEL,SVMType svmType = C_SVC,bool useScaling = true,bool useNullRejection = false,bool useAutoGamma = true,Float gamma = 0.1,UINT degree = 3,Float coef0 = 0,Float nu = 0.5,Float C = 1,bool useCrossValidation = false,UINT kFoldValue = 10);
     
     /**
     Default copy constructor.  Copies the settings from the rhs SVM instance to this instance
@@ -119,45 +129,45 @@ public:
     virtual bool predict_(VectorFloat &inputVector);
     
     /**
-    Clears any previous model or problem.
-    */
-    virtual bool clear();
+     Clears any previous model or problem.
+     */
+	virtual bool clear();
     
     /**
-    This saves the trained SVM model to a file.
-    This overrides the save function in the Classifier base class.
-    
-    @param file: a reference to the file the SVM model will be saved to
-    @return returns true if the model was saved successfully, false otherwise
-    */
+     This saves the trained SVM model to a file.
+     This overrides the save function in the Classifier base class.
+     
+     @param file: a reference to the file the SVM model will be saved to
+     @return returns true if the model was saved successfully, false otherwise
+     */
     virtual bool save( std::fstream &file ) const;
     
     /**
-    This loads a trained SVM model from a file.
-    This overrides the load function in the Classifier base class.
-    
-    @param file: a reference to the file the SVM model will be loaded from
-    @return returns true if the model was loaded successfully, false otherwise
-    */
+     This loads a trained SVM model from a file.
+     This overrides the load function in the Classifier base class.
+     
+     @param file: a reference to the file the SVM model will be loaded from
+     @return returns true if the model was loaded successfully, false otherwise
+     */
     virtual bool load( std::fstream &file );
     
     /**
-    This initializes the SVM settings and parameters.  Any previous model, settings, or problems will be cleared.
-    
-    @param kernelType: this sets the SVM kernelType. Options are LINEAR_KERNEL, POLY_KERNEL, RBF_KERNEL, SIGMOID_KERNEL, PRECOMPUTED_KERNEL     @param UINT svmType: this sets the SVM type. Options are C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR
-    @param useScaling: sets if the training/prediction data will be scaled to the default range of [-1. 1.]. The SVM algorithm commonly achieves a better classification result if scaling is turned on
-    @param useNullRejection: sets if a predicted class will be rejected if the classes' probability is below the classificationThreshold
-    @param useAutoGamma: sets if the SVM gamma parameter will automatically be computed, if set to true then gamma will be set to (1.0/numFeatures), where numFeatures is the number of features in the training data
-    @param gamma: sets the SVM gamma parameter
-    @param degree: sets the SVM degree parameter
-    @param coef0: sets the SVM coef0 parameter
-    @param nu: sets the SVM nu parameter
-    @param C: sets the SVM C parameter
-    @param useCrossValidation: sets if the SVM model will be trained using cross validation
-    @param kFoldValue: sets the number of folds that will be used for cross validation
-    @return returns true if the SVM was initialized, false otherwise
-    */
-    bool init(UINT kernelType,UINT svmType,bool useScaling,bool useNullRejection,bool useAutoGamma,Float gamma,UINT degree,Float coef0,Float nu,Float C,bool useCrossValidation,UINT kFoldValue);
+     This initializes the SVM settings and parameters.  Any previous model, settings, or problems will be cleared.
+     
+     @param kernelType: this sets the SVM kernelType. Options are LINEAR_KERNEL, POLY_KERNEL, RBF_KERNEL, SIGMOID_KERNEL, PRECOMPUTED_KERNEL     @param UINT svmType: this sets the SVM type. Options are C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR
+     @param useScaling: sets if the training/prediction data will be scaled to the default range of [-1. 1.]. The SVM algorithm commonly achieves a better classification result if scaling is turned on
+     @param useNullRejection: sets if a predicted class will be rejected if the classes' probability is below the classificationThreshold
+     @param useAutoGamma: sets if the SVM gamma parameter will automatically be computed, if set to true then gamma will be set to (1.0/numFeatures), where numFeatures is the number of features in the training data
+     @param gamma: sets the SVM gamma parameter
+     @param degree: sets the SVM degree parameter
+     @param coef0: sets the SVM coef0 parameter
+     @param nu: sets the SVM nu parameter
+     @param C: sets the SVM C parameter
+     @param useCrossValidation: sets if the SVM model will be trained using cross validation
+     @param kFoldValue: sets the number of folds that will be used for cross validation
+     @return returns true if the SVM was initialized, false otherwise
+     */
+    bool init(KernelType kernelType,SVMType svmType,bool useScaling,bool useNullRejection,bool useAutoGamma,Float gamma,UINT degree,Float coef0,Float nu,Float C,bool useCrossValidation,UINT kFoldValue);
     
     /**
     This initializes the default SVM settings and parameters. Any previous model, settings, or problems will be cleared.
@@ -248,25 +258,32 @@ public:
     */
     Float getCrossValidationResult() const;
     
-    struct svm_model *getModel() const { return model; }
+    /**
+     Returns a pointer to the svm_model, this will be NULL if the model has not been trained.
+     
+     @return returns a pointer to the svm_model.
+     */
+    struct LIBSVM::svm_model *getLIBSVMModel() const;
+
+    SVMModel getModel() const;
     
     /**
-    Sets the SVM type.
-    This should be one of the SVMTypes enumeration types.
-    
-    @param svmType: the new SVM type, options are C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR
-    @return returns true if the SVM type was set correctly, false otherwise
-    */
-    bool setSVMType(const UINT svmType);
+     Sets the SVM type.
+     This should be one of the SVMTypes enumeration types.
+     
+     @param svmType: the new SVM type, options are C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR 
+     @return returns true if the SVM type was set correctly, false otherwise
+     */
+    bool setSVMType(const SVMType svmType);
     
     /**
-    Sets the kernel type.
-    This should be one of the SVMKernelTypes enumeration types.
-    
-    @param kernelType: the new kernel, options are LINEAR_KERNEL, POLY_KERNEL, RBF_KERNEL, SIGMOID_KERNEL, PRECOMPUTED_KERNEL
-    @return returns true if the kernel type was set correctly, false otherwise
-    */
-    bool setKernelType(const UINT kernelType);
+     Sets the kernel type.
+     This should be one of the SVMKernelTypes enumeration types.
+     
+     @param kernelType: the new kernel, options are LINEAR_KERNEL, POLY_KERNEL, RBF_KERNEL, SIGMOID_KERNEL, PRECOMPUTED_KERNEL 
+     @return returns true if the kernel type was set correctly, false otherwise
+     */
+    bool setKernelType(const KernelType kernelType);
     
     /**
     Sets the SVM gamma parameter.  The user should only try and set this value manually if the useAutoGamma parameter has been set to false.
@@ -335,6 +352,13 @@ public:
     return returns true if the useCrossValidation was set, false otherwise
     */
     bool enableCrossValidationTraining(const bool useCrossValidation);
+
+    /**
+    Gets a string that represents the class.
+    
+    @return returns a string containing the ID of this class
+    */
+    static std::string getId();
     
     //Tell the compiler we are using the following functions from the MLBase class to stop hidden virtual function warnings
     using MLBase::save;
@@ -345,8 +369,8 @@ public:
 protected:
     void deleteProblemSet();
     bool validateProblemAndParameters();
-    bool validateSVMType(UINT svmType);
-    bool validateKernelType(UINT kernelType);
+    bool validateSVMType(SVMType svmType);
+    bool validateKernelType(KernelType kernelType);
     bool convertClassificationDataToLIBSVMFormat(ClassificationData &trainingData);
     bool trainSVM();
     
@@ -354,14 +378,14 @@ protected:
     bool predictSVM(VectorFloat &inputVector,Float &maxProbability, VectorFloat &probabilites);
     bool loadLegacyModelFromFile( std::fstream &file );
     
-    struct svm_model *deepCopyModel() const;
-    bool deepCopyProblem( const struct svm_problem &source_problem, struct svm_problem &target_problem, const unsigned int numInputDimensions ) const;
-    bool deepCopyParam( const svm_parameter &source_param, svm_parameter &target_param ) const;
+    struct LIBSVM::svm_model *deepCopyModel() const;
+    bool deepCopyProblem( const struct LIBSVM::svm_problem &source_problem, struct LIBSVM::svm_problem &target_problem, const unsigned int numInputDimensions ) const;
+    bool deepCopyParam( const LIBSVM::svm_parameter &source_param, LIBSVM::svm_parameter &target_param ) const;
     
     bool problemSet;
-    struct svm_model *model;
-    struct svm_parameter param;
-    struct svm_problem prob;
+    struct LIBSVM::svm_model *model;
+    struct LIBSVM::svm_parameter param;
+    struct LIBSVM::svm_problem prob;
     UINT kFoldValue;
     Float classificationThreshold;
     Float crossValidationResult;
@@ -369,6 +393,7 @@ protected:
     bool useCrossValidation;
     
     static RegisterClassifierModule< SVM > registerModule;
+    static std::string id;
 };
 
 GRT_END_NAMESPACE

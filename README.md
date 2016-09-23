@@ -8,10 +8,10 @@ Build Status:
 * Dev branch: 
   * ![Dev Build Status](https://travis-ci.org/nickgillian/grt.svg?branch=dev)
 
-Current version: [0.2.0](http://nickgillian.com/grt/api/0.2.0/)
+Current version: [0.2.3](http://nickgillian.com/grt/api/0.2.3/)
 
 Key things to know about the GRT:
-* The toolkit consists of two parts: a comprehensive [C++ API](http://nickgillian.com/grt/api/0.2.0) and a front-end [graphical user interface (GUI)](http://www.nickgillian.com/wiki/pmwiki.php/GRT/GUI). You can access the source code for both the C++ API and GUI in this repository, a precompiled version of the GUI can be downloaded [here](http://www.nickgillian.com/wiki/pmwiki.php/GRT/Download)
+* The toolkit consists of two parts: a comprehensive [C++ API](http://nickgillian.com/grt/api/0.2.3) and a front-end [graphical user interface (GUI)](http://www.nickgillian.com/wiki/pmwiki.php/GRT/GUI). You can access the source code for both the C++ API and GUI in this repository, a precompiled version of the GUI can be downloaded [here](http://www.nickgillian.com/wiki/pmwiki.php/GRT/Download)
 * Both the C++ API and GUI are designed to work with real-time sensor data, but they can also be used for more conventional offline machine-learning tasks 
 * The input to the GRT can be any *N*-dimensional floating-point vector - this means you can use the GRT with Cameras, Kinect, Leap Motion, accelerometers, or any other custom sensor you might have built
 * The toolkit defines a generic [Float](#grt-floating-point-precision) type, this defaults to double precision float, but can easily be changed to single precision via the main GRT Typedefs header
@@ -29,12 +29,32 @@ Key things to know about the GRT:
 
 ##Core Resources
 * GRT Website: [http://www.nickgillian.com/grt](http://www.nickgillian.com/grt)
-* GRT Wiki: [http://www.nickgillian.com/wiki](http://www.nickgillian.com/wiki)
+* GRT Wiki: [https://github.com/nickgillian/grt/wiki](https://github.com/nickgillian/grt/wiki)
 * GRT Forum: [http://www.nickgillian.com/forum](http://www.nickgillian.com/forum)
-* GRT API Reference: [http://nickgillian.com/grt/api/0.2.0/](http://nickgillian.com/grt/api/0.2.0/)
+* GRT API Reference: [http://nickgillian.com/grt/api/0.2.3/](http://nickgillian.com/grt/api/0.2.3/)
 * GRT Source Code: [https://github.com/nickgillian/grt](https://github.com/nickgillian/grt)
 * GRT GUI Download: [http://www.nickgillian.com/wiki/pmwiki.php/GRT/Download](http://www.nickgillian.com/wiki/pmwiki.php/GRT/Download)
 * GRT Journal of Machine Learning Research paper: [grt.pdf](http://jmlr.csail.mit.edu/papers/volume15/gillian14a/gillian14a.pdf)
+
+##Core Algorithms
+The GRT supports a wide number of supervised and unsupervised machine learning algorithms for classification, regression, and clustering, including:
+* **Classification:** [Adaboost](https://github.com/nickgillian/grt/wiki/adaboost), [Decision Tree](https://github.com/nickgillian/grt/wiki/decision_tree), [Dynamic Time Warping](https://github.com/nickgillian/grt/wiki/dtw), [Gaussian Mixture Models](https://github.com/nickgillian/grt/wiki/gmm), [Hidden Markov Models](https://github.com/nickgillian/grt/wiki/hmm_discrete), [k-nearest neighbor](https://github.com/nickgillian/grt/wiki/knn), [Naive Bayes](https://github.com/nickgillian/grt/wiki/anbc), [Random Forests](https://github.com/nickgillian/grt/wiki/random_forests), [Support Vector Machine](https://github.com/nickgillian/grt/wiki/svm), [Softmax](https://github.com/nickgillian/grt/wiki/softmax), and [more...](https://github.com/nickgillian/grt/wiki/reference#classifiers)
+
+* **Regression:** [Linear Regression](https://github.com/nickgillian/grt/wiki/linear_regression), [Logistic Regression](https://github.com/nickgillian/grt/wiki/logistic_regression), [Neural Networks (Multilayer Perceptron)](https://github.com/nickgillian/grt/wiki/mlp)
+
+* **Clustering:** [k-means](https://github.com/nickgillian/grt/blob/master/examples/ClusteringModulesExamples/KMeansExample/KMeansExample.cpp), [cluster tree](https://github.com/nickgillian/grt/blob/master/examples/ClusteringModulesExamples/ClusterTreeExample/ClusterTreeExample.cpp), [Gaussian Mixture Models](https://github.com/nickgillian/grt/blob/master/examples/ClusteringModulesExamples/GaussianMixtureModelsExample/GaussianMixtureModelsExample.cpp)
+
+In addition to the machine learning algorithms above, the toolkit also includes a large number of algorithms for [preprocessing](https://github.com/nickgillian/grt/wiki/reference#pre-processing), [feature extraction](https://github.com/nickgillian/grt/wiki/reference#feature-extraction), and [post processing](https://github.com/nickgillian/grt/wiki/reference#post-processing).
+
+See the [wiki](https://github.com/nickgillian/grt/wiki) for more details.
+
+##GRT Extensions
+There are now several extensions and third party applications that use the GRT as the backend machine learning system, these include:
+
+* [ofGrt](https://github.com/nickgillian/ofxGrt): an extension of the GRT for [openFrameworks](http://openframeworks.cc)
+* [ml-lib](https://github.com/cmuartfab/ml-lib), by [Ali Momeni](http://alimomeni.net/) and [Jamie Bullock](http://jamiebullock.com): ml-lib is a library of machine learning externals for Max and Pure Data, designed to work on a variety of platforms including OS X, Windows, Linux, on Intel and ARM architectures.
+* [ESP](https://github.com/damellis/ESP), by [David A. Mellis](https://github.com/damellis) and [Ben Zhang](https://www.benzhang.name): An interactive application that aims to help novices make sophisticated use of sensors in interactive projects through the application of machine learning.  The system is built using [openFrameworks](http://openframeworks.cc) and has several interesting examples built for [Arduino sensor modules](https://create.arduino.cc/projecthub/mellis/gesture-recognition-using-accelerometer-and-esp-71faa1) and more generic input data streams (e.g., network data).
+* [Android Port](http://hollyhook.de/wp/grt-for-android): you can find a specific Android port of the GRT [here](http://hollyhook.de/wp/grt-for-android).
 
 ##GRT Architecture
 To support flexibility while maintaining consistency, the GRT uses an object-oriented modular architecture. This architecture is built around a set 
@@ -207,6 +227,21 @@ where *ExampleName* is the name of the example application you want to run.
 
 You can find the main GRT forum at: [http://www.nickgillian.com/forum/](http://www.nickgillian.com/forum/)
 
+##Bugs
+
+Please submit bugs to the [github bug tracker](https://github.com/nickgillian/grt/issues).
+
+##Contributions
+
+All contributions are welcome, there are several ways in which users can contribute to the toolkit:
+
+* improving the doxygen generated [API](http://nickgillian.com/grt/api/0.2.3) (by improving coverage and quality of the current documents in the existing code) 
+* improving the higher-level documentation that can be found in the [wiki](https://github.com/nickgillian/grt/wiki)
+* adding new examples or tutorials, or improving the existing ones
+* adding new [unit tests](https://github.com/nickgillian/grt/tree/master/tests), to help ensure the quality of the current functions and catch potential bugs in the future
+
+Please submit [pull requests](https://help.github.com/articles/about-pull-requests/) for any contribution.
+
 ##GRT Floating Point Precision
 The GRT defaults to double precision floating point values.  The precision of the toolkit is defined by the following **Float** typedef:
 
@@ -272,10 +307,6 @@ Read the readme file in the build folder to see how to build the GRT as a static
 ##Installing and using the GRT in your C++ projects
 
 See the build directory for details on how to build, install, and use the GRT in your C++ projects.
-
-##Android port of the Gesture Recognition Toolkit
-
-as described [http://hollyhook.de/wp/grt-for-android/] extended and fixed
 
 ##License
 

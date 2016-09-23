@@ -16,29 +16,29 @@
 using namespace GRT;
 using namespace std;
 
-const char *help = "This tool can be used for training a Linear Regression model.\n"
-                   "The dataset used to train the model can be in two format, (1) a GRT RegressionData formatted file or (2) a CSV formatted file.\n"
+const char *help = "This tool implements a basic tool for training a Softmax classification model.\n"
+                   "The dataset used to train the model can be in two format, (1) a GRT ClassificationData formatted file or (2) a CSV formatted file.\n"
                    "If the data is formatted as a CSV file, then it should be formatted as follows:\n"
                      "\t- each row should contain a sample\n"
                      "\t- the first column should contain the class label\n"
                      "\t- the remaining N columns should contain the input attributes (a.k.a. features)\n"
                      "\t- columns should be seperated by a comma delimiter \',\'\n"
                      "\t- rows should be terminated by a new line operator \'\\n\'";
-                                          
-InfoLog infoLog("[grt-lin-reg-tool]");
-WarningLog warningLog("[WARNING grt-lin-reg-tool]");
-ErrorLog errorLog("[ERROR grt-lin-reg-tool]");
+                     
+InfoLog infoLog("[grt-softmax-tool]");
+WarningLog warningLog("[WARNING grt-softmax-tool]");
+ErrorLog errorLog("[ERROR grt-softmax-tool]");
 
 bool printHelp(){
-  infoLog << "\nusage: grt-lin-reg-tool [options]\n";
+  infoLog << "\nusage: grt-softmax-tool [options]\n";
   infoLog << "\t--help: prints this help message\n";
-  infoLog << "\t-f: sets the filename the training data will be loaded from. The training data can either be a GRT RegressionData file or a CSV file (see help below). \n";
-  infoLog << "\t--model: sets the filename the model will be saved to\n";
+  infoLog << "\t-f: sets the filename the training data will be loaded from. The training data can either be a GRT ClassificationData file or a CSV file (see help below)\n";
+  infoLog << "\t--model: sets the filename the Softmax model will be saved to\n";
   infoLog << "\t--batch-size: sets the number of training samples used in each batch update of the learning algorithm (default: 50)\n";
   infoLog << "\t--learning-rate: sets the rate at which the learning algorithm will update the model weights at each batch update (default: 0.01)\n";
   infoLog << "\t--min-change: sets the minimum change needed to signal convergence of the learning algorithm (default: 0.001)\n";
   infoLog << "\t--max-epoch: sets the maximum number of epochs that the learning algorithm can run for, an epoch is one iteration over the entire training dataset (default: 500)\n";
-  infoLog << "\t--log-file: \n";
+  infoLog << "\t--training-log-file: \n";
   infoLog << "\nhelp:\n" << help;
   infoLog << endl;
   return true;
@@ -62,10 +62,9 @@ int main(int argc, char * argv[])
     parser.setWarningLoggingEnabled( false );
 
     //Add some options and identifiers that can be used to get the results
+    parser.addOption( "--help", "help" );
     parser.addOption( "-f", "filename" );
-    parser.addOption( "--model", "model-filename", "log-regression-model.grt" ); //Set the default filename to log-regression-model.grt
-    parser.addOption( "--num-inputs", "num-inputs" );
-    parser.addOption( "--num-targets", "num-targets" );
+    parser.addOption( "--model", "model-filename" );
     parser.addOption( "--batch-size", "batch-size", 50 ); //Set the default batch size to 50
     parser.addOption( "--learning-rate", "learning-rate", 0.01 ); //Set the default learning rate to 0.01
     parser.addOption( "--min-change", "min-change", 0.001 ); //Set the default min change to 0.001
@@ -74,6 +73,11 @@ int main(int argc, char * argv[])
 
     //Parse the command line
     parser.parse( argc, argv );
+
+    if( parser.getOptionParsed("help") ){
+      printHelp();
+      return EXIT_SUCCESS;
+    }
 
     //Train the model model
     if( train( parser ) ){
@@ -93,10 +97,6 @@ bool train( CommandLineParser &parser ){
 
     string trainDatasetFilename = "";
     string modelFilename = "";
-    float learningRate = 0;
-    float minChange = 0;
-    unsigned int maxEpoch = 0;
-    unsigned int batchSize = 0;
 
     //Get the filename
     if( !parser.get("filename",trainDatasetFilename) ){
@@ -104,32 +104,12 @@ bool train( CommandLineParser &parser ){
         printHelp();
         return false;
     }
-    
-    //Get the parameters from the parser
-    parser.get("model-filename",modelFilename);
-    parser.get( "learning-rate", learningRate );
-    parser.get( "min-change", minChange );
-    parser.get( "max-epoch", maxEpoch );
-    parser.get( "batch-size", batchSize );
 
-    infoLog << "settings: learning-rate: " << learningRate << " min-change: " << minChange << " max-epoch: " << maxEpoch << " batch-size: " << batchSize << endl;
+    //Get the model filename
+    parser.get("model-filename",modelFilename);
 
     //Load the training data to train the model
-    RegressionData trainingData;
-
-    //Try and parse the input and target dimensions
-    unsigned int numInputDimensions = 0;
-    unsigned int numTargetDimensions = 0;
-    if( parser.get("num-inputs",numInputDimensions) && parser.get("num-targets",numTargetDimensions) ){
-      infoLog << "num input dimensions: " << numInputDimensions << " num target dimensions: " << numTargetDimensions << endl;
-      trainingData.setInputAndTargetDimensions( numInputDimensions, numTargetDimensions );
-    }
-
-    if( (numInputDimensions == 0 || numTargetDimensions == 0) && Util::stringEndsWith( trainDatasetFilename, ".csv" ) ){
-      errorLog << "Failed to parse num input dimensions and num target dimensions from input arguments. You must supply the input and target dimensions if the data format is CSV!" << endl;
-      printHelp();
-      return false; 
-    }
+    ClassificationData trainingData;
 
     infoLog << "- Loading Training Data..." << endl;
     if( !trainingData.load( trainDatasetFilename ) ){
@@ -137,27 +117,33 @@ bool train( CommandLineParser &parser ){
         return false;
     }
 
-    const unsigned int N = trainingData.getNumInputDimensions();
-    const unsigned int T = trainingData.getNumTargetDimensions();
+    const unsigned int N = trainingData.getNumDimensions();
+    const unsigned int K = trainingData.getNumClasses();
     infoLog << "- Num training samples: " << trainingData.getNumSamples() << endl;
     infoLog << "- Num input dimensions: " << N << endl;
-    infoLog << "- Num target dimensions: " << T << endl;
+    infoLog << "- Num classes: " << K << endl;
+    
+    float learningRate = 0;
+    float minChange = 0;
+    unsigned int maxEpoch = 0;
+    unsigned int batchSize = 0;
 
-    //Create a new regression instance
-    LinearRegression regression;
+    parser.get( "learning-rate", learningRate );
+    parser.get( "min-change", minChange );
+    parser.get( "max-epoch", maxEpoch );
+    parser.get( "batch-size", batchSize );
 
-    regression.setMaxNumEpochs( maxEpoch );
-    regression.setMinChange( minChange );
-    regression.setUseValidationSet( true );
-    regression.setValidationSetSize( 20 );
-    regression.setRandomiseTrainingOrder( true );
-    regression.enableScaling( true );
+    infoLog << "Softmax settings: learning-rate: " << learningRate << " min-change: " << minChange << " max-epoch: " << maxEpoch << " batch-size: " << batchSize << endl;
 
-    //Create a new pipeline that will hold the regression algorithm
+    //Create a new softmax instance
+    bool enableScaling = true;
+    Softmax classifier(enableScaling,learningRate,minChange,maxEpoch,batchSize);
+
+    //Create a new pipeline that will hold the classifier
     GestureRecognitionPipeline pipeline;
 
-    //Add a multidimensional regression instance and set the regression algorithm to Linear Regression
-    pipeline.setRegressifier( MultidimensionalRegression( regression, true ) );
+    //Add the classifier to the pipeline
+    pipeline << classifier;
 
     infoLog << "- Training model...\n";
 
@@ -177,6 +163,26 @@ bool train( CommandLineParser &parser ){
     }else warningLog << "Failed to save model to file: " << modelFilename << endl;
 
     infoLog << "- TrainingTime: " << pipeline.getTrainingTime() << endl;
+    
+    string logFilename = "";
+    if( parser.get( "log-filename", logFilename ) && logFilename.length() > 0 ){
+      infoLog << "Writing training log to: " << logFilename << endl;
+
+      fstream logFile( logFilename.c_str(), fstream::out );
+
+      if( !logFile.is_open() ){
+        errorLog << "Failed to open training log file: " << logFilename << endl;
+        return false;
+      }
+
+      Vector< TrainingResult > trainingResults = pipeline.getTrainingResults();
+
+      for(UINT i=0; i<trainingResults.getSize(); i++){
+        logFile << trainingResults[i].getTrainingIteration() << "\t" << trainingResults[i].getAccuracy() << endl;
+      }
+
+      logFile.close();
+    }
 
     return true;
 }
