@@ -1459,7 +1459,6 @@ void MainWindow::updateNumTrainingSamples(const unsigned int numTrainingSamples)
 
     errorLog << "3" << endl;
 
-
     //If the user is looking at the data labelling view then update the training table view
     if( getCurrentView() == DATA_MANAGER_VIEW ){
         updateTrainingTabView( ui->dataLabelingTool_trainingDataTab->currentIndex() );
@@ -1714,6 +1713,7 @@ void MainWindow::updateDatasetInfoText(){
 void MainWindow::updateTrainingTabView( const int tabIndex ){
 
     QString infoText;
+    errorLog << "updateTrainingTabView " << tabIndex << " " << core.getPipelineMode() << endl;
 
     switch( core.getPipelineMode() ){
         case Core::CLASSIFICATION_MODE:
@@ -1734,6 +1734,7 @@ void MainWindow::updateTrainingTabView( const int tabIndex ){
             }
         break;
         case Core::REGRESSION_MODE:
+            errorLog << "test" << endl;
             if( tabIndex == 0 ){
                 updateDatasetStatsView();
             }
@@ -1764,6 +1765,7 @@ void MainWindow::updateTrainingTabView( const int tabIndex ){
             }
         break;
     }
+    errorLog << "updateTrainingTabView done" << endl;
 
 }
 
@@ -1774,6 +1776,8 @@ void MainWindow::updateDatasetStatsView(){
     GRT::TimeSeriesClassificationData timeseriesClassificationData;
     GRT::UnlabelledData clusterData;
     string statsText;
+
+    errorLog << "updateDatasetStatsView" << endl;
 
     switch( core.getPipelineMode() ){
         case Core::CLASSIFICATION_MODE:
@@ -1786,6 +1790,7 @@ void MainWindow::updateDatasetStatsView(){
         break;
         case Core::TIMESERIES_CLASSIFICATION_MODE:
             timeseriesClassificationData = core.getTimeSeriesClassificationTrainingData();
+            errorLog << "getStatsAsString" << endl;
             statsText = timeseriesClassificationData.getStatsAsString();
         break;
         case Core::CLUSTER_MODE:

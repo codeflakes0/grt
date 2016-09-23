@@ -313,14 +313,13 @@ bool Core::loadTrainingDatasetFromFile( const std::string filename ){
                  trainingDataSize = regressionTrainingData.getNumInputDimensions();
              break;
              case TIMESERIES_CLASSIFICATION_MODE:
-                debugLog << "test1" << endl;
-                result = timeseriesClassificationTrainingData.load( filename );
-debugLog << "test2" << endl;
+                 result = timeseriesClassificationTrainingData.load( filename );
                  numTrainingSamples = timeseriesClassificationTrainingData.getNumSamples();
-                 debugLog << "test3" << endl;
+                 debugLog << "numTrainingSamples " << numTrainingSamples << endl;
                  tempTimeSeriesData = timeseriesClassificationTrainingData;
                  trainingDataSize = timeseriesClassificationTrainingData.getNumDimensions();
-                 debugLog << "test4" << endl;
+                 debugLog << "trainingDataSize " << trainingDataSize << endl;
+                 debugLog << "trainingDataSize " << tempTimeSeriesData.getNumDimensions() << endl;
              break;
              case CLUSTER_MODE:
                 result = clusterTrainingData.load( filename );

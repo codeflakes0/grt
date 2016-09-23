@@ -456,8 +456,8 @@ bool ClassificationData::loadDatasetFromFile(const std::string &filename){
 
 	//Check to make sure this is a file with the Training File Format
 	file >> word;
-	if(word != "GRT_LABELLED_CLASSIFICATION_DATA_FILE_V1.0"){
-        errorLog << "loadDatasetFromFile(const std::string &filename) - could not find file header!" << std::endl;
+    if(word != "GRT_LABELLED_CLASSIFICATION_DATA_FILE_V1.0" && word != "GRT_LABELLED_TIME_SERIES_CLASSIFICATION_DATA_FILE_V1.0"){
+        errorLog << "loadDatasetFromFile(const std::string &filename) - could not find file header1!" << std::endl;
 		file.close();
 		return false;
 	}
@@ -1202,6 +1202,8 @@ std::string ClassificationData::getClassNameForCorrespondingClassLabel(UINT clas
 }
 
 std::string ClassificationData::getStatsAsString() const{
+    errorLog << "ClassificationData::getStatsAsString" << std::endl;
+
     std::string statsText;
     statsText += "DatasetName:\t" + datasetName + "\n";
     statsText += "DatasetInfo:\t" + infoText + "\n";

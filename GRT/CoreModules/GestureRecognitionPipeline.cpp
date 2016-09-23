@@ -393,6 +393,8 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
         classificationData.setNumDimensions( trainingDataInputDimensionSize );
     }
     
+    infoLog << "trainingData.getNumSamples " << trainingData.getNumSamples() << std::endl;
+
     //Pass the timeseries data through any pre-processing modules and add it to the processedTrainingData structure
     for(UINT i=0; i<trainingData.getNumSamples(); i++){
         UINT classLabel = trainingData[i].getClassLabel();
@@ -400,11 +402,15 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
         
         if( getIsPreProcessingSet() ){
             
+            infoLog << "trainingSample.getNumRows " << trainingSample.getNumRows() << " " << trainingSample.getNumCols() << std::endl;
+
             //Try to process the matrix data row-by-row
             bool resetPreprocessingModule = true;
             for(UINT r=0; r<trainingSample.getNumRows(); r++){
                 VectorFloat sample = trainingSample.getRow( r );
                 
+                infoLog << "sample " << sample.getSize() << std::endl;
+
                 for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
                     
                     if( resetPreprocessingModule ){

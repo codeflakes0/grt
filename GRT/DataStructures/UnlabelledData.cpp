@@ -256,7 +256,7 @@ bool UnlabelledData::loadDatasetFromFile(const std::string &filename){
 	//Check to make sure this is a file with the Training File Format
 	file >> word;
 	if( word != "GRT_UNLABELLED_DATA_FILE_V1.0" && word != "GRT_UNLABELLED_CLASSIFICATION_DATA_FILE_V1.0" ){
-        errorLog << "loadDatasetFromFile(const std::string &filename) - could not find file header!" << std::endl;
+        errorLog << "loadDatasetFromFile(const std::string &filename) - could not find file header2!" << std::endl;
 		file.close();
 		return false;
 	}
@@ -604,6 +604,8 @@ UnlabelledData UnlabelledData::getTestFoldData(const UINT foldIndex) const{
 }
 
 std::string UnlabelledData::getStatsAsString() const{
+    errorLog << "UnlabelledData::getStatsAsString" << std::endl;
+
     std::string statsText;
     statsText += "DatasetName:\t" + datasetName + "\n";
     statsText += "DatasetInfo:\t" + infoText + "\n";
