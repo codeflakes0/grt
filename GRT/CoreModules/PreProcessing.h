@@ -86,6 +86,9 @@ public:
      @return returns true if the derived class was cleared succesfully, false otherwise
      */
     virtual bool clear();
+
+	// CDF
+    virtual void setSize(int aSize);
 	
     /**
      @return returns the pre processing type as a string, e.g. LowPassFilter

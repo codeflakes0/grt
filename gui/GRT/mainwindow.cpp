@@ -1439,6 +1439,7 @@ void MainWindow::updateRecordStatus(const bool recordStatus){
 
 void MainWindow::updateNumTrainingSamples(const unsigned int numTrainingSamples){
 
+    errorLog << "updateNumTrainingSamples: " << numTrainingSamples << endl;
     const unsigned int numClasses = core.getNumClassesInTrainingData();
 
     ui->dataLabellingTool_classificationMode_numTrainingSamples->setText( QString::number( numTrainingSamples ) );
@@ -1449,14 +1450,22 @@ void MainWindow::updateNumTrainingSamples(const unsigned int numTrainingSamples)
     ui->dataLabellingTool_classificationMode_numClassesField->setText( QString::number( numClasses ) );
     ui->dataLabellingTool_timeseriesClassificationMode_numClassesField->setText( QString::number( numClasses ) );
 
+    errorLog << "2" << endl;
+
+
     if( numTrainingSamples > 0 ){
         resetTrainingToolView( ui->trainingTool_trainingMode->currentIndex() );
     }
+
+    errorLog << "3" << endl;
+
 
     //If the user is looking at the data labelling view then update the training table view
     if( getCurrentView() == DATA_MANAGER_VIEW ){
         updateTrainingTabView( ui->dataLabelingTool_trainingDataTab->currentIndex() );
     }
+    errorLog << "updateNumTrainingSamples done" << endl;
+
 }
 
 void MainWindow::addNewTrainingSample(const unsigned int numTrainingSamples,const GRT::ClassificationSample &trainingSample){

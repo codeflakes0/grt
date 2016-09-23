@@ -12,3 +12,4 @@ libs/
 build/
 gui/build-GRT-Desktop_Qt_5_5_0_clang_64bit-Debug
 gui/build-GRT-iphoneos_clang_Qt_5_5_0_for_iOS-Debug
+gui/build-GRT-Desktop_Qt_5_7_0_clang_64bit-Debug

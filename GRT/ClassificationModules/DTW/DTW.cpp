@@ -149,7 +149,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     trained = false;
     continuousInputDataBuffer.clear();
     
-    Vector<bool> enabledDimensions = labelledTrainingData.getEnabledDimensions();
+    Vector<bool> enabledDimensions = data.getEnabledDimensions();
 
     if( trimTrainingData ){
         TimeSeriesClassificationSampleTrimmer timeSeriesTrimmer(trimThreshold,maximumTrimPercentage);
@@ -212,12 +212,12 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         
         //Check to make sure we actually have some training examples
         if( numExamples < 1 ){
-            errorLog << "train_(TimeSeriesClassificationData &labelledTrainingData) - Can not train model: Num of Example is < 1! Class: " << classLabel << ". Turn off null rejection if you want to use DTW with only 1 training sample per class." << std::endl;
+            errorLog << "train_(TimeSeriesClassificationData &data) - Can not train model: Num of Example is < 1! Class: " << classLabel << ". Turn off null rejection if you want to use DTW with only 1 training sample per class." << std::endl;
             return false;
         }
         
         if( numExamples == 1 && useNullRejection ){
-            errorLog << "train_(TimeSeriesClassificationData &labelledTrainingData) - Can not train model as there is only 1 example in class: " << classLabel << ". Turn off null rejection if you want to use DTW with only 1 training sample per class." << std::endl;
+            errorLog << "train_(TimeSeriesClassificationData &data) - Can not train model as there is only 1 example in class: " << classLabel << ". Turn off null rejection if you want to use DTW with only 1 training sample per class." << std::endl;
             return false;
         }
         
@@ -227,7 +227,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         }else{
             //Search for the best training example for this class
             if( !train_NDDTW(classData,templatesBuffer[k],bestIndex) ){
-                errorLog << "train_(LabelledTimeSeriesClassificationData &labelledTrainingData) - Failed to train template for class with label: " << classLabel << std::endl;
+                errorLog << "train_(LabelledTimeSeriesClassificationData &data) - Failed to train template for class with label: " << classLabel << std::endl;
                     return false;
             }
         }
@@ -956,13 +956,13 @@ void DTW::smoothData(MatrixFloat &data,UINT smoothFactor,MatrixFloat &resultsDat
 
 ////////////////////////////// SAVE & LOAD FUNCTIONS ////////////////////////////////
 
-bool DTW::saveModelToFile( std::string filename ) const{
+bool DTW::save( std::string filename ) const{
     //Open the file
     debugLog << "saving '" << filename << "'" << std::endl;
     std::fstream file;
     file.open(filename.c_str(), std::ios::out);
 
-    if( !saveModelToFile( file ) ){
+    if( !save( file ) ){
         return false;
     }
 
@@ -1034,13 +1034,13 @@ bool DTW::save( std::fstream &file ) const{
     return true;
 }
 
-bool DTW::loadModelFromFile( std::string filename ){
+bool DTW::load( std::string filename ){
     //Open the file
     debugLog << "opening '" << filename << "'" << std::endl;
     std::fstream file;
     file.open(filename.c_str(), std::ios::in);
 
-    if( !loadModelFromFile( file ) ){
+    if( !load( file ) ){
         return false;
     }
 

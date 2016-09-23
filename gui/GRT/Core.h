@@ -210,6 +210,8 @@ protected:
 
     TrainingThread trainingThread;
 
+    GRT::DebugLog debugLog;                                      ///< Default debugging log
+
 public:
     enum PipelineModes{CLASSIFICATION_MODE=0,REGRESSION_MODE,TIMESERIES_CLASSIFICATION_MODE,CLUSTER_MODE};
     

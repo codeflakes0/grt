@@ -39,6 +39,7 @@ Core::Core(QObject *parent) : QObject(parent)
     connect(&trainingThread, SIGNAL(pipelineTestingFinished(bool)), this, SIGNAL(pipelineTestingFinished(bool)));
     connect(&trainingThread, SIGNAL(pipelineUpdated(const GRT::GestureRecognitionPipeline&)), this, SLOT(setPipeline(const GRT::GestureRecognitionPipeline&)));
 
+    debugLog.setProceedingText("[DEBUG Core]");
 }
 
 Core::~Core(){
@@ -273,6 +274,8 @@ bool Core::loadTrainingDatasetFromFile( const std::string filename ){
     GRT::UnlabelledData tempClusterData;
     std::size_t found;
 
+    debugLog << "loadTrainingDatasetFromFile1" << endl;
+
     {
          std::unique_lock< std::mutex > lock( mutex );
          unsigned int trainingDataSize = 0;
@@ -310,11 +313,14 @@ bool Core::loadTrainingDatasetFromFile( const std::string filename ){
                  trainingDataSize = regressionTrainingData.getNumInputDimensions();
              break;
              case TIMESERIES_CLASSIFICATION_MODE:
-                 result = timeseriesClassificationTrainingData.load( filename );
-
+                debugLog << "test1" << endl;
+                result = timeseriesClassificationTrainingData.load( filename );
+debugLog << "test2" << endl;
                  numTrainingSamples = timeseriesClassificationTrainingData.getNumSamples();
+                 debugLog << "test3" << endl;
                  tempTimeSeriesData = timeseriesClassificationTrainingData;
                  trainingDataSize = timeseriesClassificationTrainingData.getNumDimensions();
+                 debugLog << "test4" << endl;
              break;
              case CLUSTER_MODE:
                 result = clusterTrainingData.load( filename );
@@ -339,8 +345,13 @@ bool Core::loadTrainingDatasetFromFile( const std::string filename ){
         return false;
     }
 
+    debugLog << "test5" << endl;
+
     if( result ){
+        debugLog << "numTrainingSamples: " << numTrainingSamples << endl;
+
         emit numTrainingSamplesChanged( numTrainingSamples );
+        debugLog << "test5b " << tempPipelineMode << endl;
 
         switch( tempPipelineMode ){
             case CLASSIFICATION_MODE:
@@ -350,7 +361,11 @@ bool Core::loadTrainingDatasetFromFile( const std::string filename ){
                 emit trainingDataReset( tempRegressionData );
             break;
             case TIMESERIES_CLASSIFICATION_MODE:
-                emit trainingDataReset( tempTimeSeriesData );
+            debugLog << "test6" << endl;
+
+            emit trainingDataReset( tempTimeSeriesData );
+            debugLog << "test7" << endl;
+
             break;
             case CLUSTER_MODE:
                 emit trainingDataReset( tempClusterData );
@@ -366,7 +381,10 @@ bool Core::loadTrainingDatasetFromFile( const std::string filename ){
         emit newInfoMessage( "Training data loaded from file" );
     }else emit newWarningMessage( "WARNING: Failed to load training data from file" );
 
+    debugLog << "test8" << endl;
+
     emit loadTrainingDataFromFileResult( result );
+    debugLog << "test9" << endl;
 
     return result;
 }
@@ -378,6 +396,8 @@ bool Core::loadTestDatasetFromFile( const std::string filename ){
     GRT::RegressionData tempRegressionData;
     GRT::TimeSeriesClassificationData tempTimeSeriesData;
     GRT::UnlabelledData tempClusterData;
+
+    debugLog << "loadTestDatasetFromFile" << endl;
 
     {
          std::unique_lock< std::mutex > lock( mutex );

@@ -206,6 +206,16 @@ bool LowPassFilter::init(Float filterFactor,Float gain,UINT numDimensions){
     return true;
 }
 
+// CDF
+void LowPassFilter::setSize(int aSize) {
+    PreProcessing::setSize(aSize);
+
+    yy.clear();
+    yy.resize(aSize,0);
+    processedData.clear();
+    processedData.resize(aSize,0);
+}
+
 Float LowPassFilter::filter(Float x){
     
     //If the filter has not been initialised then return 0, otherwise filter x and return y

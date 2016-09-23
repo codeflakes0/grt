@@ -382,16 +382,21 @@ public:
      */
     std::string getInfoText() const { return infoText; }
     
+    int getSampleRate() const; // CDF
+
 	/**
      Gets the number of dimensions of the labelled classification data.
      
 	 @return an unsigned int representing the number of dimensions in the classification data
      */
     UINT /*inline*/ getNumDimensions() const;// { return numDimensions; }
+    // CDF
+    UINT inline getAbsoluteNumDimensions() const { return numDimensions; } // bypass dimension enabling
 
     Vector<std::string> getDimensionNames()  const; // CDF
     void setDimensionNames(Vector<std::string> names);
 
+    void resetEnabledDimensions();
     void enableDimension(UINT index, bool state);
     bool isDimensionEnabled(UINT index) const;
     Vector<bool> getEnabledDimensions() const;

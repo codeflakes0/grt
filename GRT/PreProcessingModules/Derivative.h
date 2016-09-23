@@ -176,7 +176,7 @@ public:
     @param delta: the estimated sampling time between sensor samples, must be greater than zero
     @return returns true if delta was set, false otherwise
     */
-    bool setDelta(Float delta);
+    //bool setDelta(Float delta); // CDF: not implemented
     
     /**
     Sets if the input data will be filtered using a moving average filter before the derivative is computed.

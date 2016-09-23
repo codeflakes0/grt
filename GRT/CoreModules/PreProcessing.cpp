@@ -89,7 +89,14 @@ bool PreProcessing::clear(){
     processedData.clear();
     return true;
 }
-    
+
+// CDF
+void PreProcessing::setSize(int aSize) {
+    numInputDimensions = aSize;
+    numOutputDimensions = aSize;
+    processedData.resize( aSize );
+}
+
 bool PreProcessing::init(){
     
     if( numOutputDimensions == 0 ){

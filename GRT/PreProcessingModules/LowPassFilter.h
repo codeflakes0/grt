@@ -196,9 +196,7 @@ public:
     */
     VectorFloat getFilteredValues(){ if( initialized ){ return yy; } return VectorFloat(); }
     
-    //Tell the compiler we are using the following functions from the MLBase class to stop hidden virtual function warnings
-    using MLBase::save;
-    using MLBase::load;
+    void setSize(int aSize);
     
 protected:
     Float filterFactor;                ///< The filter factor (alpha) of the filter

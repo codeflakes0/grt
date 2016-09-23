@@ -29,6 +29,7 @@ TimeSeriesClassificationData::TimeSeriesClassificationData(UINT numDimensions,st
     warningLog.setProceedingText("[WARNING TSCD]");
 
     this->numDimensions = numDimensions;
+    resetEnabledDimensions();
     this->datasetName = datasetName;
     this->infoText = infoText;
     totalNumSamples = 0;
@@ -57,6 +58,7 @@ TimeSeriesClassificationData& TimeSeriesClassificationData::operator=(const Time
         this->datasetName = rhs.datasetName;
         this->infoText = rhs.infoText;
         this->numDimensions = rhs.numDimensions;
+        this->resetEnabledDimensions();
         this->dimensionsName = rhs.dimensionsName;
         this->useExternalRanges = rhs.useExternalRanges;
         this->allowNullGestureClass = rhs.allowNullGestureClass;
@@ -93,11 +95,7 @@ bool TimeSeriesClassificationData::setNumDimensions(const UINT numDimensions){
         dimensionsName.clear();
         dimensionsName.resize(numDimensions);
 
-        enabledDimensions.clear();
-        enabledDimensions.resize(numDimensions);
-        for (UINT d=0; d<numDimensions; d++) {
-            enabledDimensions[d] = true;
-        }
+        resetEnabledDimensions();
 
         return true;
     }
@@ -550,7 +548,7 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const std::string filenam
 		UINT timeSeriesLength = 0;
         std::string className;
 
-        infoLog << "load sample:" << x << std::endl;
+        //infoLog << "load sample:" << x << std::endl;
 
 		file >> word;
 		if( word != "************TIME_SERIES************" ){
@@ -606,9 +604,9 @@ bool TimeSeriesClassificationData::loadDatasetFromFile(const std::string filenam
 		data[x].setTrainingSample(classLabel,trainingExample);
     }
 
-    infoLog << "loading done" << std::endl;
+    //infoLog << "loading done" << std::endl;
 	file.close();
-    infoLog << "loading closed" << std::endl;
+    //infoLog << "loading closed" << std::endl;
 	return true;
 }
     
@@ -1208,6 +1206,14 @@ void TimeSeriesClassificationData::setDimensionNames(Vector<std::string> names) 
         dimensionsName.push_back(names[d]);
 }
 
+void TimeSeriesClassificationData::resetEnabledDimensions() {
+    enabledDimensions.clear();
+    enabledDimensions.resize(numDimensions);
+    for (UINT d=0; d<numDimensions; d++) {
+        enabledDimensions[d] = true;
+    }
+}
+
 void TimeSeriesClassificationData::enableDimension(UINT index, bool state) {
     if(index >= enabledDimensions.size()) {
         errorLog << "bad dimension index " << index << " vs " << enabledDimensions.size() << std::endl;
@@ -1235,6 +1241,23 @@ UINT TimeSeriesClassificationData::getNumDimensions() const
         if(enabledDimensions[d]) num++;
     return num;
     //return numDimensions; // before enabledDimensions
+}
+
+int TimeSeriesClassificationData::getSampleRate() const {
+    unsigned int end = infoText.find("Hz");
+    if(end == std::string::npos) return -1;
+
+    if(end>0) end--; // skip space before Hz
+    unsigned int start = end-1; // last digit
+
+    for(;start>0; start--) {
+        if(!isdigit(infoText.at(start))) break;
+    }
+    start++; // first digit
+    if(start < 2) return -1;
+
+    std::string sampleRate = infoText.substr(start, end-start);
+    return std::atoi(sampleRate.c_str());
 }
 
 GRT_END_NAMESPACE
