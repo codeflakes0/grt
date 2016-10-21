@@ -23,10 +23,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
-//Register the AdaBoost module with the Classifier base class
-RegisterClassifierModule< AdaBoost > AdaBoost::registerModule("AdaBoost");
+//Define the string that will be used to indentify the object
+std::string AdaBoost::id = "AdaBoost";
+std::string AdaBoost::getId() { return AdaBoost::id; }
 
-AdaBoost::AdaBoost(const WeakClassifier &weakClassifier,bool useScaling,bool useNullRejection,Float nullRejectionCoeff,UINT numBoostingIterations,UINT predictionMethod)
+//Register the AdaBoost module with the Classifier base class
+RegisterClassifierModule< AdaBoost > AdaBoost::registerModule( AdaBoost::getId() );
+
+AdaBoost::AdaBoost(const WeakClassifier &weakClassifier,bool useScaling,bool useNullRejection,Float nullRejectionCoeff,UINT numBoostingIterations,UINT predictionMethod) : Classifier( AdaBoost::getId() )
 {
     setWeakClassifier( weakClassifier );
     this->useScaling = useScaling;
@@ -34,22 +38,11 @@ AdaBoost::AdaBoost(const WeakClassifier &weakClassifier,bool useScaling,bool use
     this->nullRejectionCoeff = nullRejectionCoeff;
     this->numBoostingIterations = numBoostingIterations;
     this->predictionMethod = predictionMethod;
-    classType = "AdaBoost";
-    classifierType = classType;
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG AdaBoost]");
-    errorLog.setProceedingText("[ERROR AdaBoost]");
-    trainingLog.setProceedingText("[TRAINING AdaBoost]");
-    warningLog.setProceedingText("[WARNING AdaBoost]");
 }
 
-AdaBoost::AdaBoost(const AdaBoost &rhs){
-    classifierType = "AdaBoost";
+AdaBoost::AdaBoost(const AdaBoost &rhs):Classifier(AdaBoost::getId()){
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG AdaBoost]");
-    errorLog.setProceedingText("[ERROR AdaBoost]");
-    trainingLog.setProceedingText("[TRAINING AdaBoost]");
-    warningLog.setProceedingText("[WARNING AdaBoost]");
     *this = rhs;
 }
 

@@ -23,33 +23,26 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
-//Register the Softmax module with the Classifier base class
-RegisterClassifierModule< Softmax >  Softmax::registerModule("Softmax");
+//Define the string that will be used to indentify the object
+std::string Softmax::id = "Softmax";
+std::string Softmax::getId() { return Softmax::id; }
 
-Softmax::Softmax(const bool useScaling,const Float learningRate,const Float minChange,const UINT maxNumEpochs,const UINT batchSize)
+//Register the Softmax module with the Classifier base class
+RegisterClassifierModule< Softmax >  Softmax::registerModule( getId() );
+
+Softmax::Softmax(const bool useScaling,const Float learningRate,const Float minChange,const UINT maxNumEpochs,const UINT batchSize) : Classifier( getId() )
 {
     this->useScaling = useScaling;
     this->learningRate = learningRate;
     this->minChange = minChange;
     this->maxNumEpochs = maxNumEpochs;
     this->batchSize = batchSize;
-    classType = "Softmax";
-    classifierType = classType;
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG Softmax]");
-    errorLog.setProceedingText("[ERROR Softmax]");
-    trainingLog.setProceedingText("[TRAINING Softmax]");
-    warningLog.setProceedingText("[WARNING Softmax]");
 }
 
-Softmax::Softmax(const Softmax &rhs){
-    classType = "Softmax";
-    classifierType = classType;
+Softmax::Softmax(const Softmax &rhs) : Classifier( getId() )
+{
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG Softmax]");
-    errorLog.setProceedingText("[ERROR Softmax]");
-    trainingLog.setProceedingText("[TRAINING Softmax]");
-    warningLog.setProceedingText("[WARNING Softmax]");
     *this = rhs;
 }
 

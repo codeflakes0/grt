@@ -2,32 +2,32 @@
 #include "gtest/gtest.h"
 using namespace GRT;
 
-//Unit tests for the GRT ANBC Classifier
+//Unit tests for the GRT MinDist module
 
 // Tests the default constructor
-TEST(ANBC, Constructor) {
+TEST(MinDist, Constructor) {
   
-  ANBC anbc;
+  MinDist md;
 
   //Check the type matches
-  EXPECT_TRUE( anbc.getClassifierType() == ANBC::getId() );
+  EXPECT_TRUE( md.getClassifierType() == MinDist::getId() );
 
   //Check the module is not trained
-  EXPECT_TRUE( !anbc.getTrained() );
+  EXPECT_TRUE( !md.getTrained() );
 }
 
 // Tests the learning algorithm on a basic dataset
-TEST(ANBC, TrainBasicDataset) {
+TEST(MinDist, TrainBasicDataset) {
   
-  ANBC anbc;
+  MinDist md;
 
   //Check the module is not trained
-  EXPECT_TRUE( !anbc.getTrained() );
+  EXPECT_TRUE( !md.getTrained() );
 
   //Generate a basic dataset
-  const UINT numSamples = 10 * 1000;
+  const UINT numSamples = 10000;
   const UINT numClasses = 10;
-  const UINT numDimensions = 1000;
+  const UINT numDimensions = 100;
   ClassificationData::generateGaussDataset( "gauss_data.csv", numSamples, numClasses, numDimensions, 10, 1 );
   ClassificationData trainingData;
   EXPECT_TRUE( trainingData.load( "gauss_data.csv" ) );
@@ -35,28 +35,28 @@ TEST(ANBC, TrainBasicDataset) {
   ClassificationData testData = trainingData.split( 50 );
 
   //Train the classifier
-  EXPECT_TRUE( anbc.train( trainingData ) );
+  EXPECT_TRUE( md.train( trainingData ) );
 
-  EXPECT_TRUE( anbc.getTrained() );
+  EXPECT_TRUE( md.getTrained() );
 
-  EXPECT_TRUE( anbc.print() );
+  EXPECT_TRUE( md.print() );
 
   for(UINT i=0; i<testData.getNumSamples(); i++){
-    EXPECT_TRUE( anbc.predict( testData[i].getSample() ) );
+    EXPECT_TRUE( md.predict( testData[i].getSample() ) );
   }
 
-  EXPECT_TRUE( anbc.save( "anbc_model.grt" ) );
+  EXPECT_TRUE( md.save( "min_dist_model.grt" ) );
 
-  anbc.clear();
+  md.clear();
 
-  EXPECT_TRUE( !anbc.getTrained() );
+  EXPECT_TRUE( !md.getTrained() );
 
-  EXPECT_TRUE( anbc.load( "anbc_model.grt" ) );
+  EXPECT_TRUE( md.load( "min_dist_model.grt" ) );
 
-  EXPECT_TRUE( anbc.getTrained() );
+  EXPECT_TRUE( md.getTrained() );
 
   for(UINT i=0; i<testData.getNumSamples(); i++){
-    EXPECT_TRUE( anbc.predict( testData[i].getSample() ) );
+    EXPECT_TRUE( md.predict( testData[i].getSample() ) );
   }
 
 

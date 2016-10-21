@@ -23,11 +23,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
+//Define the string that will be used to indentify the object
+std::string SwipeDetector::id = "SwipeDetector";
+std::string SwipeDetector::getId() { return SwipeDetector::id; }
+
 //Register the SwipeDetector module with the Classifier base class
-RegisterClassifierModule< SwipeDetector > SwipeDetector::registerModule("SwipeDetector");
+RegisterClassifierModule< SwipeDetector > SwipeDetector::registerModule( getId() );
 
 SwipeDetector::SwipeDetector(const unsigned int swipeIndex, const unsigned int swipeThreshold,
-                                   const unsigned int hysteresisThreshold, const unsigned int swipeDirection,bool useScaling)
+                                   const unsigned int hysteresisThreshold, const unsigned int swipeDirection,bool useScaling) : Classifier( getId() )
 {
     this->swipeIndex = swipeIndex;
     this->swipeThreshold = swipeThreshold;
@@ -37,13 +41,7 @@ SwipeDetector::SwipeDetector(const unsigned int swipeIndex, const unsigned int s
     
     supportsNullRejection = false;
     contextInput = true;
-    classType = "SwipeDetector";
-    classifierType = classType;
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG SwipeDetector]");
-    errorLog.setProceedingText("[ERROR SwipeDetector]");
-    trainingLog.setProceedingText("[TRAINING SwipeDetector]");
-    warningLog.setProceedingText("[WARNING SwipeDetector]");
     
     swipeIntegrationCoeff = 0.92;
     movementIntegrationCoeff = 0.90;
@@ -53,15 +51,10 @@ SwipeDetector::SwipeDetector(const unsigned int swipeIndex, const unsigned int s
     reset();
 }
     
-SwipeDetector::SwipeDetector(const SwipeDetector &rhs){
+SwipeDetector::SwipeDetector(const SwipeDetector &rhs) : Classifier( getId() )
+{
     supportsNullRejection = false;
-    classType = "SwipeDetector";
-    classifierType = classType;
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG SwipeDetector]");
-    errorLog.setProceedingText("[ERROR SwipeDetector]");
-    trainingLog.setProceedingText("[TRAINING SwipeDetector]");
-    warningLog.setProceedingText("[WARNING SwipeDetector]");
     
     swipeIntegrationCoeff = 0.92;
     movementIntegrationCoeff = 0.90;

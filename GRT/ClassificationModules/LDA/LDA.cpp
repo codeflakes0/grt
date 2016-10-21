@@ -23,18 +23,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
-LDA::LDA(bool useScaling,bool useNullRejection,Float nullRejectionCoeff)
+//Define the string that will be used to indentify the object
+std::string LDA::id = "LDA";
+std::string LDA::getId() { return LDA::id; }
+
+LDA::LDA(bool useScaling,bool useNullRejection,Float nullRejectionCoeff) : Classifier( getId() )
 {
     this->useScaling = useScaling;
     this->useNullRejection = useNullRejection;
     this->nullRejectionCoeff = nullRejectionCoeff;
-    classType = "LDA";
-    classifierType = classType;
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG LDA]");
-    errorLog.setProceedingText("[ERROR LDA]");
-    trainingLog.setProceedingText("[TRAINING LDA]");
-    warningLog.setProceedingText("[WARNING LDA]");
 }
 
 LDA::~LDA(void)

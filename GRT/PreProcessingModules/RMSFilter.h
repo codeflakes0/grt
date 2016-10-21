@@ -2,7 +2,6 @@
 @file
 @author  Nicholas Gillian <ngillian@media.mit.edu>
 @version 1.0
-@example PreprocessingModulesExamples/MedianFilterExample/MedianFilterExample.cpp
 */
 
 /**
@@ -25,52 +24,52 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef GRT_MEDIAN_FILTER_HEADER
-#define GRT_MEDIAN_FILTER_HEADER
+#ifndef GRT_RMS_FILTER_HEADER
+#define GRT_RMS_FILTER_HEADER
 
 #include "../CoreModules/PreProcessing.h"
 
 GRT_BEGIN_NAMESPACE
 
 /**
- @brief The MedianFilter implements a simple median filter: https://en.wikipedia.org/wiki/Median_filter
+ @brief The RMSFilter implements a root mean squared (RMS) filter.
 */
-class GRT_API MedianFilter : public PreProcessing {
-    public:
+class RMSFilter : public PreProcessing {
+public:
     /**
-    Constructor, sets the size of the median filter and the dimensionality of the data it will filter.
+    Constructor, sets the size of the filter (the size of the buffer used to store and filter data) and the dimensionality of the data it will filter.
     
-    @param filterSize: the size of the median filter, should be a value greater than zero. Default filterSize = 5
-    @param numDimensions: the dimensionality of the data to filter.  Default numDimensions = 1
+    @param filterSize: the size of the RMS filter buffer, should be a value greater than zero
+    @param numDimensions: the dimensionality of the data to filter
     */
-    MedianFilter(const UINT filterSize = 5,const UINT numDimensions = 1);
+    RMSFilter(UINT filterSize = 5,UINT numDimensions = 1);
     
     /**
-    Copy Constructor, copies the MedianFilter from the rhs instance to this instance
+    Copy Constructor, copies the RMSFilter from the rhs instance to this instance
     
-    @param rhs: another instance of the MedianFilter class from which the data will be copied to this instance
+    @param rhs: another instance of the RMSFilter class from which the data will be copied to this instance
     */
-    MedianFilter(const MedianFilter &rhs);
+    RMSFilter(const RMSFilter &rhs);
     
     /**
     Default Destructor
     */
-    virtual ~MedianFilter();
+    virtual ~RMSFilter();
     
     /**
     Sets the equals operator, copies the data from the rhs instance to this instance
     
-    @param rhs: another instance of the MedianFilter class from which the data will be copied to this instance
-    @return a reference to this instance of MedianFilter
+    @param rhs: another instance of the RMSFilter class from which the data will be copied to this instance
+    @return a reference to this instance of RMSFilter
     */
-    MedianFilter& operator=(const MedianFilter &rhs);
+    RMSFilter& operator=(const RMSFilter &rhs);
     
     /**
     Sets the PreProcessing deepCopyFrom function, overwriting the base PreProcessing function.
     This function is used to deep copy the values from the input pointer to this instance of the PreProcessing module.
     This function is called by the GestureRecognitionPipeline when the user adds a new PreProcessing module to the pipeline.
     
-    @param preProcessing: a pointer to another instance of a MedianFilter, the values of that instance will be cloned to this instance
+    @param preProcessing: a pointer to another instance of a RMSFilter, the values of that instance will be cloned to this instance
     @return true if the deep copy was successful, false otherwise
     */
     virtual bool deepCopyFrom(const PreProcessing *preProcessing);
@@ -78,7 +77,7 @@ class GRT_API MedianFilter : public PreProcessing {
     /**
     Sets the PreProcessing process function, overwriting the base PreProcessing function.
     This function is called by the GestureRecognitionPipeline when any new input data needs to be processed (during the prediction phase for example).
-    This function calls the MedianFilter's filter function.
+    This function calls the RMSFilter's filter function.
     
     @param inputVector: the inputVector that should be processed.  Must have the same dimensionality as the PreProcessing module
     @return true if the data was processed, false otherwise
@@ -95,22 +94,22 @@ class GRT_API MedianFilter : public PreProcessing {
     virtual bool reset();
     
     /**
-    This saves the current settings of the MedianFilter to a file.
+    This saves the current settings of the RMSFilter to a file.
     This overrides the save function in the PreProcessing base class.
     
     @param file: a reference to the file the settings will be saved to
     @return returns true if the settings were saved successfully, false otherwise
     */
-    virtual bool save( std::fstream &file) const;
+    virtual bool save(std::fstream &file) const;
     
     /**
-    This loads the MedianFilter settings from a file.
+    This loads the RMSFilter settings from a file.
     This overrides the load function in the PreProcessing base class.
     
     @param file: a reference to the file to load the settings from
     @return returns true if the model was loaded successfully, false otherwise
     */
-    virtual bool load( std::fstream &file );
+    virtual bool load(std::fstream &file);
     
     /**
     Initializes the filter, setting the filter size and dimensionality of the data it will filter.
@@ -119,7 +118,7 @@ class GRT_API MedianFilter : public PreProcessing {
     @param filterSize: the size of the moving average filter, should be a value greater than zero
     @return true if the filter was initiliazed, false otherwise
     */
-    bool init(const UINT filterSize,const UINT numDimensions);
+    bool init(UINT filterSize,UINT numDimensions);
     
     /**
     Filters the input, this should only be called if the dimensionality of the filter was set to 1.
@@ -142,24 +141,14 @@ class GRT_API MedianFilter : public PreProcessing {
     
     @return returns the filter size
     */
-    UINT getFilterSize() const;
+    UINT getFilterSize() const { return filterSize; }
     
     /**
     Returns the last value(s) that were filtered.
     
     @return the filtered values.  An empty vector will be returned if the values were not filtered
     */
-    VectorFloat getFilteredData() const;
-    
-    /**
-    Returns the current data in the dataBuffer.
-    This will be a [N M] vector of VectorFloats, where N is the number of dimensions in the filter and M is the
-    size of the buffer.
-    If the filter has not been initialized then an empty vector will be returned.
-    
-    @return the current data in the dataBuffer
-    */
-    Vector< VectorFloat > getDataBuffer() const;
+    VectorFloat getFilteredData() const { return processedData; }
     
     //Tell the compiler we are using the following functions from the MLBase class to stop hidden virtual function warnings
     using MLBase::save;
@@ -170,10 +159,10 @@ protected:
     UINT inputSampleCounter;                                ///< A counter to keep track of the number of input samples
     CircularBuffer< VectorFloat > dataBuffer;           ///< A buffer to store the previous N values, N = filterSize
     
-    static RegisterPreProcessingModule< MedianFilter > registerModule;
+    static RegisterPreProcessingModule< RMSFilter > registerModule;
 };
 
 GRT_END_NAMESPACE
 
-#endif //GRT_MEDIAN_FILTER_HEADER
-    
+#endif //GRT_RMS_FILTER_HEADER
+

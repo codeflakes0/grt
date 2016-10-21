@@ -23,10 +23,14 @@
 
 GRT_BEGIN_NAMESPACE
     
-//Register the ParticleClassifier module with the Classifier base class
-RegisterClassifierModule< ParticleClassifier > ParticleClassifier::registerModule("ParticleClassifier");
+//Define the string that will be used to indentify the object
+std::string ParticleClassifier::id = "ParticleClassifier";
+std::string ParticleClassifier::getId() { return ParticleClassifier::id; }
 
-ParticleClassifier::ParticleClassifier( const unsigned int numParticles,const Float sensorNoise,const Float transitionSigma,const Float phaseSigma,const Float velocitySigma )
+//Register the ParticleClassifier module with the Classifier base class
+RegisterClassifierModule< ParticleClassifier > ParticleClassifier::registerModule( getId() );
+
+ParticleClassifier::ParticleClassifier( const unsigned int numParticles,const Float sensorNoise,const Float transitionSigma,const Float phaseSigma,const Float velocitySigma ) : Classifier( getId() )
 {
     this->numParticles = numParticles;
     this->sensorNoise = sensorNoise;
@@ -35,16 +39,11 @@ ParticleClassifier::ParticleClassifier( const unsigned int numParticles,const Fl
     this->velocitySigma = velocitySigma;
     useNullRejection = true;
     supportsNullRejection = true;
-    classType = "ParticleClassifier";
-    classifierType = classType;
     classifierMode = TIMESERIES_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG ParticleClassifier]");
-    errorLog.setProceedingText("[ERROR ParticleClassifier]");
-    trainingLog.setProceedingText("[TRAINING ParticleClassifier]");
-    warningLog.setProceedingText("[WARNING ParticleClassifier]");
 }
 
-ParticleClassifier::ParticleClassifier(const ParticleClassifier &rhs){
+ParticleClassifier::ParticleClassifier(const ParticleClassifier &rhs) : Classifier( getId() )
+{
     *this = rhs;
 }
 

@@ -19,20 +19,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #define GRT_DLL_EXPORTS
-#include "MedianFilter.h"
+#include "RMSFilter.h"
 
 GRT_BEGIN_NAMESPACE
 
-//Register the MedianFilter module with the PreProcessing base class
-RegisterPreProcessingModule< MedianFilter > MedianFilter::registerModule("MedianFilter");
+//Register the RMSFiltermodule with the PreProcessing base class
+RegisterPreProcessingModule< RMSFilter> RMSFilter::registerModule("RMSFilter");
 
-MedianFilter::MedianFilter(UINT filterSize,UINT numDimensions) : PreProcessing( "MedianFilter" )
+RMSFilter::RMSFilter(UINT filterSize,UINT numDimensions) : PreProcessing( "RMSFilter" )
 {
     init(filterSize,numDimensions);
 }
 
-MedianFilter::MedianFilter(const MedianFilter &rhs) : PreProcessing( "MedianFilter" )
-{
+RMSFilter::RMSFilter(const RMSFilter&rhs) : PreProcessing( "RMSFilter" )
+{ 
     //Zero this instance
     this->filterSize = 0;
     this->inputSampleCounter = 0;
@@ -41,11 +41,11 @@ MedianFilter::MedianFilter(const MedianFilter &rhs) : PreProcessing( "MedianFilt
     *this = rhs;
 }
 
-MedianFilter::~MedianFilter(){
+RMSFilter::~RMSFilter(){
     
 }
 
-MedianFilter& MedianFilter::operator=(const MedianFilter &rhs){
+RMSFilter& RMSFilter::operator=(const RMSFilter&rhs){
     if(this!=&rhs){
         //Clear this instance
         this->filterSize = 0;
@@ -64,14 +64,14 @@ MedianFilter& MedianFilter::operator=(const MedianFilter &rhs){
     return *this;
 }
 
-bool MedianFilter::deepCopyFrom(const PreProcessing *preProcessing){
+bool RMSFilter::deepCopyFrom(const PreProcessing *preProcessing){
     
     if( preProcessing == NULL ) return false;
     
     if( this->getPreProcessingType() == preProcessing->getPreProcessingType() ){
         
         //Call the equals operator
-        *this = *dynamic_cast<const MedianFilter*>(preProcessing);
+        *this = *dynamic_cast<const RMSFilter*>(preProcessing);
         
         return true;
     }
@@ -82,38 +82,38 @@ bool MedianFilter::deepCopyFrom(const PreProcessing *preProcessing){
 }
 
 
-bool MedianFilter::process(const VectorFloat &inputVector){
+bool RMSFilter::process(const VectorFloat &inputVector){
     
     if( !initialized ){
         errorLog << "process(const VectorFloat &inputVector) - The filter has not been initialized!" << std::endl;
         return false;
     }
     
-    if( inputVector.size() != numInputDimensions ){
-        errorLog << "process(const VectorFloat &inputVector) - The size of the inputVector (" << inputVector.size() << ") does not match that of the filter (" << numInputDimensions << ")!" << std::endl;
+    if( inputVector.getSize() != numInputDimensions ){
+        errorLog << "process(const VectorFloat &inputVector) - The size of the inputVector (" << inputVector.getSize() << ") does not match that of the filter (" << numInputDimensions << ")!" << std::endl;
         return false;
     }
     
     filter( inputVector );
     
-    if( processedData.size() == numOutputDimensions ) return true;
+    if( processedData.getSize() == numOutputDimensions ) return true;
     
     return false;
 }
 
-bool MedianFilter::reset(){
+bool RMSFilter::reset(){
     if( initialized ) return init(filterSize,numInputDimensions);
     return false;
 }
 
-bool MedianFilter::save( std::fstream &file ) const{
+bool RMSFilter::save(std::fstream &file) const{
     
     if( !file.is_open() ){
         errorLog << "save(fstream &file) - The file is not open!" << std::endl;
         return false;
     }
     
-    file << "GRT_MEDIAN_FILTER_FILE_V1.0" << std::endl;
+    file << "GRT_RMS_FILTER_FILE_V1.0" << std::endl;
     
     file << "NumInputDimensions: " << numInputDimensions << std::endl;
     file << "NumOutputDimensions: " << numOutputDimensions << std::endl;
@@ -122,7 +122,7 @@ bool MedianFilter::save( std::fstream &file ) const{
     return true;
 }
 
-bool MedianFilter::load( std::fstream &file ){
+bool RMSFilter::load(std::fstream &file){
     
     if( !file.is_open() ){
         errorLog << "load(fstream &file) - The file is not open!" << std::endl;
@@ -134,7 +134,7 @@ bool MedianFilter::load( std::fstream &file ){
     //Load the header
     file >> word;
     
-    if( word != "GRT_MEDIAN_FILTER_FILE_V1.0" ){
+    if( word != "GRT_RMS_FILTER_FILE_V1.0" ){
         errorLog << "load(fstream &file) - Invalid file format!" << std::endl;
         return false;
     }
@@ -167,7 +167,7 @@ bool MedianFilter::load( std::fstream &file ){
     return init(filterSize,numInputDimensions);
 }
 
-bool MedianFilter::init(const UINT filterSize,const UINT numDimensions){
+bool RMSFilter::init(UINT filterSize,UINT numDimensions){
     
     //Cleanup the old memory
     initialized = false;
@@ -198,7 +198,13 @@ bool MedianFilter::init(const UINT filterSize,const UINT numDimensions){
     return initialized;
 }
 
-Float MedianFilter::filter(const Float x){
+Float RMSFilter::filter(const Float x){
+    
+    //If the filter has not been initialised then return 0, otherwise filter x and return y
+    if( !initialized ){
+        errorLog << "filter(const Float x) - The filter has not been initialized!" << std::endl;
+        return 0;
+    }
     
     VectorFloat y = filter(VectorFloat(1,x));
     
@@ -206,7 +212,7 @@ Float MedianFilter::filter(const Float x){
     return y[0];
 }
 
-VectorFloat MedianFilter::filter(const VectorFloat &x){
+VectorFloat RMSFilter::filter(const VectorFloat &x){
     
     //If the filter has not been initialised then return 0, otherwise filter x and return y
     if( !initialized ){
@@ -214,8 +220,8 @@ VectorFloat MedianFilter::filter(const VectorFloat &x){
         return VectorFloat();
     }
     
-    if( x.getSize() != numInputDimensions ){
-        errorLog << "filter(const VectorFloat &x) - The size of the input Vector (" << x.getSize() << ") does not match that of the number of dimensions of the filter (" << numInputDimensions << ")!" << std::endl;
+    if( x.size() != numInputDimensions ){
+        errorLog << "filter(const VectorFloat &x) - The size of the input vector (" << x.getSize() << ") does not match that of the number of dimensions of the filter (" << numInputDimensions << ")!" << std::endl;
         return VectorFloat();
     }
     
@@ -224,39 +230,15 @@ VectorFloat MedianFilter::filter(const VectorFloat &x){
     //Add the new value to the buffer
     dataBuffer.push_back( x );
     
-    //Compute the median value for each dimension
-    VectorFloat tmp( inputSampleCounter );
     for(unsigned int j=0; j<numInputDimensions; j++){
+        processedData[j] = 0;
         for(unsigned int i=0; i<inputSampleCounter; i++) {
-            tmp[i] = dataBuffer[i][j];
+            processedData[j] += dataBuffer[i][j] * dataBuffer[i][j];
         }
-        std::sort(tmp.begin(),tmp.end());
-        
-        //Get the median value
-        unsigned int medianIndex = (inputSampleCounter/2);
-        processedData[j] = tmp[ medianIndex ];
+        processedData[j] = sqrt( processedData[j] / Float(inputSampleCounter) );
     }
     
     return processedData;
-}
-
-UINT MedianFilter::getFilterSize() const { return filterSize; }
-    
-VectorFloat MedianFilter::getFilteredData() const { return processedData; }
-
-Vector< VectorFloat > MedianFilter::getDataBuffer() const {
-    
-    if( !initialized ){
-        return Vector< VectorFloat >();
-    }
-    
-    Vector< VectorFloat > data(numInputDimensions,VectorFloat(inputSampleCounter));
-    for(unsigned int j=0; j<numInputDimensions; j++){
-        for(unsigned int i=0; i<inputSampleCounter; i++){
-            data[j][i] = dataBuffer[i][j];
-        }
-    }
-    return data;
 }
 
 GRT_END_NAMESPACE

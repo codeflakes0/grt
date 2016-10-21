@@ -23,30 +23,22 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
-//Register the BAG module with the Classifier base class
-RegisterClassifierModule< BAG >  BAG::registerModule("BAG");
+//Define the string that will be used to indentify the object
+std::string BAG::id = "BAG";
+std::string BAG::getId() { return BAG::id; }
 
-BAG::BAG(bool useScaling)
+//Register the BAG module with the Classifier base class
+RegisterClassifierModule< BAG >  BAG::registerModule( BAG::getId() );
+
+BAG::BAG(bool useScaling) : Classifier( BAG::getId() )
 {
     this->useScaling = useScaling;
     useNullRejection = false;
-    classType = "BAG";
-    classifierType = classType;
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG BAG]");
-    errorLog.setProceedingText("[ERROR BAG]");
-    trainingLog.setProceedingText("[TRAINING BAG]");
-    warningLog.setProceedingText("[WARNING BAG]");
 }
 
-BAG::BAG(const BAG &rhs){
-    classType = "BAG";
-    classifierType = classType;
+BAG::BAG(const BAG &rhs):Classifier( BAG::getId() ){
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG BAG]");
-    errorLog.setProceedingText("[ERROR BAG]");
-    trainingLog.setProceedingText("[TRAINING BAG]");
-    warningLog.setProceedingText("[WARNING BAG]");
     *this = rhs;
 }
 

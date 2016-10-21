@@ -23,17 +23,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
-//Register the GMM module with the Classifier base class
-RegisterClassifierModule< GMM > GMM::registerModule("GMM");
+//Define the string that will be used to indentify the object
+std::string GMM::id = "GMM";
+std::string GMM::getId() { return GMM::id; }
 
-GMM::GMM(UINT numMixtureModels,bool useScaling,bool useNullRejection,Float nullRejectionCoeff,UINT maxIter,Float minChange){
-    classType = "GMM";
-    classifierType = classType;
+//Register the GMM module with the Classifier base class
+RegisterClassifierModule< GMM > GMM::registerModule( getId() );
+
+GMM::GMM(UINT numMixtureModels,bool useScaling,bool useNullRejection,Float nullRejectionCoeff,UINT maxIter,Float minChange) : Classifier( getId() )
+{
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG GMM]");
-    errorLog.setProceedingText("[ERROR GMM]");
-    warningLog.setProceedingText("[WARNING GMM]");
-    
     this->numMixtureModels = numMixtureModels;
     this->useScaling = useScaling;
     this->useNullRejection = useNullRejection;
@@ -42,13 +41,9 @@ GMM::GMM(UINT numMixtureModels,bool useScaling,bool useNullRejection,Float nullR
     this->minChange = minChange;
 }
 
-GMM::GMM(const GMM &rhs){
-    classType = "GMM";
-    classifierType = classType;
+GMM::GMM(const GMM &rhs) : Classifier( getId() )
+{
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG GMM]");
-    errorLog.setProceedingText("[ERROR GMM]");
-    warningLog.setProceedingText("[WARNING GMM]");
     *this = rhs;
 }
 

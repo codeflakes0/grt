@@ -2,27 +2,27 @@
 #include "gtest/gtest.h"
 using namespace GRT;
 
-//Unit tests for the GRT Decision Tree module
+//Unit tests for the GRT AdaBoost module
 
 // Tests the default constructor
-TEST(DecisionTree, Constructor) {
+TEST(AdaBoost, Constructor) {
   
-  DecisionTree tree;
+  AdaBoost adaBoost;
 
   //Check the type matches
-  EXPECT_TRUE( tree.getClassifierType() == DecisionTree::getId() );
+  EXPECT_TRUE( adaBoost.getClassifierType() == AdaBoost::getId() );
 
   //Check the module is not trained
-  EXPECT_TRUE( !tree.getTrained() );
+  EXPECT_TRUE( !adaBoost.getTrained() );
 }
 
 // Tests the learning algorithm on a basic dataset
-TEST(DecisionTree, TrainBasicDataset) {
+TEST(AdaBoost, TrainBasicDataset) {
   
-  DecisionTree tree;
+  AdaBoost adaBoost;
 
   //Check the module is not trained
-  EXPECT_TRUE( !tree.getTrained() );
+  EXPECT_TRUE( !adaBoost.getTrained() );
 
   //Generate a basic dataset
   const UINT numSamples = 10000;
@@ -35,30 +35,28 @@ TEST(DecisionTree, TrainBasicDataset) {
   ClassificationData testData = trainingData.split( 50 );
 
   //Train the classifier
-  EXPECT_TRUE( tree.train( trainingData ) );
+  EXPECT_TRUE( adaBoost.train( trainingData ) );
 
-  EXPECT_TRUE( tree.getTrained() );
+  EXPECT_TRUE( adaBoost.getTrained() );
 
-  EXPECT_TRUE( tree.print() );
-
-  for(UINT i=0; i<testData.getNumSamples(); i++){
-    EXPECT_TRUE( tree.predict( testData[i].getSample() ) );
-  }
-
-  EXPECT_TRUE( tree.save( "tree_model.grt" ) );
-
-  tree.clear();
-
-  EXPECT_TRUE( !tree.getTrained() );
-
-  EXPECT_TRUE( tree.load( "tree_model.grt" ) );
-
-  EXPECT_TRUE( tree.getTrained() );
+  EXPECT_TRUE( adaBoost.print() );
 
   for(UINT i=0; i<testData.getNumSamples(); i++){
-    EXPECT_TRUE( tree.predict( testData[i].getSample() ) );
+    EXPECT_TRUE( adaBoost.predict( testData[i].getSample() ) );
   }
 
+  EXPECT_TRUE( adaBoost.save( "ada_boost_model.grt" ) );
+
+  adaBoost.clear();
+  EXPECT_TRUE( !adaBoost.getTrained() );
+
+  EXPECT_TRUE( adaBoost.load( "ada_boost_model.grt" ) );
+
+  EXPECT_TRUE( adaBoost.getTrained() );
+
+  for(UINT i=0; i<testData.getNumSamples(); i++){
+    EXPECT_TRUE( adaBoost.predict( testData[i].getSample() ) );
+  }
 
 }
 

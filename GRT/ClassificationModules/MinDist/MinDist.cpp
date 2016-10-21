@@ -23,33 +23,26 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
-//Register the MinDist module with the Classifier base class
-RegisterClassifierModule< MinDist > MinDist::registerModule("MinDist");
+//Define the string that will be used to indentify the object
+std::string MinDist::id = "MinDist";
+std::string MinDist::getId() { return MinDist::id; }
 
-MinDist::MinDist(bool useScaling,bool useNullRejection,Float nullRejectionCoeff,UINT numClusters)
+//Register the MinDist module with the Classifier base class
+RegisterClassifierModule< MinDist > MinDist::registerModule( getId() );
+
+MinDist::MinDist(bool useScaling,bool useNullRejection,Float nullRejectionCoeff,UINT numClusters) : Classifier( getId() )
 {
     this->useScaling = useScaling;
     this->useNullRejection = useNullRejection;
     this->nullRejectionCoeff = nullRejectionCoeff;
     this->numClusters = numClusters;
     supportsNullRejection = true;
-    classType = "MinDist";
-    classifierType = classType;
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG MinDist]");
-    errorLog.setProceedingText("[ERROR MinDist]");
-    trainingLog.setProceedingText("[TRAINING MinDist]");
-    warningLog.setProceedingText("[WARNING MinDist]");
 }
 
-MinDist::MinDist(const MinDist &rhs){
-    classType = "MinDist";
-    classifierType = classType;
+MinDist::MinDist(const MinDist &rhs) : Classifier( getId() )
+{
     classifierMode = STANDARD_CLASSIFIER_MODE;
-    debugLog.setProceedingText("[DEBUG MinDist]");
-    errorLog.setProceedingText("[ERROR MinDist]");
-    trainingLog.setProceedingText("[TRAINING MinDist]");
-    warningLog.setProceedingText("[WARNING MinDist]");
     *this = rhs;
 }
 
