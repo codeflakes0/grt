@@ -75,7 +75,7 @@ class GRT_API DTWTemplate{
     public:
     DTWTemplate(){
         classLabel = 0;
-        className = "";
+        className = ""; // CDF
         trainingMu = 0.0;
         trainingSigma = 0.0;
         averageTemplateLength=0;
@@ -83,7 +83,7 @@ class GRT_API DTWTemplate{
     ~DTWTemplate(){};
     
     UINT classLabel;                    //The class that this template belongs to
-    std::string className;
+    std::string className; // CDF
     MatrixFloat timeSeries;            //The raw time series
     Float trainingMu;                  //The mean distance value of the training data with the trained template
     Float trainingSigma;               //The sigma of the distance value of the training data with the trained template

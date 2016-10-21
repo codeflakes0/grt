@@ -444,7 +444,41 @@ Float MatrixFloat::getMaxValue() const{
     }
     return maxValue;
 }
-    
+
+// CDF
+Float MatrixFloat::getMinValue(Vector<int> enabledDimensions) const {
+    Float minValue = 99e+99;
+    if(enabledDimensions.size() != cols) {
+        errorLog << "getMinValue(): enabledDimensions size does not match column number" << std::endl;
+        return minValue;
+    }
+
+    unsigned int s = enabledDimensions.size();
+    for(unsigned int i=0; i<rows*cols; i++){
+        if(enabledDimensions.at(i%s)){ // i%s == current column
+            if( dataPtr[i] < minValue ) minValue = dataPtr[i];
+        }
+    }
+    return minValue;
+}
+
+// CDF
+Float MatrixFloat::getMaxValue(Vector<int> enabledDimensions) const {
+    Float maxValue = 99e-99;
+    if(enabledDimensions.size() != cols) {
+        errorLog << "getMaxValue(): enabledDimensions size does not match column number" << std::endl;
+        return maxValue;
+    }
+
+    unsigned int s = enabledDimensions.size();
+    for(unsigned int i=0; i<rows*cols; i++){
+        if(enabledDimensions.at(i%s)){ // i%s == current column
+            if( dataPtr[i] > maxValue ) maxValue = dataPtr[i];
+        }
+    }
+    return maxValue;
+}
+
 VectorFloat MatrixFloat::getMean() const{
     
     VectorFloat mean(cols);

@@ -61,7 +61,7 @@ bool TimeSeriesClassificationSample::setTrainingSample(const UINT classLabel,con
     return true;
 }
 
-MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<bool> enabledDimensions) {
+MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<int> enabledDimensions) {
     UINT enabledCol = 0;
     for (UINT d=0; d<enabledDimensions.size(); d++)
         enabledCol++;
@@ -72,7 +72,7 @@ MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<bool> enabled
     return data;
 }
 
-const MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<bool> enabledDimensions) const {
+const MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<int> enabledDimensions) const {
     return data;
 }
 

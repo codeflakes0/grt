@@ -65,8 +65,8 @@ public:
     inline UINT getClassLabel() const { return classLabel; }
     MatrixFloat &getData(){ return data; }
     const MatrixFloat &getData() const { return data; }
-    MatrixFloat &getEnabledData(Vector<bool> enabledDimensions);
-    const MatrixFloat &getEnabledData(Vector<bool> enabledDimensions) const;
+    MatrixFloat &getEnabledData(Vector<int> enabledDimensions);
+    const MatrixFloat &getEnabledData(Vector<int> enabledDimensions) const;
 
 protected:
 	UINT classLabel;

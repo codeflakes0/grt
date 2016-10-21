@@ -1169,6 +1169,8 @@ MatrixFloat TimeSeriesClassificationData::getDataAsMatrixFloat() const {
 }
 
 
+// CDF from Here
+
 MatrixFloat TimeSeriesClassificationData::getSampleData(UINT classLabel, UINT recordID) const {
 
     int record = 0;
@@ -1230,7 +1232,7 @@ bool TimeSeriesClassificationData::isDimensionEnabled(UINT index) const {
     return enabledDimensions[index];
 }
 
-Vector<bool> TimeSeriesClassificationData::getEnabledDimensions() const {
+Vector<int> TimeSeriesClassificationData::getEnabledDimensions() const {
     return enabledDimensions;
 }
 

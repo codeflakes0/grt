@@ -145,17 +145,17 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     //Cleanup Memory
     templatesBuffer.clear();
     classLabels.clear();
-    classNames.clear();
+    classNames.clear(); // CDF
     trained = false;
     continuousInputDataBuffer.clear();
     
-    Vector<bool> enabledDimensions = data.getEnabledDimensions();
+    Vector<int> enabledDimensions = data.getEnabledDimensions(); // CDF
 
     if( trimTrainingData ){
         TimeSeriesClassificationSampleTrimmer timeSeriesTrimmer(trimThreshold,maximumTrimPercentage);
         TimeSeriesClassificationData tempData;
         tempData.setNumDimensions( data.getNumDimensions() );
-
+        
         for(UINT i=0; i<data.getNumSamples(); i++){
             if( timeSeriesTrimmer.trimTimeSeries( data[i] ) ){
                 tempData.addSample(data[i].getClassLabel(), data[i].getData());
@@ -212,12 +212,12 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         
         //Check to make sure we actually have some training examples
         if( numExamples < 1 ){
-            errorLog << "train_(TimeSeriesClassificationData &data) - Can not train model: Num of Example is < 1! Class: " << classLabel << ". Turn off null rejection if you want to use DTW with only 1 training sample per class." << std::endl;
+            errorLog << "train_(TimeSeriesClassificationData &labelledTrainingData) - Can not train model: Num of Example is < 1! Class: " << classLabel << ". Turn off null rejection if you want to use DTW with only 1 training sample per class." << std::endl;
             return false;
         }
         
         if( numExamples == 1 && useNullRejection ){
-            errorLog << "train_(TimeSeriesClassificationData &data) - Can not train model as there is only 1 example in class: " << classLabel << ". Turn off null rejection if you want to use DTW with only 1 training sample per class." << std::endl;
+            errorLog << "train_(TimeSeriesClassificationData &labelledTrainingData) - Can not train model as there is only 1 example in class: " << classLabel << ". Turn off null rejection if you want to use DTW with only 1 training sample per class." << std::endl;
             return false;
         }
         
@@ -227,7 +227,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         }else{
             //Search for the best training example for this class
             if( !train_NDDTW(classData,templatesBuffer[k],bestIndex) ){
-                errorLog << "train_(LabelledTimeSeriesClassificationData &data) - Failed to train template for class with label: " << classLabel << std::endl;
+                errorLog << "train_(LabelledTimeSeriesClassificationData &labelledTrainingData) - Failed to train template for class with label: " << classLabel << std::endl;
                     return false;
             }
         }
@@ -284,7 +284,7 @@ bool DTW::train_NDDTW(TimeSeriesClassificationData &trainingData,DTWTemplate &dt
     MatrixFloat distanceResults(numExamples,numExamples);
     dtwTemplate.averageTemplateLength = 0;
     
-   Vector<bool> enabledDimensions = trainingData.getEnabledDimensions();
+   Vector<int> enabledDimensions = trainingData.getEnabledDimensions(); // CDF
 
     for(UINT m=0; m<numExamples; m++){
         
@@ -807,7 +807,7 @@ inline Float DTW::MIN_(Float a,Float b, Float c){
 
 void DTW::scaleData(TimeSeriesClassificationData &trainingData){
     
-    Vector<bool> enabledDimensions = trainingData.getEnabledDimensions();
+    Vector<int> enabledDimensions = trainingData.getEnabledDimensions();
 
     //Scale the data using the min and max values
     for(UINT i=0; i<trainingData.getNumSamples(); i++){
@@ -834,7 +834,7 @@ void DTW::scaleData(MatrixFloat &data,MatrixFloat &scaledData){
 
 void DTW::znormData(TimeSeriesClassificationData &trainingData){
     
-    Vector<bool> enabledDimensions = trainingData.getEnabledDimensions();
+    Vector<int> enabledDimensions = trainingData.getEnabledDimensions();
 
     for(UINT i=0; i<trainingData.getNumSamples(); i++){
         znormData( trainingData[i].getEnabledData(enabledDimensions), trainingData[i].getEnabledData(enabledDimensions) );
@@ -956,6 +956,7 @@ void DTW::smoothData(MatrixFloat &data,UINT smoothFactor,MatrixFloat &resultsDat
 
 ////////////////////////////// SAVE & LOAD FUNCTIONS ////////////////////////////////
 
+// CDF
 bool DTW::save( std::string filename ) const{
     //Open the file
     debugLog << "saving '" << filename << "'" << std::endl;
@@ -1034,6 +1035,7 @@ bool DTW::save( std::fstream &file ) const{
     return true;
 }
 
+// CDF
 bool DTW::load( std::string filename ){
     //Open the file
     debugLog << "opening '" << filename << "'" << std::endl;

@@ -399,7 +399,7 @@ public:
     void resetEnabledDimensions();
     void enableDimension(UINT index, bool state);
     bool isDimensionEnabled(UINT index) const;
-    Vector<bool> getEnabledDimensions() const;
+    Vector<int> getEnabledDimensions() const;
 
 	/**
      Gets the number of samples in the classification data across all the classes.
@@ -493,7 +493,7 @@ protected:
 	Vector< TimeSeriesClassificationSample > data;          ///< The labelled time series classification data
     Vector< Vector< UINT > >  crossValidationIndexs;        ///< A vector to hold the indexs of the dataset for the cross validation
     Vector<std::string> dimensionsName;
-    Vector<bool> enabledDimensions;
+    Vector<int> enabledDimensions;
 
     DebugLog debugLog;                                      ///< Default debugging log
     ErrorLog errorLog;                                      ///< Default error log

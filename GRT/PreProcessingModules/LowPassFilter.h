@@ -196,8 +196,12 @@ public:
     */
     VectorFloat getFilteredValues(){ if( initialized ){ return yy; } return VectorFloat(); }
     
-    void setSize(int aSize);
+    //Tell the compiler we are using the following functions from the MLBase class to stop hidden virtual function warnings
+    using MLBase::save;
+    using MLBase::load;
     
+	void setSize(int aSize); // CDF
+	
 protected:
     Float filterFactor;                ///< The filter factor (alpha) of the filter
     Float gain;                        ///< The gain factor of the filter
