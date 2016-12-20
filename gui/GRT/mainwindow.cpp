@@ -3061,6 +3061,7 @@ void MainWindow::updateRegressifierView(const int viewIndex){
             outputLayerActivationFunction = ui->pipelineTool_mlpOutputLayerType->currentIndex();
 
             //Init the mlp
+            /*
             mlp.init( numInputs,
                       ui->pipelineTool_mlpNumHiddenNeurons->value(),
                       numOutputNeurons,
@@ -3072,6 +3073,7 @@ void MainWindow::updateRegressifierView(const int viewIndex){
 
             if( useMDRegression ) core.setRegressifier( GRT::MultidimensionalRegression( mlp, enableScaling ) );
             else core.setRegressifier( mlp );
+            */
         break;
     }
 
