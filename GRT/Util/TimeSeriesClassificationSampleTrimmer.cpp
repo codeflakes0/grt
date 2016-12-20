@@ -31,6 +31,15 @@ TimeSeriesClassificationSampleTrimmer::TimeSeriesClassificationSampleTrimmer(Flo
     errorLog.setProceedingText("[ERROR TimeSeriesTrimmer]");
 }
 
+// CDF
+TimeSeriesClassificationSampleTrimmer::TimeSeriesClassificationSampleTrimmer(Float leftTrimInDataPoints)
+{
+    this->leftTrimInDataPoints = leftTrimInDataPoints;
+    debugLog.setProceedingText("[DEBUG TimeSeriesTrimmer]");
+    warningLog.setProceedingText("[WARNING TimeSeriesTrimmer]");
+    errorLog.setProceedingText("[ERROR TimeSeriesTrimmer]");
+}
+
 TimeSeriesClassificationSampleTrimmer::~TimeSeriesClassificationSampleTrimmer(){}
 
 bool TimeSeriesClassificationSampleTrimmer::trimTimeSeries(TimeSeriesClassificationSample &timeSeries){
@@ -125,5 +134,42 @@ bool TimeSeriesClassificationSampleTrimmer::trimTimeSeries(TimeSeriesClassificat
     return false;
 }
     
+bool TimeSeriesClassificationSampleTrimmer::leftTrimTimeSeries(TimeSeriesClassificationSample &timeSeries){
+
+    const UINT M = timeSeries.getLength();
+    const UINT N = timeSeries.getNumDimensions();
+
+    debugLog << "leftTrimTimeSeries(TimeSeriesClassificationSample &timeSeries) M=" << M << " N=" << N << " trim=" << leftTrimInDataPoints << std::endl;
+
+    if( M == 0 ){
+        warningLog << "leftTrimTimeSeries(TimeSeriesClassificationSample &timeSeries) - can't trim data, the length of the input time series is 0!" << std::endl;
+        return false;
+    }
+
+    if( N == 0 ){
+        warningLog << "leftTrimTimeSeries(TimeSeriesClassificationSample &timeSeries) - can't trim data, the number of dimensions in the input time series is 0!" << std::endl;
+        return false;
+    }
+
+    if( leftTrimInDataPoints >= M  ){
+        warningLog << "leftTrimTimeSeries(TimeSeriesClassificationSample &timeSeries) - can't trim data, tthe length of the input time series is less than leftTrimInDataPoints!" << std::endl;
+        return false;
+    }
+
+    UINT newM = M-leftTrimInDataPoints;
+    MatrixDouble newTimeSeries(newM,N);
+    UINT index = 0;
+    for(UINT i=leftTrimInDataPoints; i<N; i++){
+        for(UINT j=0; j<N; j++){
+            newTimeSeries[index][j] = timeSeries[i][j];
+        }
+        index++;
+    }
+    debugLog << "leftTrimTimeSeries(TimeSeriesClassificationSample &timeSeries) trimed " << leftTrimInDataPoints << " points from " << M << " to " << newM << std::endl;
+
+    timeSeries.setTrainingSample(timeSeries.getClassLabel(), newTimeSeries);
+    return true;
+}
+
 GRT_END_NAMESPACE
 

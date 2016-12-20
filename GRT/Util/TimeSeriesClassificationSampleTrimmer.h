@@ -53,7 +53,8 @@ public:
 	/**
      Default Constructor.
   */
-  TimeSeriesClassificationSampleTrimmer(Float trimThreshold=0.1,Float maximumTrimPercentage=80);
+  TimeSeriesClassificationSampleTrimmer(Float trimThreshold/*=0.1*/,Float maximumTrimPercentage/*=80*/);
+  TimeSeriesClassificationSampleTrimmer(Float leftTrimInDataPoints); // CDF
 
 	/**
     Default Destructor
@@ -70,6 +71,7 @@ public:
     if( this != &rhs){
       this->trimThreshold = rhs.trimThreshold;
       this->maximumTrimPercentage = rhs.maximumTrimPercentage;
+      this->leftTrimInDataPoints = rhs.leftTrimInDataPoints;
       this->debugLog = rhs.debugLog;
       this->warningLog = rhs.warningLog;
       this->errorLog = rhs.errorLog;
@@ -92,10 +94,12 @@ public:
    @return returns true if the timeseries was trimmed, false otherwise
   */
   bool trimTimeSeries(TimeSeriesClassificationSample &timeSeries);
+  bool leftTrimTimeSeries(TimeSeriesClassificationSample &timeSeries); // CDF
 
 protected:
     Float trimThreshold;
     Float maximumTrimPercentage;
+    Float leftTrimInDataPoints;
     DebugLog debugLog;
     WarningLog warningLog;
     ErrorLog errorLog;
