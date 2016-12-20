@@ -31,6 +31,7 @@ TimeSeriesClassificationSample::TimeSeriesClassificationSample(const UINT classL
 
     this->classLabel = classLabel;
 	this->data = data;
+    this->enabledData = data;
 }
 
 TimeSeriesClassificationSample::TimeSeriesClassificationSample(const TimeSeriesClassificationSample &rhs){
@@ -38,6 +39,7 @@ TimeSeriesClassificationSample::TimeSeriesClassificationSample(const TimeSeriesC
 
     this->classLabel = rhs.classLabel;
 	this->data = rhs.data;
+    this->enabledData = rhs.enabledData;
 }
 
 TimeSeriesClassificationSample::~TimeSeriesClassificationSample(){};
@@ -61,19 +63,72 @@ bool TimeSeriesClassificationSample::setTrainingSample(const UINT classLabel,con
     return true;
 }
 
-MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<int> enabledDimensions) {
+/*
+UINT TimeSeriesClassificationSample::getNumDimensions() const {
     UINT enabledCol = 0;
     for (UINT d=0; d<enabledDimensions.size(); d++)
-        enabledCol++;
+        if(enabledDimensions[d])
+            enabledCol++;
+    return enabledCol;
+}
+*/
 
+MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<int> enabledDimensions) {
+    //UINT enabledCol = getNumDimensions();
+
+    UINT enabledCol = 0;
+    for (UINT d=0; d<enabledDimensions.size(); d++)
+        if(enabledDimensions[d])
+            enabledCol++;
+
+    debugLog << "resize to " << data.getNumRows() << "x" << enabledCol << std::endl;
     enabledData.resize(data.getNumRows(), enabledCol);
-    debugLog << "getEnabledData from " << data.getNumRows() << "x" << data.getNumCols() << " to " <<
+
+    UINT i=0;
+    for (UINT d=0; d<enabledDimensions.size(); d++) {
+        if(enabledDimensions[d]) {
+            enabledData.setColVector(data.getColVector(d), i);
+            i++;
+        }
+    }
+
+    debugLog << "TimeSeriesClassificationSample::getEnabledData from " << data.getNumRows() << "x" << data.getNumCols() << " to " <<
              enabledData.getNumRows() << "x" << enabledData.getNumCols() << std::endl;
-    return data;
+    return enabledData;
 }
 
-const MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<int> enabledDimensions) const {
-    return data;
+/*
+MatrixFloat* TimeSeriesClassificationSample::getEnabledData(Vector<int> enabledDimensions) const {
+    UINT enabledCol = 0;
+    for (UINT d=0; d<enabledDimensions.size(); d++)
+        if(enabledDimensions[d])
+            enabledCol++;
+
+    //debugLog << "new data " << data.getNumRows() << "x" << enabledCol << std::endl;
+    MatrixFloat* newData = new MatrixFloat(data.getNumRows(), enabledCol);
+
+    UINT i=0;
+    for (UINT d=0; d<enabledDimensions.size(); d++) {
+        if(enabledDimensions[d]) {
+            //debugLog << "dim " << d << " -> col " << i << std::endl;
+            newData->setColVector(data.getColVector(d), i);
+            i++;
+        }
+    }
+
+    //debugLog << "TimeSeriesClassificationSample::getEnabledData const from " << data.getNumRows() << "x" << data.getNumCols() << " to " <<
+    //         newData->getNumRows() << "x" << newData->getNumCols() << std::endl;
+
+    return newData;
+}
+*/
+
+MatrixFloat* TimeSeriesClassificationSample::getMatrixWithEnabledDataSet(Vector<int> enabledDimensions) const {
+    MatrixFloat* dd = new MatrixFloat(data);
+    dd->enableDimensions(enabledDimensions);
+    debugLog << "TimeSeriesClassificationSample::getEnabledData const from " << data.getNumRows() << "x" << data.getNumCols() << " to " <<
+             dd->getNumRows() << "x" << dd->getNumDimensions() << std::endl;
+    return dd;
 }
 
 GRT_END_NAMESPACE

@@ -49,6 +49,8 @@ TimeSeriesClassificationData::TimeSeriesClassificationData(const TimeSeriesClass
     infoLog.setProceedingText("");
 
     *this = rhs;
+
+    enableDimensions(rhs.getEnabledDimensions());
 }
 
 TimeSeriesClassificationData::~TimeSeriesClassificationData(){}
@@ -71,6 +73,7 @@ TimeSeriesClassificationData& TimeSeriesClassificationData::operator=(const Time
         this->debugLog = rhs.debugLog;
         this->errorLog = rhs.errorLog;
         this->warningLog = rhs.warningLog;
+        enableDimensions(rhs.getEnabledDimensions());
     }
     return *this;
 }
@@ -146,7 +149,7 @@ bool TimeSeriesClassificationData::addSample(const UINT classLabel,const MatrixF
         errorLog << "addSample(UINT classLabel, MatrixFloat trainingSample) - The dimensionality of the training sample (" << trainingSample.getNumCols() << ") does not match that of the dataset (" << numDimensions << ")" << std::endl;
         return false;
     }
-    
+        
     //The class label must be greater than zero (as zero is used for the null rejection class label
     if( classLabel == GRT_DEFAULT_NULL_CLASS_LABEL && !allowNullGestureClass ){
         errorLog << "addSample(UINT classLabel, MatrixFloat sample) - the class label can not be 0!" << std::endl;
@@ -789,6 +792,9 @@ TimeSeriesClassificationData TimeSeriesClassificationData::split(const UINT trai
 
     TimeSeriesClassificationData trainingSet(numDimensions);
     TimeSeriesClassificationData testSet(numDimensions);
+
+    infoLog << "TimeSeriesClassificationData::split() enabledDimensions: " << this->getNumDimensions() << "/" << numDimensions << std::endl;
+
     trainingSet.setAllowNullGestureClass(allowNullGestureClass);
     testSet.setAllowNullGestureClass(allowNullGestureClass);
     Vector< UINT > indexs( totalNumSamples );
@@ -860,6 +866,9 @@ TimeSeriesClassificationData TimeSeriesClassificationData::split(const UINT trai
         data = trainingSet.getClassificationData();
         totalNumSamples = trainingSet.getNumSamples();
     }
+
+    trainingSet.enableDimensions(this->getEnabledDimensions());
+    testSet.enableDimensions(this->getEnabledDimensions());
 
     return testSet;
 }
@@ -1044,9 +1053,11 @@ TimeSeriesClassificationData TimeSeriesClassificationData::getTestFoldData(const
 
 TimeSeriesClassificationData TimeSeriesClassificationData::getClassData(const UINT classLabel) const {
     TimeSeriesClassificationData classData(numDimensions);
+    classData.enableDimensions(this->getEnabledDimensions()); // CDF
     for(UINT x=0; x<totalNumSamples; x++){
         if( data[x].getClassLabel() == classLabel ){
-            classData.addSample( classLabel, data[x].getData() );
+            TimeSeriesClassificationSample sample = data[x];
+            classData.addSample( classLabel, sample.getData());//getEnabledData(this->getEnabledDimensions()) ); // CDF
         }
     }
     return classData;
@@ -1131,12 +1142,14 @@ Vector<MinMax> TimeSeriesClassificationData::getRanges() const {
 
     if( totalNumSamples > 0 ){
         for(UINT j=0; j<numDimensions; j++){
-            ranges[j].minValue = data[0][0][0];
-            ranges[j].maxValue = data[0][0][0];
-            for(UINT x=0; x<totalNumSamples; x++){
-                for(UINT i=0; i<data[x].getLength(); i++){
-                    if( data[x][i][j] < ranges[j].minValue ){ ranges[j].minValue = data[x][i][j]; }		//Search for the min value
-                    else if( data[x][i][j] > ranges[j].maxValue ){ ranges[j].maxValue = data[x][i][j]; }	//Search for the max value
+            if(enabledDimensions[j]) {
+                ranges[j].minValue = data[0][0][0];
+                ranges[j].maxValue = data[0][0][0];
+                for(UINT x=0; x<totalNumSamples; x++){
+                    for(UINT i=0; i<data[x].getLength(); i++){
+                        if( data[x][i][j] < ranges[j].minValue ){ ranges[j].minValue = data[x][i][j]; }		//Search for the min value
+                        else if( data[x][i][j] > ranges[j].maxValue ){ ranges[j].maxValue = data[x][i][j]; }	//Search for the max value
+                    }
                 }
             }
         }
@@ -1218,21 +1231,27 @@ void TimeSeriesClassificationData::resetEnabledDimensions() {
 
 void TimeSeriesClassificationData::enableDimension(UINT index, bool state) {
     if(index >= enabledDimensions.size()) {
-        errorLog << "bad dimension index " << index << " vs " << enabledDimensions.size() << std::endl;
+        errorLog << "(enableDimension) bad dimension index " << index << " vs " << enabledDimensions.size() << std::endl;
         return;
     }
     enabledDimensions[index] = state;
 }
 
+void TimeSeriesClassificationData::enableDimensions(Vector<int> dims) {
+    for (UINT d=0; d<numDimensions; d++) {
+        enableDimension(d, dims[d]);
+    }
+}
+
 bool TimeSeriesClassificationData::isDimensionEnabled(UINT index) const {
     if(index >= enabledDimensions.size()) {
-        errorLog << "bad dimension index " << index << " vs " << enabledDimensions.size() << std::endl;
+        //errorLog << "(isDimensionEnabled) bad dimension index " << index << " vs " << enabledDimensions.size() << std::endl;
         return false;
     }
     return enabledDimensions[index];
 }
 
-Vector<int> TimeSeriesClassificationData::getEnabledDimensions() const {
+const Vector<int> TimeSeriesClassificationData::getEnabledDimensions() const {
     return enabledDimensions;
 }
 

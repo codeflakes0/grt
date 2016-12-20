@@ -49,10 +49,12 @@ DTW::DTW(bool useScaling,bool useNullRejection,Float nullRejectionCoeff,UINT rej
     useZNormalisation=false;
     constrainZNorm=false;
     trimTrainingData = false;
+    leftTrimData = false;
     
     zNormConstrainThreshold=0.2;
     trimThreshold = 0.1;
     maximumTrimPercentage = 90;
+    leftTrimInDataPoints = 0;
     
     numTemplates=0;
     distanceMethod=EUCLIDEAN_DIST;
@@ -84,6 +86,8 @@ DTW& DTW::operator=(const DTW &rhs){
         this->constrainZNorm = rhs.constrainZNorm;
         this->constrainWarpingPath = rhs.constrainWarpingPath;
         this->trimTrainingData = rhs.trimTrainingData;
+        this->leftTrimData = rhs.leftTrimData;
+        this->leftTrimInDataPoints = rhs.leftTrimInDataPoints;
         this->zNormConstrainThreshold = rhs.zNormConstrainThreshold;
         this->radius = rhs.radius;
         this->offsetUsingFirstSample = rhs.offsetUsingFirstSample;
@@ -118,6 +122,8 @@ bool DTW::deepCopyFrom(const Classifier *classifier){
         this->useZNormalisation = ptr->useZNormalisation;
         this->constrainZNorm = ptr->constrainZNorm;
         this->constrainWarpingPath = ptr->constrainWarpingPath;
+        this->leftTrimData = ptr->leftTrimData;
+        this->leftTrimInDataPoints = ptr->leftTrimInDataPoints;
         this->trimTrainingData = ptr->trimTrainingData;
         this->zNormConstrainThreshold = ptr->zNormConstrainThreshold;
         this->radius = ptr->radius;
@@ -150,15 +156,35 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     continuousInputDataBuffer.clear();
     
     Vector<int> enabledDimensions = data.getEnabledDimensions(); // CDF
+    trainingLog << "train_ on enabledDimensions " << data.getNumDimensions() << "/" << data.getAbsoluteNumDimensions() << " leftTrimData=" << leftTrimData << " (" << leftTrimInDataPoints  <<")" << " trimTrainingData=" << trimTrainingData << std::endl;
+
+    if( leftTrimData ){
+        TimeSeriesClassificationSampleTrimmer timeSeriesTrimmer(leftTrimInDataPoints);
+        TimeSeriesClassificationData tempData;
+        tempData.setNumDimensions( data.getNumDimensions() );
+        tempData.enableDimensions(data.getEnabledDimensions()); // CDF
+
+        for(UINT i=0; i<data.getNumSamples(); i++){
+            if( timeSeriesTrimmer.leftTrimTimeSeries( data[i] ) ){
+                tempData.addSample(data[i].getClassLabel(), data[i].getEnabledData(enabledDimensions));
+            }else{
+                trainingLog << "Removing training sample " << i << " from the dataset as it could not be trimmed!" << std::endl;
+            }
+        }
+        //Overwrite the original training data with the trimmed dataset
+        data = tempData;
+    }
+
 
     if( trimTrainingData ){
         TimeSeriesClassificationSampleTrimmer timeSeriesTrimmer(trimThreshold,maximumTrimPercentage);
         TimeSeriesClassificationData tempData;
         tempData.setNumDimensions( data.getNumDimensions() );
-        
+        tempData.enableDimensions(data.getEnabledDimensions()); // CDF
+
         for(UINT i=0; i<data.getNumSamples(); i++){
             if( timeSeriesTrimmer.trimTimeSeries( data[i] ) ){
-                tempData.addSample(data[i].getClassLabel(), data[i].getData());
+                tempData.addSample(data[i].getClassLabel(), data[i].getEnabledData(enabledDimensions));
             }else{
                 trainingLog << "Removing training sample " << i << " from the dataset as it could not be trimmed!" << std::endl;
             }
@@ -184,7 +210,9 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     
     //Need to copy the labelled training data incase we need to scale it or znorm it
     TimeSeriesClassificationData trainingData( data );
-    
+    trainingLog << "data copied dim " << trainingData.getNumDimensions() << "/" << trainingData.getAbsoluteNumDimensions() << std::endl;
+    trainingLog << "useScaling=" << useScaling << " useZNorm=" << useZNormalisation << std::endl;
+
     //Perform any scaling or normalisation
     ranges = trainingData.getRanges();
     if( useScaling ) scaleData( trainingData );
@@ -197,6 +225,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         std::string className = trainingData.getClassTracker()[k].className;
 
         TimeSeriesClassificationData classData = trainingData.getClassData( classLabel );
+
         UINT numExamples = classData.getNumSamples();
         bestIndex = 0;
         
@@ -267,12 +296,13 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     
     //Resize the prediction results to make sure it is setup for realtime prediction
     continuousInputDataBuffer.clear();
+    infoLog << "resize for prediction dim=" << numInputDimensions << std::endl;
     continuousInputDataBuffer.resize(averageTemplateLength,VectorFloat(numInputDimensions,0));
     classLikelihoods.resize(numTemplates,DEFAULT_NULL_LIKELIHOOD_VALUE);
     classDistances.resize(numTemplates,0);
     predictedClassLabel = GRT_DEFAULT_NULL_CLASS_LABEL;
     maxLikelihood = DEFAULT_NULL_LIKELIHOOD_VALUE;
-    
+
     //Training complete
     return true;
 }
@@ -283,20 +313,24 @@ bool DTW::train_NDDTW(TimeSeriesClassificationData &trainingData,DTWTemplate &dt
     VectorFloat results(numExamples,0.0);
     MatrixFloat distanceResults(numExamples,numExamples);
     dtwTemplate.averageTemplateLength = 0;
-    
-   Vector<int> enabledDimensions = trainingData.getEnabledDimensions(); // CDF
+
+    infoLog << "train_NDDTW useSmoothing=" << useSmoothing << " dim=" << trainingData.getNumDimensions() << "/" << trainingData.getAbsoluteNumDimensions() << std::endl;
+    Vector<int> enabledDimensions = trainingData.getEnabledDimensions(); // CDF
 
     for(UINT m=0; m<numExamples; m++){
-        
+
+        infoLog << "m=" << m << "/numExamples=" << numExamples << "\n" << std::endl;
+
         MatrixFloat templateA; //The m'th template
         MatrixFloat templateB; //The n'th template
         dtwTemplate.averageTemplateLength += trainingData[m].getLength();
         
         //Smooth the data if required
+       // trainingData[m] returns a TimeSeriesClassificationSample
        if( useSmoothing ) smoothData(trainingData[m].getEnabledData(enabledDimensions),smoothingFactor,templateA);
        else templateA = trainingData[m].getEnabledData(enabledDimensions);
-            
-        if( offsetUsingFirstSample ){
+
+       if( offsetUsingFirstSample ){
             offsetTimeseries(templateA);
         }
         
@@ -314,9 +348,9 @@ bool DTW::train_NDDTW(TimeSeriesClassificationData &trainingData,DTWTemplate &dt
                 MatrixFloat distanceMatrix(templateA.getNumRows(),templateB.getNumRows());
                 Vector< IndexDist > warpPath;
                 Float dist = computeDistance(templateA,templateB,distanceMatrix,warpPath);
-                
+
                 trainingLog << "Template: " << m << " Timeseries: " << n << " Dist: " << dist << std::endl;
-                
+
                 //Update the results values
                 distanceResults[m][n] = dist;
                 results[m] += dist;
@@ -389,24 +423,28 @@ bool DTW::predict_(MatrixFloat &inputTimeSeries){
     MatrixFloat processedTimeSeries;
     MatrixFloat tempMatrix;
     if(useScaling){
+        infoLog << "useScaling" << std::endl;
         scaleData(*timeSeriesPtr,processedTimeSeries);
         timeSeriesPtr = &processedTimeSeries;
     }
     
     //Normalize the data if needed
     if( useZNormalisation ){
+        infoLog << "useZNormalisation" << std::endl;
         znormData(*timeSeriesPtr,processedTimeSeries);
         timeSeriesPtr = &processedTimeSeries;
     }
     
     //Smooth the data if required
     if( useSmoothing ){
+        infoLog << "useSmoothing" << std::endl;
         smoothData(*timeSeriesPtr,smoothingFactor,tempMatrix);
         timeSeriesPtr = &tempMatrix;
     }
     
     //Offset the timeseries if required
     if( offsetUsingFirstSample ){
+        infoLog << "offsetUsingFirstSample" << std::endl;
         offsetTimeseries( *timeSeriesPtr );
     }
     
@@ -585,6 +623,8 @@ Float DTW::computeDistance(MatrixFloat &timeSeriesA,MatrixFloat &timeSeriesB,Mat
     int i,j,k,index = 0;
     Float totalDist,v,normFactor = 0.;
     
+    //infoLog << "computeDistance " << timeSeriesA.getNumRows() << "x" << timeSeriesA.getNumCols() << " and " << timeSeriesB.getNumRows() << " " << timeSeriesB.getNumCols() << std::endl;
+
     warpPath.clear();
     if( int(distanceMatrix.getNumRows()) != M || int(distanceMatrix.getNumCols()) != N ){
         distanceMatrix.resize(M, N);
@@ -637,9 +677,7 @@ Float DTW::computeDistance(MatrixFloat &timeSeriesA,MatrixFloat &timeSeriesB,Mat
         warningLog << "DTW computeDistance(...) - Distance Matrix Values are INF!" << std::endl;
         return INFINITY;
     }
-    
-    //cout << "DIST: " << distance << std::endl;
-    
+        
     //The distMatrix values are negative so make them positive
     for(i=0; i<M; i++){
         for(j=0; j<N; j++){
@@ -693,8 +731,12 @@ Float DTW::computeDistance(MatrixFloat &timeSeriesA,MatrixFloat &timeSeriesB,Mat
     return totalDist/normFactor;
 }
 
-Float DTW::d(int m,int n,MatrixFloat &distanceMatrix,const int M,const int N){
-    
+Float avoidMinusZero(Float z) {
+    if(z == 0) return 0.0001;
+    return z;
+}
+
+Float DTW::d(const int m,const int n,MatrixFloat &distanceMatrix,const int M,const int N){
     Float dist = 0;
     //The following is based on Matlab code by Eamonn Keogh and Michael Pazzani
     
@@ -737,7 +779,7 @@ Float DTW::d(int m,int n,MatrixFloat &distanceMatrix,const int M,const int N){
     //End of recursion
     if( m == 0 && n == 0 ){
         dist = distanceMatrix[0][0];
-        distanceMatrix[0][0] = -distanceMatrix[0][0];
+        distanceMatrix[0][0] = -avoidMinusZero(distanceMatrix[0][0]);
         return dist;
     }
     
@@ -748,7 +790,7 @@ Float DTW::d(int m,int n,MatrixFloat &distanceMatrix,const int M,const int N){
         
         dist = distanceMatrix[m][n] + contribDist;
         
-        distanceMatrix[m][n] = -dist;
+        distanceMatrix[m][n] = -avoidMinusZero(dist);
         return dist;
     }else{
         //Case 3: we are somewhere in the left column of the matrix
@@ -758,7 +800,7 @@ Float DTW::d(int m,int n,MatrixFloat &distanceMatrix,const int M,const int N){
             
             dist = distanceMatrix[m][n] + contribDist;
             
-            distanceMatrix[m][n] = -dist;
+            distanceMatrix[m][n] = -avoidMinusZero(dist);
             return dist;
         }else{
             //Case 4: We are somewhere away from the edges so consider moving in the three main directions
@@ -781,16 +823,14 @@ Float DTW::d(int m,int n,MatrixFloat &distanceMatrix,const int M,const int N){
                 case 3:
                 dist = distanceMatrix[m][n] + minValue;
                 break;
-                
                 default:
                 break;
             }
-            
-            distanceMatrix[m][n] = -dist; //Negate the value to record that it has been visited
+            distanceMatrix[m][n] = -avoidMinusZero(dist); //Negate the value to record that it has been visited
             return dist;
         }
     }
-    
+
     //This should not happen!
     return dist;
 }
@@ -1338,6 +1378,21 @@ bool DTW::enableTrimTrainingData(bool trimTrainingData,Float trimThreshold,Float
     this->trimThreshold = trimThreshold;
     this->maximumTrimPercentage = maximumTrimPercentage;
     return true;
+}
+
+bool DTW::enableLeftTrimTrainingDataPoints(bool leftTrimData,Float leftTrimInDataPoints){
+    if( leftTrimInDataPoints < 0){
+        warningLog << "Failed to set trimTrainingData.  The leftTrimInDataPoints must be greater than zero" << std::endl;
+        return false;
+    }
+    this->leftTrimData = leftTrimData;
+    this->leftTrimInDataPoints = leftTrimInDataPoints;
+}
+
+Float DTW::getLeftTrimTrainingDataPoints() {
+    if(this->leftTrimData)
+        return this->leftTrimInDataPoints;
+    return 0;
 }
 
 void DTW::offsetTimeseries(MatrixFloat &timeseries){

@@ -45,6 +45,7 @@ public:
 		if( this != &rhs){
 			this->classLabel = rhs.classLabel;
 			this->data = rhs.data;
+            this->enabledData = rhs.enabledData;
 		}
 		return *this;
 	}
@@ -62,11 +63,14 @@ public:
 	bool setTrainingSample( const UINT classLabel, const MatrixFloat &data );
 	inline UINT getLength() const { return data.getNumRows(); }
     inline UINT getNumDimensions() const { return data.getNumCols(); }
+    //inline UINT getAbsoluteNumDimensions() const { return data.getNumCols(); }
     inline UINT getClassLabel() const { return classLabel; }
     MatrixFloat &getData(){ return data; }
     const MatrixFloat &getData() const { return data; }
+
     MatrixFloat &getEnabledData(Vector<int> enabledDimensions);
-    const MatrixFloat &getEnabledData(Vector<int> enabledDimensions) const;
+    //MatrixFloat* getEnabledData(Vector<int> enabledDimensions) const; // Return Matrix must be deleted
+    MatrixFloat* getMatrixWithEnabledDataSet(Vector<int> enabledDimensions) const; // Return Matrix must be deleted
 
 protected:
 	UINT classLabel;

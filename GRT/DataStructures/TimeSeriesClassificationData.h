@@ -396,10 +396,12 @@ public:
     Vector<std::string> getDimensionNames()  const; // CDF
     void setDimensionNames(Vector<std::string> names);
 
+    // CDF
     void resetEnabledDimensions();
     void enableDimension(UINT index, bool state);
+    void enableDimensions(Vector<int> dims);
     bool isDimensionEnabled(UINT index) const;
-    Vector<int> getEnabledDimensions() const;
+    const Vector<int> getEnabledDimensions() const;
 
 	/**
      Gets the number of samples in the classification data across all the classes.

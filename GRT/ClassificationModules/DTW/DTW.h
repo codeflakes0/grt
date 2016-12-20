@@ -299,6 +299,10 @@ public:
     */
     bool enableTrimTrainingData(bool trimTrainingData,Float trimThreshold,Float maximumTrimPercentage);
     
+    // CDF
+    bool enableLeftTrimTrainingDataPoints(bool leftTrimData,Float leftTrimInDataPoints);
+    Float getLeftTrimTrainingDataPoints();
+
     /**
     Gets the DTW models.
     
@@ -389,7 +393,9 @@ protected:
     Float               trimThreshold;          //Sets the threshold under which training data should be trimmed (default 0.1)
     Float               maximumTrimPercentage;  //Sets the maximum amount of data that can be trimmed for each training sample (default 20)
     Float               nullRejectionLikelihoodThreshold; //Sets the threshold for null rejection based on likelihoods
-    
+    Float               leftTrimInDataPoints; // CDF
+    bool                leftTrimData;
+
     UINT                smoothingFactor;        //The smoothing factor if smoothing is used
     UINT                distanceMethod;         //The distance method to be used (should be of enum DISTANCE_METHOD)
     UINT                averageTemplateLength;  //The overall average template length (over all the templates)

@@ -325,7 +325,9 @@ public:
 	 @return an unsigned int representing the number of dimensions in the classification data
     */
 	UINT inline getNumDimensions() const{ return numDimensions; }
-	
+    // CDF
+    UINT inline getAbsoluteNumDimensions() const { return numDimensions; } // bypass dimension enabling
+
 	/**
      Gets the number of samples in the classification data across all the classes.
      
