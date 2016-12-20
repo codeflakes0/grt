@@ -53,7 +53,7 @@ public:
     ErrorLog(const std::string &key = "" ) : Log( key )
     {
         loggingEnabledPtr = &errorLoggingEnabled;
-
+		// CDF
         #ifdef __ANDROID__
         this->androidLogLevel = ANDROID_LOG_ERROR;
         #endif

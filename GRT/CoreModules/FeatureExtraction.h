@@ -208,8 +208,9 @@ private:
     
 template< typename T >  FeatureExtraction *createNewFeatureExtractionModule() { return new T; } ///< Returns a pointer to a new instance of the template class, the caller is responsible for deleting the pointer
 
+// CDF. Moved into own header for swig
 template< typename T > 
-class RegisterFeatureExtractionModule : FeatureExtraction { 
+class RegisterFeatureExtractionModule : public FeatureExtraction { 
 public:
     RegisterFeatureExtractionModule( const std::string &newModuleId ) { 
         getMap()->insert( std::pair< std::string, FeatureExtraction*(*)()>(newModuleId, &createNewFeatureExtractionModule< T > ) );

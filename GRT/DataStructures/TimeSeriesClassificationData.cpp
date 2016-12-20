@@ -46,7 +46,7 @@ TimeSeriesClassificationData::TimeSeriesClassificationData(const TimeSeriesClass
     debugLog.setKey("[DEBUG TSCD]");
     errorLog.setKey("[ERROR TSCD]");
     warningLog.setKey("[WARNING TSCD]");
-    infoLog.setKet("");
+    infoLog.setKey("");
 
     *this = rhs;
 
@@ -1265,8 +1265,10 @@ UINT TimeSeriesClassificationData::getNumDimensions() const
 }
 
 int TimeSeriesClassificationData::getSampleRate() const {
-    unsigned int end = infoText.find("Hz");
-    if(end == std::string::npos) return -1;
+    int end = infoText.find("Hz");
+    if(end == std::string::npos) {
+		return -1;
+	}
 
     if(end>0) end--; // skip space before Hz
     unsigned int start = end-1; // last digit
@@ -1275,7 +1277,9 @@ int TimeSeriesClassificationData::getSampleRate() const {
         if(!isdigit(infoText.at(start))) break;
     }
     start++; // first digit
-    if(start < 2) return -1;
+    if(start < 2) {
+		return -1;
+	}
 
     std::string sampleRate = infoText.substr(start, end-start);
     return std::atoi(sampleRate.c_str());

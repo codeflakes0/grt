@@ -56,6 +56,7 @@ public:
         loggingEnabledPtr = &instanceLoggingEnabled;
         writeKeyPtr = &writeKey;
         lastMessagePtr = &lastMessage;
+		// CDF
         #ifdef __ANDROID__
         androidLogLevel = ANDROID_LOG_VERBOSE;
         #endif
@@ -98,8 +99,9 @@ public:
     /**
     @brief defines an operator<< to write a value to std::endl, this updates the message
     */
-    template < class T >
-    const Log& operator<< (const T &val ) const{
+	template < class T >
+    const Log& operator<< (const T &val ) const
+	{
 
         if(!isAndroidLogLevelEnabled(androidLogLevel)) return *this;
 
@@ -126,9 +128,24 @@ public:
     /**
     @brief defines an operator<< to take in std::endl, this ends a message and triggers the mesaage callback
     */
-    const Log& operator<<(const StandardEndLine manip) const;
+    const Log& operator<<(const StandardEndLine manip) const{
+
+#ifdef GRT_CXX11_ENABLED
+        std::unique_lock<std::mutex> lock( logMutex );
+#endif
         if( !baseLoggingEnabled ) return *this; //If the base class global logging is disabled, then there is nothing to do
-            *writeProceedingTextPtr = true;
+
+        if( *loggingEnabledPtr && instanceLoggingEnabled ){
+            // call the function, but we cannot return it's value
+            manip(std::cout);
+            *writeKeyPtr = true; //The message is now complete, so toggle back the key
+            
+            //Trigger any logging callbacks
+            triggerCallback( lastMessage );
+        }
+        
+        return *this;
+    }
     
     /**
      @brief returns true if logging is enabled for this specific instance
@@ -199,8 +216,14 @@ public:
         return true;
     }
 
+    GRT_DEPRECATED_MSG("setProceedingText is deprecated, use setKey instead", void setProceedingText(std::string proceedingText) );
     GRT_DEPRECATED_MSG("getProceedingText is deprecated, use getKey instead", std::string getProceedingText() const );
-        #ifdef __ANDROID__
+	GRT_DEPRECATED_MSG("setEnableInstanceLogging is deprecated, use setInstanceLoggingEnabled instead", bool setEnableInstanceLogging(const bool loggingEnabled) );
+    
+// CDF
+private:
+	   static int _strproperty_to_prio(char* str) {
+	    #ifdef __ANDROID__
         if(str == NULL) return ANDROID_LOG_DEFAULT;   // 1
         if(str[0] == 'V') return ANDROID_LOG_VERBOSE; // 2
         if(str[0] == 'D') return ANDROID_LOG_DEBUG;   // 3
@@ -247,10 +270,9 @@ protected:
 
 	// TBE
     int androidLogLevel; // default ANDROID_LOG_VERBOSE
-    //friend std::ostream& operator<<(std::ostream& os, const Log& l);
 
 #ifdef GRT_CXX11_ENABLED
-	static std::mutex logMutex;
+    static std::mutex logMutex;
 #endif
 };
 

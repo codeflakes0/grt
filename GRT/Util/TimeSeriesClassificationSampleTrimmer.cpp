@@ -28,15 +28,16 @@ TimeSeriesClassificationSampleTrimmer::TimeSeriesClassificationSampleTrimmer(Flo
     this->maximumTrimPercentage = maximumTrimPercentage;
     warningLog.setKey("[WARNING TimeSeriesTrimmer]");
     errorLog.setKey("[ERROR TimeSeriesTrimmer]");
+	debugLog.setKey("[DEBUG TimeSeriesTrimmer]");
 }
 
 // CDF
 TimeSeriesClassificationSampleTrimmer::TimeSeriesClassificationSampleTrimmer(Float leftTrimInDataPoints)
 {
     this->leftTrimInDataPoints = leftTrimInDataPoints;
-    debugLog.setProceedingText("[DEBUG TimeSeriesTrimmer]");
-    warningLog.setProceedingText("[WARNING TimeSeriesTrimmer]");
-    errorLog.setProceedingText("[ERROR TimeSeriesTrimmer]");
+    debugLog.setKey("[DEBUG TimeSeriesTrimmer]");
+    warningLog.setKey("[WARNING TimeSeriesTrimmer]");
+    errorLog.setKey("[ERROR TimeSeriesTrimmer]");
 }
 
 TimeSeriesClassificationSampleTrimmer::~TimeSeriesClassificationSampleTrimmer(){}

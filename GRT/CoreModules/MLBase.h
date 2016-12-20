@@ -517,7 +517,7 @@ public:
     
     @return returns true if a validation set should be used for training, false otherwise
     */
-    //bool getUseValidationSet() const;
+    bool getUseValidationSet() const;
     
     /**
     Returns true if the order of the training dataset should be randomized at each epoch of training.

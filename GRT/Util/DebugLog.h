@@ -53,6 +53,7 @@ public:
     DebugLog( const std::string &key = "" ) : Log( key )
     { 
         Log::loggingEnabledPtr = &debugLoggingEnabled; 
+		// CDF
     	#ifdef __ANDROID__
         this->androidLogLevel = ANDROID_LOG_DEBUG;
         #endif

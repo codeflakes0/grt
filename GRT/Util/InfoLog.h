@@ -53,7 +53,7 @@ public:
     InfoLog( const std::string &key = "" ) : Log( key )
     { 
         Log::loggingEnabledPtr = &infoLoggingEnabled; 
-		
+		// CDF
 		#ifdef __ANDROID__
         this->androidLogLevel = ANDROID_LOG_INFO;
         #endif

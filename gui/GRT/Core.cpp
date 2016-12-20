@@ -39,7 +39,7 @@ Core::Core(QObject *parent) : QObject(parent)
     connect(&trainingThread, SIGNAL(pipelineTestingFinished(bool)), this, SIGNAL(pipelineTestingFinished(bool)));
     connect(&trainingThread, SIGNAL(pipelineUpdated(const GRT::GestureRecognitionPipeline&)), this, SLOT(setPipeline(const GRT::GestureRecognitionPipeline&)));
 
-    debugLog.setProceedingText("[DEBUG Core]");
+    debugLog.setKey("[DEBUG Core]");
 }
 
 Core::~Core(){

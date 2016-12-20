@@ -53,7 +53,7 @@ public:
     WarningLog(const std::string &key = "" ) : Log( key )
     {
         Log::loggingEnabledPtr = &warningLoggingEnabled;
-
+		// CDF
         #ifdef __ANDROID__
         this->androidLogLevel = ANDROID_LOG_WARN;
         #endif

@@ -196,7 +196,7 @@ public:
     virtual bool save( std::fstream &file ) const;
     
     // TBE
-	virtual bool save(std::string filename) const;
+	virtual bool save(const std::string& filename) const;
 
     /**
     This loads a trained DTW model from a file.
@@ -208,7 +208,7 @@ public:
     virtual bool load( std::fstream &file );
     
     // TBE
-	virtual bool load(std::string filename);
+	virtual bool load(const std::string& filename);
 
     /**
     This recomputes the null rejection thresholds for each of the classes in the DTW model.
@@ -394,7 +394,7 @@ protected:
     Float               maximumTrimPercentage;  //Sets the maximum amount of data that can be trimmed for each training sample (default 20)
     Float               nullRejectionLikelihoodThreshold; //Sets the threshold for null rejection based on likelihoods
     Float               leftTrimInDataPoints; // CDF
-    bool                leftTrimData;
+    bool                leftTrimData; // CDF
 
     UINT                smoothingFactor;        //The smoothing factor if smoothing is used
     UINT                distanceMethod;         //The distance method to be used (should be of enum DISTANCE_METHOD)

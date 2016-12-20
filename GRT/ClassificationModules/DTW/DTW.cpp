@@ -49,12 +49,12 @@ DTW::DTW(bool useScaling,bool useNullRejection,Float nullRejectionCoeff,UINT rej
     useZNormalisation=false;
     constrainZNorm=false;
     trimTrainingData = false;
-    leftTrimData = false;
+    leftTrimData = false; // CDF
     
     zNormConstrainThreshold=0.2;
     trimThreshold = 0.1;
     maximumTrimPercentage = 90;
-    leftTrimInDataPoints = 0;
+    leftTrimInDataPoints = 0; // CDF
     
     numTemplates=0;
     distanceMethod=EUCLIDEAN_DIST;
@@ -86,8 +86,8 @@ DTW& DTW::operator=(const DTW &rhs){
         this->constrainZNorm = rhs.constrainZNorm;
         this->constrainWarpingPath = rhs.constrainWarpingPath;
         this->trimTrainingData = rhs.trimTrainingData;
-        this->leftTrimData = rhs.leftTrimData;
-        this->leftTrimInDataPoints = rhs.leftTrimInDataPoints;
+        this->leftTrimData = rhs.leftTrimData; // CDF
+        this->leftTrimInDataPoints = rhs.leftTrimInDataPoints; // CDF
         this->zNormConstrainThreshold = rhs.zNormConstrainThreshold;
         this->radius = rhs.radius;
         this->offsetUsingFirstSample = rhs.offsetUsingFirstSample;
@@ -122,8 +122,8 @@ bool DTW::deepCopyFrom(const Classifier *classifier){
         this->useZNormalisation = ptr->useZNormalisation;
         this->constrainZNorm = ptr->constrainZNorm;
         this->constrainWarpingPath = ptr->constrainWarpingPath;
-        this->leftTrimData = ptr->leftTrimData;
-        this->leftTrimInDataPoints = ptr->leftTrimInDataPoints;
+        this->leftTrimData = ptr->leftTrimData; // CDF
+        this->leftTrimInDataPoints = ptr->leftTrimInDataPoints; // CDF
         this->trimTrainingData = ptr->trimTrainingData;
         this->zNormConstrainThreshold = ptr->zNormConstrainThreshold;
         this->radius = ptr->radius;
@@ -155,14 +155,15 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     trained = false;
     continuousInputDataBuffer.clear();
     
-    Vector<int> enabledDimensions = data.getEnabledDimensions(); // CDF
+	// CDF BEGIN
+    Vector<int> enabledDimensions = data.getEnabledDimensions();
     trainingLog << "train_ on enabledDimensions " << data.getNumDimensions() << "/" << data.getAbsoluteNumDimensions() << " leftTrimData=" << leftTrimData << " (" << leftTrimInDataPoints  <<")" << " trimTrainingData=" << trimTrainingData << std::endl;
 
     if( leftTrimData ){
         TimeSeriesClassificationSampleTrimmer timeSeriesTrimmer(leftTrimInDataPoints);
         TimeSeriesClassificationData tempData;
         tempData.setNumDimensions( data.getNumDimensions() );
-        tempData.enableDimensions(data.getEnabledDimensions()); // CDF
+        tempData.enableDimensions(data.getEnabledDimensions());
 
         for(UINT i=0; i<data.getNumSamples(); i++){
             if( timeSeriesTrimmer.leftTrimTimeSeries( data[i] ) ){
@@ -174,6 +175,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         //Overwrite the original training data with the trimmed dataset
         data = tempData;
     }
+	// CDF END
 
 
     if( trimTrainingData ){
@@ -184,7 +186,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
 
         for(UINT i=0; i<data.getNumSamples(); i++){
             if( timeSeriesTrimmer.trimTimeSeries( data[i] ) ){
-                tempData.addSample(data[i].getClassLabel(), data[i].getEnabledData(enabledDimensions));
+                tempData.addSample(data[i].getClassLabel(), data[i].getEnabledData(enabledDimensions)); // CDF
             }else{
                 trainingLog << "Removing training sample " << i << " from the dataset as it could not be trimmed!" << std::endl;
             }
@@ -204,7 +206,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     numInputDimensions = data.getNumDimensions();
     templatesBuffer.resize( numClasses );
     classLabels.resize( numClasses );
-    classNames.resize( numClasses );
+    classNames.resize( numClasses ); // CDF
     nullRejectionThresholds.resize( numClasses );
     averageTemplateLength = 0;
     
@@ -231,11 +233,11 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         
         //Set the class label of this template
         templatesBuffer[k].classLabel = classLabel;
-        templatesBuffer[k].className = className;
+        templatesBuffer[k].className = className; // CDF
         
         //Set the kth class label
         classLabels[k] = classLabel;
-        classNames[k] = className;
+        classNames[k] = className; // CDF
         
         trainingLog << "Training Template: " << k << " Class: " << classLabel << std::endl;
         
@@ -267,11 +269,11 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         
         switch (trainingMethod) {
             case(0)://Standard Training
-                templatesBuffer[k].timeSeries = classData[bestIndex].getEnabledData(enabledDimensions);
+                templatesBuffer[k].timeSeries = classData[bestIndex].getEnabledData(enabledDimensions); // CDF
             break;
             case(1)://Training using Smoothing
                 //Smooth the data, reducing its size by a factor set by smoothFactor
-                smoothData(classData[ bestIndex ].getEnabledData(enabledDimensions),smoothingFactor,templatesBuffer[k].timeSeries);
+                smoothData(classData[ bestIndex ].getEnabledData(enabledDimensions),smoothingFactor,templatesBuffer[k].timeSeries); // CDF
             break;
             default:
                 errorLog << "Can not train model: Unknown training method "  << std::endl;
@@ -326,7 +328,7 @@ bool DTW::train_NDDTW(TimeSeriesClassificationData &trainingData,DTWTemplate &dt
         dtwTemplate.averageTemplateLength += trainingData[m].getLength();
         
         //Smooth the data if required
-       // trainingData[m] returns a TimeSeriesClassificationSample
+       // trainingData[m] returns a TimeSeriesClassificationSample // CDF
        if( useSmoothing ) smoothData(trainingData[m].getEnabledData(enabledDimensions),smoothingFactor,templateA);
        else templateA = trainingData[m].getEnabledData(enabledDimensions);
 
@@ -603,10 +605,10 @@ bool DTW::setModels( Vector< DTWTemplate > newTemplates ){
         templatesBuffer = newTemplates;
         //Make sure the class labels have not changed
         classLabels.resize( templatesBuffer.size() );
-        classNames.resize( templatesBuffer.size() );
+        classNames.resize( templatesBuffer.size() ); // CDF
         for(UINT i=0; i<templatesBuffer.size(); i++){
             classLabels[i] = templatesBuffer[i].classLabel;
-            classNames[i] = templatesBuffer[i].className;
+            classNames[i] = templatesBuffer[i].className; // CDF
         }
         return true;
     }
@@ -677,7 +679,9 @@ Float DTW::computeDistance(MatrixFloat &timeSeriesA,MatrixFloat &timeSeriesB,Mat
         warningLog << "DTW computeDistance(...) - Distance Matrix Values are INF!" << std::endl;
         return INFINITY;
     }
-        
+    
+    //cout << "DIST: " << distance << std::endl;
+    
     //The distMatrix values are negative so make them positive
     for(i=0; i<M; i++){
         for(j=0; j<N; j++){
@@ -731,6 +735,7 @@ Float DTW::computeDistance(MatrixFloat &timeSeriesA,MatrixFloat &timeSeriesB,Mat
     return totalDist/normFactor;
 }
 
+// CDF
 Float avoidMinusZero(Float z) {
     if(z == 0) return 0.0001;
     return z;
@@ -996,8 +1001,8 @@ void DTW::smoothData(MatrixFloat &data,UINT smoothFactor,MatrixFloat &resultsDat
 
 ////////////////////////////// SAVE & LOAD FUNCTIONS ////////////////////////////////
 
-// CDF
-bool DTW::save( std::string filename ) const{
+// CDF. From MLBase
+bool DTW::save(const std::string& filename ) const{
     //Open the file
     debugLog << "saving '" << filename << "'" << std::endl;
     std::fstream file;
@@ -1075,8 +1080,8 @@ bool DTW::save( std::fstream &file ) const{
     return true;
 }
 
-// CDF
-bool DTW::load( std::string filename ){
+// CDF. From MLBase
+bool DTW::load(const std::string& filename ){
     //Open the file
     debugLog << "opening '" << filename << "'" << std::endl;
     std::fstream file;
@@ -1387,6 +1392,7 @@ bool DTW::enableLeftTrimTrainingDataPoints(bool leftTrimData,Float leftTrimInDat
     }
     this->leftTrimData = leftTrimData;
     this->leftTrimInDataPoints = leftTrimInDataPoints;
+	return true;
 }
 
 Float DTW::getLeftTrimTrainingDataPoints() {

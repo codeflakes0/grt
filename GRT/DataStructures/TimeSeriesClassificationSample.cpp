@@ -27,7 +27,7 @@ GRT_BEGIN_NAMESPACE
 TimeSeriesClassificationSample::TimeSeriesClassificationSample():classLabel(0){};
 
 TimeSeriesClassificationSample::TimeSeriesClassificationSample(const UINT classLabel,const MatrixFloat &data){
-    debugLog.setProceedingText("[DEBUG TSCS]");
+    debugLog.setKey("[DEBUG TSCS]");
 
     this->classLabel = classLabel;
 	this->data = data;
@@ -35,7 +35,7 @@ TimeSeriesClassificationSample::TimeSeriesClassificationSample(const UINT classL
 }
 
 TimeSeriesClassificationSample::TimeSeriesClassificationSample(const TimeSeriesClassificationSample &rhs){
-    debugLog.setProceedingText("[DEBUG TSCS]");
+    debugLog.setKey("[DEBUG TSCS]");
 
     this->classLabel = rhs.classLabel;
 	this->data = rhs.data;

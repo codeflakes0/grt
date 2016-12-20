@@ -184,7 +184,7 @@ PreProcessing *createNewPreProcessingModule() { return new T; } ///<Returns a po
  be automatically be created from just a string, e.g.: PreProcessing *lpf = create( "LowPassFilter" );
 */
 template< typename T > 
-class RegisterPreProcessingModule : PreProcessing { 
+class RegisterPreProcessingModule : public PreProcessing { 
 public:
     RegisterPreProcessingModule( const std::string &newModuleId ) { 
         getMap()->insert( std::pair< std::string, PreProcessing*(*)() >(newModuleId, &createNewPreProcessingModule< T > ) );
