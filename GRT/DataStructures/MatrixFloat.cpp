@@ -479,6 +479,21 @@ Float MatrixFloat::getMaxValue(Vector<int> enabledDimensions) const {
     return maxValue;
 }
 
+MatrixFloat* MatrixFloat::getEnabledData() const {
+    UINT s = this->getNumDimensions();
+    MatrixFloat* enabledData = new MatrixFloat(rows, s);
+    UINT i=0;
+
+    for (int d=0; d<enabledDimensions.size(); d++) {
+        if(enabledDimensions[d]) {
+            enabledData->setColVector(getColVector(d), i);
+            i++;
+        }
+    }
+    //infoLog << "MatrixFloat::getEnabledData() const " << rows << "x" << cols << " to " << enabledData->getNumRows() << "x" << enabledData->getNumCols() << std::endl;
+    return enabledData;
+}
+
 VectorFloat MatrixFloat::getMean() const{
     
     VectorFloat mean(cols);

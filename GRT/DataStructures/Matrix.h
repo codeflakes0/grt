@@ -33,6 +33,7 @@
 #include <exception>
 #include "../Util/GRTException.h"
 #include "../Util/ErrorLog.h"
+#include "../Util/InfoLog.h"
 
 GRT_BEGIN_NAMESPACE
     
@@ -41,7 +42,7 @@ public:
     /**
      Default Constructor
     */
-	Matrix():errorLog("[ERROR Matrix]"){
+    Matrix():errorLog("[ERROR Matrix]"),infoLog("[INFO Matrix]"){
         rows = 0;
         cols = 0;
         size = 0;
@@ -56,7 +57,7 @@ public:
      @param rows: sets the number of rows in the matrix, must be a value greater than zero
      @param cols: sets the number of columns in the matrix, must be a value greater than zero
     */
-	Matrix(const unsigned int rows,const unsigned int cols):errorLog("[ERROR Matrix]"){
+    Matrix(const unsigned int rows,const unsigned int cols):errorLog("[ERROR Matrix]"),infoLog("[INFO Matrix]"){
         dataPtr = NULL;
         rowPtr = NULL;
         resize(rows,cols);
@@ -80,7 +81,7 @@ public:
      
      @param rhs: the Matrix from which the values will be copied
     */
-	Matrix(const Matrix &rhs):errorLog("[ERROR Matrix]"){
+    Matrix(const Matrix &rhs):errorLog("[ERROR Matrix]"),infoLog("[INFO Matrix]"){
         this->dataPtr = NULL;
         this->rowPtr = NULL;
         this->rows = 0;
@@ -97,7 +98,7 @@ public:
      
      @param data: the input data which will be copied to this Matrix instance
      */
-	Matrix( const Vector< Vector< T > > &data ):errorLog("[ERROR Matrix]"){
+    Matrix( const Vector< Vector< T > > &data ):errorLog("[ERROR Matrix]"),infoLog("[INFO Matrix]"){
 		this->dataPtr = NULL;
         this->rowPtr = NULL;
 		this->rows = 0;
@@ -295,6 +296,7 @@ public:
                     p += cols;
                 }
                 
+                enabledDimensions.resize(cols); //CDF
                 return true;
                 
             }catch( std::exception& e ){
@@ -350,7 +352,9 @@ public:
                 this->dataPtr[i] = rhs.dataPtr[i];
             }
         }
-        
+        for (int i=0; i<rhs.cols; i++)
+            enabledDimensions[i] = rhs.enabledDimensions[i];
+
         return true;
     }
 
@@ -614,6 +618,39 @@ public:
         return dataPtr;
     }
 
+    void enableDimensions(Vector<int> dims) {
+        for (UINT d=0; d<cols; d++) {
+            enabledDimensions[d] = dims[d];
+        }
+    }
+
+    const Vector<int> getEnabledDimensions() const { return enabledDimensions; } // CDF
+
+    UINT getNumDimensions() const {
+        UINT s=0;
+        for (UINT d=0; d<cols; d++) {
+            if(enabledDimensions[d]) s++;
+        }
+        return s;
+    } // CDF
+
+    Matrix<T>* getEnabledData() const {
+        UINT s = this->getNumDimensions();
+
+        Matrix<T>* enabledData = new Matrix<T>(rows, s);
+        UINT i=0;
+
+        for (int d=0; d<enabledDimensions.size(); d++) {
+            if(enabledDimensions[d]) {
+                Vector<T> v = getColVector(d);
+                enabledData->setColVector(v, i);
+                i++;
+            }
+        }
+        infoLog << "Matrix::getEnabledData() const " << rows << "x" << cols << " to " << enabledData->getNumRows() << "x" << enabledData->getNumCols() << std::endl;
+        return enabledData;
+    }
+
 protected:
 	unsigned int rows;      ///< The number of rows in the Matrix
 	unsigned int cols;      ///< The number of columns in the Matrix
@@ -622,6 +659,8 @@ protected:
     T *dataPtr;             ///< A pointer to the raw data
     T **rowPtr;             ///< A pointer to each row in the data
     ErrorLog errorLog;
+    InfoLog infoLog;
+    Vector<int> enabledDimensions; // CDF
 };
 
 GRT_END_NAMESPACE

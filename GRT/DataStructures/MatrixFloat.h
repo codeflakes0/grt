@@ -300,6 +300,7 @@ public:
     // CDF
     Float getMinValue(Vector<int> enabledDimensions) const;
     Float getMaxValue(Vector<int> enabledDimensions) const;
+    MatrixFloat* getEnabledData() const;
 
     /**
      Gets the mean of each column in the matrix and returns this as a VectorFloat.
