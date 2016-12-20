@@ -24,19 +24,23 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 GRT_BEGIN_NAMESPACE
    
 MatrixFloat::MatrixFloat(){
-    warningLog.setProceedingText("[WARNING MatrixFloat]");
-    errorLog.setProceedingText("[ERROR MatrixFloat]");
+    warningLog.setKey("[WARNING MatrixFloat]");
+    errorLog.setKey("[ERROR MatrixFloat]");
     this->dataPtr = NULL;
+    this->rowPtr = NULL;
     this->rows = 0;
     this->cols = 0;
 }
     
 MatrixFloat::MatrixFloat(const unsigned int rows,const unsigned int cols){
-    infoLog.setProceedingText("[INFO MatrixFloat]");
-    warningLog.setProceedingText("[WARNING MatrixFloat]");
-    errorLog.setProceedingText("[ERROR MatrixFloat]");
-    debugLog.setProceedingText("[DEBUG MatrixFloat]");
+    infoLog.setKey("[INFO MatrixFloat]");
+    warningLog.setKey("[WARNING MatrixFloat]");
+    errorLog.setKey("[ERROR MatrixFloat]");
+    debugLog.setKey("[DEBUG MatrixFloat]");
     this->dataPtr = NULL;
+    this->rowPtr = NULL;
+    this->rows = 0;
+    this->cols = 0;
     if( rows > 0 && cols > 0 ){
         //debugLog << "new MatrixFloat " << rows << " " << cols << std::endl;
         resize(rows, cols);
@@ -44,19 +48,48 @@ MatrixFloat::MatrixFloat(const unsigned int rows,const unsigned int cols){
 }
     
 MatrixFloat::MatrixFloat(const MatrixFloat &rhs){
-    warningLog.setProceedingText("[WARNING MatrixFloat]");
-    errorLog.setProceedingText("[ERROR MatrixFloat]");
+    warningLog.setKey("[WARNING MatrixFloat]");
+    errorLog.setKey("[ERROR MatrixFloat]");
     this->dataPtr = NULL;
     this->rowPtr = NULL;
+    this->rows = 0;
+    this->cols = 0;
     this->copy( rhs );
 }
     
 MatrixFloat::MatrixFloat(const Matrix< Float > &rhs){
-    warningLog.setProceedingText("[WARNING MatrixFloat]");
-    errorLog.setProceedingText("[ERROR MatrixFloat]");
+    warningLog.setKey("[WARNING MatrixFloat]");
+    errorLog.setKey("[ERROR MatrixFloat]");
     this->dataPtr = NULL;
     this->rowPtr = NULL;
+    this->rows = 0;
+    this->cols = 0;
     this->copy( rhs );
+}
+
+MatrixFloat::MatrixFloat(const Vector< VectorFloat > &rhs){
+    warningLog.setKey("[WARNING MatrixFloat]");
+    errorLog.setKey("[ERROR MatrixFloat]");
+    this->dataPtr = NULL;
+    this->rowPtr = NULL;
+    this->rows = 0;
+    this->cols = 0;
+    
+    if( rhs.size() == 0 ) return;
+    
+    unsigned int M = rhs.getSize();
+    unsigned int N = (unsigned int)rhs[0].getSize();
+    resize(M, N);
+    
+    for(unsigned int i=0; i<M; i++){
+        if( rhs[i].size() != N ){
+            clear();
+            return;
+        }
+        for(unsigned int j=0; j<N; j++){
+            dataPtr[i*cols+j] = rhs[i][j];
+        }
+    }
 }
 
 MatrixFloat::~MatrixFloat(){

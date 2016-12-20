@@ -33,10 +33,10 @@ ClassificationDataStream::ClassificationDataStream(const UINT numDimensions,cons
     playbackIndex  = 0;
     trackingClass = false;
     useExternalRanges = false;
-    debugLog.setProceedingText("[DEBUG ClassificationDataStream]");
-    errorLog.setProceedingText("[ERROR ClassificationDataStream]");
-    warningLog.setProceedingText("[WARNING ClassificationDataStream]");
-    infoLog.setProceedingText("");
+    debugLog.setKey("[DEBUG ClassificationDataStream]");
+    errorLog.setKey("[ERROR ClassificationDataStream]");
+    warningLog.setKey("[WARNING ClassificationDataStream]");
+    infoLog.setKey("");
 
     if( numDimensions > 0 ){
         setNumDimensions(numDimensions);

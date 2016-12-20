@@ -32,10 +32,10 @@ ClassificationData::ClassificationData(const UINT numDimensions,const std::strin
     useExternalRanges = false;
     allowNullGestureClass = true;
     if( numDimensions > 0 ) setNumDimensions( numDimensions );
-    infoLog.setProceedingText("[ClassificationData]");
-    debugLog.setProceedingText("[DEBUG ClassificationData]");
-    errorLog.setProceedingText("[ERROR ClassificationData]");
-    warningLog.setProceedingText("[WARNING ClassificationData]");
+    infoLog.setKey("[ClassificationData]");
+    debugLog.setKey("[DEBUG ClassificationData]");
+    errorLog.setKey("[ERROR ClassificationData]");
+    warningLog.setKey("[WARNING ClassificationData]");
 }
 
 ClassificationData::ClassificationData(const ClassificationData &rhs){
@@ -735,8 +735,17 @@ ClassificationData ClassificationData::split(const UINT trainingSizePercentage,c
 
 	//Create the random partion indexs
 	Random random;
-    UINT randomIndex = 0;
     UINT K = getNumClasses();
+
+    //Make sure both datasets get all the class labels, even if they have no samples in each
+    trainingSet.classTracker.resize( K );
+    testSet.classTracker.resize( K );
+    for(UINT k=0; k<K; k++){
+        trainingSet.classTracker[k].classLabel = classTracker[k].classLabel;
+        testSet.classTracker[k].classLabel = classTracker[k].classLabel;
+        trainingSet.classTracker[k].counter = 0;
+        testSet.classTracker[k].counter = 0;
+    }
 
     if( useStratifiedSampling ){
         //Break the data into seperate classes
@@ -783,7 +792,6 @@ ClassificationData ClassificationData::split(const UINT trainingSizePercentage,c
         const UINT numTrainingExamples = (UINT) floor( Float(totalNumSamples) / 100.0 * Float(trainingSizePercentage) );
 
         //Create the random partion indexs
-        UINT randomIndex = 0;
         Vector< UINT > indexs( totalNumSamples );
         for(UINT i=0; i<totalNumSamples; i++) indexs[i] = i;
         std::random_shuffle(indexs.begin(), indexs.end());
@@ -800,6 +808,10 @@ ClassificationData ClassificationData::split(const UINT trainingSizePercentage,c
             testSet.addSample( data[ indexs[i] ].getClassLabel(), data[ indexs[i] ].getSample() );
         }
     }
+
+    //The training and test datasets MUST have the same number of classes as the original data
+    grt_assert( trainingSet.getNumClasses() == K );
+    grt_assert( testSet.getNumClasses() == K );
 
     //Overwrite the training data in this instance with the training data of the trainingSet
     *this = trainingSet;
@@ -866,7 +878,7 @@ bool ClassificationData::spiltDataIntoKFolds(const UINT K,const bool useStratifi
 
     //K can not be larger than the number of examples in a specific class if the stratified sampling option is true
     if( useStratifiedSampling ){
-        for(UINT c=0; c<classTracker.size(); c++){
+        for(UINT c=0; c<classTracker.getSize(); c++){
             if( K > classTracker[c].counter ){
                 errorLog << "spiltDataIntoKFolds(const UINT K,const bool useStratifiedSampling) - K can not be larger than the number of samples in any given class!" << std::endl;
                 return false;
@@ -1042,7 +1054,7 @@ ClassificationData ClassificationData::getClassData(const UINT classLabel) const
     return classData;
 }
     
-ClassificationData ClassificationData::getBootstrappedDataset(UINT numSamples,bool balanceDataset) const{
+ClassificationData ClassificationData::getBootstrappedDataset(const UINT numSamples_,const bool balanceDataset) const{
     
     Random rand;
     ClassificationData newDataset;
@@ -1050,9 +1062,11 @@ ClassificationData ClassificationData::getBootstrappedDataset(UINT numSamples,bo
     newDataset.setAllowNullGestureClass( allowNullGestureClass );
     newDataset.setExternalRanges( externalRanges, useExternalRanges );
     
-    if( numSamples == 0 ) numSamples = totalNumSamples;
+    const UINT numBootstrapSamples = numSamples_ > 0 ? numSamples_ : totalNumSamples;
+
+    grt_assert( numBootstrapSamples > 0 );
     
-    newDataset.reserve( numSamples );
+    newDataset.reserve( numBootstrapSamples );
 
     const UINT K = getNumClasses(); 
     
@@ -1069,13 +1083,13 @@ ClassificationData ClassificationData::getBootstrappedDataset(UINT numSamples,bo
         }
 
         //Get the class with the minimum number of examples
-        UINT numSamplesPerClass = (UINT)floor( numSamples / Float(K) );
+        UINT numSamplesPerClass = (UINT)floor( numBootstrapSamples / Float(K) );
 
         //Randomly select the training samples from each class
         UINT classIndex = 0;
         UINT classCounter = 0;
         UINT randomIndex = 0;
-        for(UINT i=0; i<numSamples; i++){
+        for(UINT i=0; i<numBootstrapSamples; i++){
             randomIndex = rand.getRandomNumberInt(0, (UINT)classIndexs[ classIndex ].size() );
             randomIndex = classIndexs[ classIndex ][ randomIndex ];
             newDataset.addSample(data[ randomIndex ].getClassLabel(), data[ randomIndex ].getSample());
@@ -1088,7 +1102,7 @@ ClassificationData ClassificationData::getBootstrappedDataset(UINT numSamples,bo
     }else{
         //Randomly select the training samples to add to the new data set
         UINT randomIndex;
-        for(UINT i=0; i<numSamples; i++){
+        for(UINT i=0; i<numBootstrapSamples; i++){
             randomIndex = rand.getRandomNumberInt(0, totalNumSamples);
             newDataset.addSample( data[randomIndex].getClassLabel(), data[randomIndex].getSample() );
         }
@@ -1177,7 +1191,7 @@ UINT ClassificationData::getMaximumClassLabel() const{
     return maxClassLabel;
 }
 
-UINT ClassificationData::getClassLabelIndexValue(UINT classLabel) const{
+UINT ClassificationData::getClassLabelIndexValue(const UINT classLabel) const{
     for(UINT k=0; k<classTracker.getSize(); k++){
         if( classTracker[k].classLabel == classLabel ){
             return k;
@@ -1187,7 +1201,7 @@ UINT ClassificationData::getClassLabelIndexValue(UINT classLabel) const{
     return 0;
 }
 
-std::string ClassificationData::getClassNameForCorrespondingClassLabel(UINT classLabel) const{
+std::string ClassificationData::getClassNameForCorrespondingClassLabel(const UINT classLabel) const{
 
     for(UINT i=0; i<classTracker.getSize(); i++){
         if( classTracker[i].classLabel == classLabel ){
@@ -1299,7 +1313,7 @@ VectorFloat ClassificationData::getStdDev() const{
 	return stdDev;
 }
 
-MatrixFloat ClassificationData::getClassHistogramData(UINT classLabel,UINT numBins) const{
+MatrixFloat ClassificationData::getClassHistogramData(const UINT classLabel,const UINT numBins) const{
 
     const UINT M = getNumSamples();
     const UINT N = getNumDimensions();
@@ -1411,7 +1425,7 @@ MatrixFloat ClassificationData::getCovarianceMatrix() const{
 	return covariance;
 }
 
-Vector< MatrixFloat > ClassificationData::getHistogramData(UINT numBins) const{
+Vector< MatrixFloat > ClassificationData::getHistogramData(const UINT numBins) const{
     const UINT K = getNumClasses();
     Vector< MatrixFloat > histData(K);
 
@@ -1451,7 +1465,7 @@ VectorFloat ClassificationData::getClassProbabilities( const Vector< UINT > &cla
     return x;
 }
 
-Vector< UINT > ClassificationData::getClassDataIndexes(UINT classLabel) const{
+Vector< UINT > ClassificationData::getClassDataIndexes(const UINT classLabel) const{
 
     const UINT M = getNumSamples();
     const UINT K = getNumClasses();
@@ -1507,6 +1521,15 @@ MatrixFloat ClassificationData::getDataAsMatrixFloat() const {
 
 bool ClassificationData::generateGaussDataset( const std::string filename, const UINT numSamples, const UINT numClasses, const UINT numDimensions, const Float range, const Float sigma ){
     
+    //Generate the dataset
+    ClassificationData data = generateGaussDataset( numSamples, numClasses, numDimensions, range, sigma );
+    
+    //Save the dataset to a CSV file
+    return data.save( filename );
+}
+
+ClassificationData ClassificationData::generateGaussDataset( const UINT numSamples, const UINT numClasses, const UINT numDimensions, const Float range, const Float sigma ){
+    
     Random random;
     
     //Generate a simple model that will be used to generate the main dataset
@@ -1520,6 +1543,7 @@ bool ClassificationData::generateGaussDataset( const std::string filename, const
     //Use the model above to generate the main dataset
     ClassificationData data;
     data.setNumDimensions( numDimensions );
+    data.reserve( numSamples );
     
     for(UINT i=0; i<numSamples; i++){
         
@@ -1539,8 +1563,47 @@ bool ClassificationData::generateGaussDataset( const std::string filename, const
         data.addSample( classLabel, sample );
     }
     
-    //Save the dataset to a CSV file
-    return data.save( filename );
+    //Return the datset
+    return data;
+}
+
+ClassificationData ClassificationData::generateGaussLinearDataset( const UINT numSamples, const UINT numClasses, const UINT numDimensions, const Float range, const Float sigma){
+
+    Random random;
+    
+    //Generate a simple model that will be used to generate the main dataset
+    //Enforce the gaussian clusters to be linearly separable by setting each model centroid on a regular spaced grid
+    MatrixFloat model(numClasses,numDimensions);
+    for(UINT k=0; k<numClasses; k++){
+        for(UINT j=0; j<numDimensions; j++){
+            model[k][j] = Util::scale(k,0,numClasses-1,-range,range,true);
+        }
+    }
+    
+    //Use the model above to generate the main dataset
+    ClassificationData data;
+    data.setNumDimensions( numDimensions );
+    data.reserve( numSamples );
+    
+    for(UINT i=0; i<numSamples; i++){
+        
+        //Randomly select which class this sample belongs to
+        UINT k = random.getRandomNumberInt( 0, numClasses );
+        
+        //Generate a sample using the model (+ some Gaussian noise)
+        VectorFloat sample( numDimensions );
+        for(UINT j=0; j<numDimensions; j++){
+            sample[j] = model[k][j] + random.getRandomNumberGauss(0,sigma);
+        }
+        
+        //By default in the GRT, the class label should not be 0, so add 1
+        UINT classLabel = k + 1;
+        
+        //Add the labeled sample to the dataset
+        data.addSample( classLabel, sample );
+    }
+
+    return data;
 }
 
 GRT_END_NAMESPACE

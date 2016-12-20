@@ -23,34 +23,26 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 GRT_BEGIN_NAMESPACE
 
-GestureRecognitionPipeline::GestureRecognitionPipeline(void)
+GestureRecognitionPipeline::GestureRecognitionPipeline(void) : MLBase( "Pipeline" )
 {
     init();
-
-    debugLog.setProceedingText("[DEBUG GRP]");
-    errorLog.setProceedingText("[ERROR GRP]");
-    warningLog.setProceedingText("[WARNING GRP]");
-    testingLog.setProceedingText("[TEST GRP]");
 }
 
-GestureRecognitionPipeline::GestureRecognitionPipeline(const GestureRecognitionPipeline &rhs){
-	
+GestureRecognitionPipeline::GestureRecognitionPipeline(const GestureRecognitionPipeline &rhs) : MLBase( "Pipeline" )
+{
 	init();
-    
-    debugLog.setProceedingText("[DEBUG GRP]");
-    errorLog.setProceedingText("[ERROR GRP]");
-    warningLog.setProceedingText("[WARNING GRP]");
-    testingLog.setProceedingText("[TEST GRP]");
 
     //Invoke the equals operator to copy the rhs data to this instance
 	*this = rhs;
 }
 
-
 GestureRecognitionPipeline& GestureRecognitionPipeline::operator=(const GestureRecognitionPipeline &rhs){
 	
 	if( this != &rhs ){
         this->clear();
+
+        //Copy the base class
+        this->copyMLBaseVariables( dynamic_cast<const MLBase*>(&rhs) );
 		
         //Copy the pipeline variables
 		this->initialized = rhs.initialized;
@@ -78,19 +70,12 @@ GestureRecognitionPipeline& GestureRecognitionPipeline::operator=(const GestureR
 	    this->testConfusionMatrix = rhs.testConfusionMatrix;
         this->crossValidationResults = rhs.crossValidationResults;
         this->testResults = rhs.testResults;
-
-        //Copy the GRT Base variables
-        this->debugLog = rhs.debugLog;
-        this->errorLog = rhs.errorLog;
-        this->trainingLog = rhs.trainingLog;
-        this->testingLog = rhs.testingLog;
-        this->warningLog = rhs.warningLog;
 	
-		for(unsigned int i=0; i<rhs.preProcessingModules.size(); i++){
+		for(unsigned int i=0; i<rhs.preProcessingModules.getSize(); i++){
 			this->addPreProcessingModule( *(rhs.preProcessingModules[i]) );
 		}
 		
-		for(unsigned int i=0; i<rhs.featureExtractionModules.size(); i++){
+		for(unsigned int i=0; i<rhs.featureExtractionModules.getSize(); i++){
 			this->addFeatureExtractionModule( *(rhs.featureExtractionModules[i]) );
 		}
 		
@@ -106,12 +91,12 @@ GestureRecognitionPipeline& GestureRecognitionPipeline::operator=(const GestureR
 			setClusterer( *rhs.clusterer );
 		}
 		
-		for(unsigned int i=0; i<rhs.postProcessingModules.size(); i++){
+		for(unsigned int i=0; i<rhs.postProcessingModules.getSize(); i++){
 			this->addPostProcessingModule( *(rhs.postProcessingModules[i]) );
 		}
 		
 		for(unsigned int k=0; k<NUM_CONTEXT_LEVELS; k++){
-			for(unsigned int i=0; i<rhs.contextModules[k].size(); i++){
+			for(unsigned int i=0; i<rhs.contextModules[k].getSize(); i++){
 				this->addContextModule( *(rhs.contextModules[k][i]), k );
 			}
 		}
@@ -159,7 +144,7 @@ GestureRecognitionPipeline::~GestureRecognitionPipeline(void)
     clear();
 } 
     
-bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
+bool GestureRecognitionPipeline::train_(ClassificationData &trainingData){
     
     trained = false;
     trainingTime = 0;
@@ -167,12 +152,12 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
     debugLog << "train with classification data" << std::endl;
 
     if( !getIsClassifierSet() ){
-        errorLog << "train(ClassificationData trainingData) - Failed To Train Classifier, the classifier has not been set!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Classifier, the classifier has not been set!" << std::endl;
         return false;
     }
     
     if( trainingData.getNumSamples() == 0 ){
-        errorLog << "train(ClassificationData trainingData) - Failed To Train Classifier, there is no training data!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Classifier, there is no training data!" << std::endl;
         return false;
     }
     
@@ -211,7 +196,7 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
         if( getIsPreProcessingSet() ){
             for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
                 if( !preProcessingModules[moduleIndex]->process( trainingSample ) ){
-                    errorLog << "train(ClassificationData trainingData) - Failed to PreProcess Training Data. PreProcessingModuleIndex: ";
+                    errorLog << __FILENAME__ << " Failed to PreProcess Training Data. PreProcessingModuleIndex: ";
                     errorLog << moduleIndex;
                     errorLog << std::endl;
                     return false;
@@ -224,7 +209,7 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
         if( getIsFeatureExtractionSet() ){
             for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.size(); moduleIndex++){
                 if( !featureExtractionModules[moduleIndex]->computeFeatures( trainingSample ) ){
-                    errorLog << "train(ClassificationData trainingData) - Failed to Compute Features from Training Data. FeatureExtractionModuleIndex ";
+                    errorLog << __FILENAME__ << " Failed to Compute Features from Training Data. FeatureExtractionModuleIndex ";
                     errorLog << moduleIndex;
                     errorLog << std::endl;
                     return false;
@@ -246,7 +231,7 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
     }
     
     if( processedTrainingData.getNumSamples() != trainingData.getNumSamples() ){
-        warningLog << "train(ClassificationData trainingData) - Lost " << trainingData.getNumSamples()-processedTrainingData.getNumSamples() << " of " << trainingData.getNumSamples() << " training samples due to the processing stage!" << std::endl;
+        warningLog << __FILENAME__ << " Lost " << trainingData.getNumSamples()-processedTrainingData.getNumSamples() << " of " << trainingData.getNumSamples() << " training samples due to the processing stage!" << std::endl;
     }
 
     //Store the number of training samples
@@ -255,7 +240,7 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
     //Train the classifier
     trained = classifier->train_( processedTrainingData );
     if( !trained ){
-        errorLog << "train(ClassificationData trainingData) - Failed To Train Classifier: " << classifier->getLastErrorMessage() << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Classifier: " << classifier->getLastErrorMessage() << std::endl;
         return false;
     }
     
@@ -264,20 +249,26 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData){
     
     return true;
 }
-    
+
 bool GestureRecognitionPipeline::train(const ClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling){
+    //Get a copy of the data so we can spilt it
+    ClassificationData data = trainingData;
+    return train_( data, kFoldValue, useStratifiedSampling );
+}
+
+bool GestureRecognitionPipeline::train_(ClassificationData &data,const UINT kFoldValue,const bool useStratifiedSampling){
     
     trained = false;
     trainingTime = 0;
     clearTestResults();
     
     if( !getIsClassifierSet() ){
-        errorLog << "train(const ClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling) - Failed To Train Classifier, the classifier has not been set!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Classifier, the classifier has not been set!" << std::endl;
         return false;
     }
     
-    if( trainingData.getNumSamples() == 0 ){
-        errorLog << "train(const ClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling) - Failed To Train Classifier, there is no training data!" << std::endl;
+    if( data.getNumSamples() == 0 ){
+        errorLog << __FILENAME__ << " Failed To Train Classifier, there is no training data!" << std::endl;
         return false;
     }
     
@@ -287,14 +278,10 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData,co
     //Start the training timer
     Timer timer;
     timer.start();
-	
-	//Get a copy of the data so we can spilt it
-	ClassificationData data = trainingData;
 
     //Spilt the data into K folds
-    bool spiltResult = data.spiltDataIntoKFolds(kFoldValue, useStratifiedSampling);
-    
-    if( !spiltResult ){
+    if( !data.spiltDataIntoKFolds(kFoldValue, useStratifiedSampling) ){
+        errorLog << __FILENAME__ << " Failed To Train Classifier, failed to split data into K folds!" << std::endl;
         return false;
     }
     
@@ -308,7 +295,7 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData,co
         ///Train the classification system
 		foldTrainingData = data.getTrainingFoldData(k);
         
-        if( !train( foldTrainingData ) ){
+        if( !train_( foldTrainingData ) ){
             return false;
         }
         
@@ -336,19 +323,19 @@ bool GestureRecognitionPipeline::train(const ClassificationData &trainingData,co
     return true;
 }
 
-bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trainingData ){
+bool GestureRecognitionPipeline::train_( TimeSeriesClassificationData &trainingData ){
     
     trained = false;
     trainingTime = 0;
     clearTestResults();
     
     if( !getIsClassifierSet() ){
-        errorLog << "train(const TimeSeriesClassificationData &trainingData) - Failed To Train Classifier, the classifier has not been set!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Classifier, the classifier has not been set!" << std::endl;
         return false;
     }
     
     if( trainingData.getNumSamples() == 0 ){
-        errorLog << "train(TimeSeriesClassificationData trainingData) - Failed To Train Classifier, there is no training data!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Classifier, there is no training data!" << std::endl;
         return false;
     }
     
@@ -420,8 +407,9 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
 
             //Try to process the matrix data row-by-row
             bool resetPreprocessingModule = true;
+            VectorFloat sample;
             for(UINT r=0; r<trainingSample.getNumRows(); r++){
-                VectorFloat sample = trainingSample.getRow( r );
+                sample = trainingSample.getRow( r );
                 
                 //infoLog << "sample " << sample.getSize() << std::endl;
 
@@ -433,7 +421,7 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
                     
                     //Validate the input and output dimensions match!
                     if( preProcessingModules[moduleIndex]->getNumInputDimensions() != preProcessingModules[moduleIndex]->getNumOutputDimensions() ){
-                        errorLog << "train(TimeSeriesClassificationData trainingData) - Failed To PreProcess Training Data. The number of inputDimensions (";
+                        errorLog << __FILENAME__ << " Failed To PreProcess Training Data. The number of inputDimensions (";
                         errorLog << preProcessingModules[moduleIndex]->getNumInputDimensions();
                         errorLog << ") in  PreProcessingModule ";
                         errorLog << moduleIndex;
@@ -444,7 +432,7 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
                     }
                     
                     if( !preProcessingModules[moduleIndex]->process( sample ) ){
-                        errorLog << "train(TimeSeriesClassificationData trainingData) - Failed To PreProcess Training Data. PreProcessingModuleIndex: ";
+                        errorLog << __FILENAME__ << " Failed To PreProcess Training Data. PreProcessingModuleIndex: ";
                         errorLog << moduleIndex;
                         errorLog << std::endl;
                         return false;
@@ -495,7 +483,7 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
                     }
                     
                     if( !featureExtractionModules[moduleIndex]->computeFeatures( inputVector ) ){
-                        errorLog << "train(TimeSeriesClassificationData trainingData) - Failed To Compute Features For Training Data. FeatureExtractionModuleIndex: ";
+                        errorLog << __FILENAME__ << " Failed To Compute Features For Training Data. FeatureExtractionModuleIndex: ";
                         errorLog << moduleIndex;
                         errorLog << std::endl;
                         return false;
@@ -517,7 +505,7 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
                     
                     if( classifier->getTimeseriesCompatible() ){
                         if( !featureData.push_back( inputVector ) ){
-                            errorLog << "train(TimeSeriesClassificationData trainingData) - Failed To add feature Vector to feature data matrix! FeatureExtractionModuleIndex: " << std::endl;
+                            errorLog << __FILENAME__ << " Failed To add feature Vector to feature data matrix! FeatureExtractionModuleIndex: " << std::endl;
                             return false;
                         }
                     }else {
@@ -528,7 +516,7 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
             }else{
                 if( classifier->getTimeseriesCompatible() ){
                     if( !featureData.push_back( inputVector ) ){
-                        errorLog << "train(TimeSeriesClassificationData trainingData) - Failed To add feature Vector to feature data matrix! FeatureExtractionModuleIndex: " << std::endl;
+                        errorLog << __FILENAME__ << " Failed To add feature Vector to feature data matrix! FeatureExtractionModuleIndex: " << std::endl;
                         return false;
                     }
                 }
@@ -549,14 +537,14 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
     //Train the classification system
     if( classifier->getTimeseriesCompatible() ){
         numTrainingSamples = timeseriesClassificationData.getNumSamples();
-        trained = classifier->train( timeseriesClassificationData );
+        trained = classifier->train_( timeseriesClassificationData );
     }else{
         numTrainingSamples = classificationData.getNumSamples();
-        trained = classifier->train( classificationData );
+        trained = classifier->train_( classificationData );
     }
 
     if( !trained ){
-        errorLog << "train(TimeSeriesClassificationData trainingData) - Failed To Train Classifier" << classifier->getLastErrorMessage() << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Classifier" << classifier->getLastErrorMessage() << std::endl;
         return false;
     }
     
@@ -565,20 +553,26 @@ bool GestureRecognitionPipeline::train( const TimeSeriesClassificationData &trai
     
     return true;
 }
-    
+
 bool GestureRecognitionPipeline::train(const TimeSeriesClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling){
+    //Get a copy of the data so we can split it
+    TimeSeriesClassificationData data = trainingData;
+    return train_( data, kFoldValue, useStratifiedSampling );
+}
+
+bool GestureRecognitionPipeline::train_(TimeSeriesClassificationData &data,const UINT kFoldValue,const bool useStratifiedSampling){
     
     trained = false;
     trainingTime = 0;
     clearTestResults();
     
     if( !getIsClassifierSet() ){
-        errorLog << "train(const TimeSeriesClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling) - Failed To Train Classifier, the classifier has not been set!" << std::endl;
+        errorLog << __FILENAME__ << " - Failed To Train Classifier, the classifier has not been set!" << std::endl;
         return false;
     }
     
-    if( trainingData.getNumSamples() == 0 ){
-        errorLog << "train(const TimeSeriesClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling) - Failed To Train Classifier, there is no training data!" << std::endl;
+    if( data.getNumSamples() == 0 ){
+        errorLog << __FILENAME__ << " Failed To Train Classifier, there is no training data!" << std::endl;
         return false;
     }
     
@@ -588,13 +582,10 @@ bool GestureRecognitionPipeline::train(const TimeSeriesClassificationData &train
     //Start the training timer
     Timer timer;
     timer.start();
-
-	//Get a copy of the data so we can split it
-	TimeSeriesClassificationData data = trainingData;
     
     //Spilt the data into K folds
     if( !data.spiltDataIntoKFolds(kFoldValue, useStratifiedSampling) ){
-        errorLog << "train(const TimeSeriesClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling) - Failed To Spilt Dataset into KFolds!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Spilt Dataset into KFolds!" << std::endl;
         return false;
     }
     
@@ -607,8 +598,8 @@ bool GestureRecognitionPipeline::train(const TimeSeriesClassificationData &train
         ///Train the classification system
 		foldTrainingData = data.getTrainingFoldData(k);
         
-        if( !train( foldTrainingData ) ){
-            errorLog << "train(const TimeSeriesClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling) - Failed to train pipeline for fold " << k << "." << std::endl;
+        if( !train_( foldTrainingData ) ){
+            errorLog << __FILENAME__ << " Failed to train pipeline for fold " << k << "." << std::endl;
             return false;
         }
         
@@ -616,7 +607,7 @@ bool GestureRecognitionPipeline::train(const TimeSeriesClassificationData &train
         foldTestData = data.getTestFoldData(k);
         
         if( !test( foldTestData ) ){
-            errorLog << "train(const TimeSeriesClassificationData &trainingData,const UINT kFoldValue,const bool useStratifiedSampling) - Failed to test pipeline for fold " << k << "." << std::endl;
+            errorLog << __FILENAME__ << " Failed to test pipeline for fold " << k << "." << std::endl;
             return false;
         }
         
@@ -635,19 +626,19 @@ bool GestureRecognitionPipeline::train(const TimeSeriesClassificationData &train
     return true;
 }
 
-bool GestureRecognitionPipeline::train(const ClassificationDataStream &trainingData){
+bool GestureRecognitionPipeline::train_(ClassificationDataStream &trainingData){
 
     trained = false;
     trainingTime = 0;
     clearTestResults();
     
     if( !getIsClassifierSet() ){
-        errorLog << "train(ClassificationDataStream trainingData) - Failed To train Classifier, the classifier has not been set!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To train Classifier, the classifier has not been set!" << std::endl;
         return false;
     }
     
     if( trainingData.getNumSamples() == 0 ){
-        errorLog << "train(ClassificationDataStream trainingData) - Failed To train Classifier, there is no training data!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To train Classifier, there is no training data!" << std::endl;
         return false;
     }
     
@@ -686,7 +677,7 @@ bool GestureRecognitionPipeline::train(const ClassificationDataStream &trainingD
         if( getIsPreProcessingSet() ){
             for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
                 if( !preProcessingModules[moduleIndex]->process( trainingSample ) ){
-                    errorLog << "train(ClassificationDataStream trainingData) - Failed to PreProcess training Data. PreProcessingModuleIndex: ";
+                    errorLog << __FILENAME__ << " Failed to PreProcess training Data. PreProcessingModuleIndex: ";
                     errorLog << moduleIndex;
                     errorLog << std::endl;
                     return false;
@@ -699,7 +690,7 @@ bool GestureRecognitionPipeline::train(const ClassificationDataStream &trainingD
         if( getIsFeatureExtractionSet() ){
             for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.size(); moduleIndex++){
                 if( !featureExtractionModules[moduleIndex]->computeFeatures( trainingSample ) ){
-                    errorLog << "train(ClassificationDataStream trainingData) - Failed to Compute Features from training Data. FeatureExtractionModuleIndex ";
+                    errorLog << __FILENAME__ << " Failed to Compute Features from training Data. FeatureExtractionModuleIndex ";
                     errorLog << moduleIndex;
                     errorLog << std::endl;
                     return false;
@@ -721,7 +712,7 @@ bool GestureRecognitionPipeline::train(const ClassificationDataStream &trainingD
     }
     
     if( processedTrainingData.getNumSamples() != trainingData.getNumSamples() ){
-        warningLog << "train(ClassificationDataStream trainingData) - Lost " << trainingData.getNumSamples()-processedTrainingData.getNumSamples() << " of " << trainingData.getNumSamples() << " training samples due to the processing stage!" << std::endl;
+        warningLog << __FILENAME__ << " Lost " << trainingData.getNumSamples()-processedTrainingData.getNumSamples() << " of " << trainingData.getNumSamples() << " training samples due to the processing stage!" << std::endl;
     }
 
     //Store the number of training samples
@@ -730,7 +721,7 @@ bool GestureRecognitionPipeline::train(const ClassificationDataStream &trainingD
     //Train the classifier
     trained = classifier->train_( processedTrainingData );
     if( !trained ){
-        errorLog << "train(ClassificationDataStream trainingData) - Failed To Train Classifier: " << classifier->getLastErrorMessage() << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Classifier: " << classifier->getLastErrorMessage() << std::endl;
         return false;
     }
     
@@ -740,7 +731,7 @@ bool GestureRecognitionPipeline::train(const ClassificationDataStream &trainingD
     return true;
 }
     
-bool GestureRecognitionPipeline::train(const RegressionData &trainingData){
+bool GestureRecognitionPipeline::train_(RegressionData &trainingData){
     
     trained = false;
     trainingTime = 0;
@@ -788,7 +779,7 @@ bool GestureRecognitionPipeline::train(const RegressionData &trainingData){
         if( getIsPreProcessingSet() ){
             for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
                 if( !preProcessingModules[ moduleIndex ]->process( inputVector ) ){
-                    errorLog << "train(const RegressionData &trainingData) - Failed To Compute Features For Training Data. PreProcessingModuleIndex: " << moduleIndex << std::endl;
+                    errorLog << __FILENAME__ << " Failed To Compute Features For Training Data. PreProcessingModuleIndex: " << moduleIndex << std::endl;
                     return false;
                 }
                 
@@ -799,7 +790,7 @@ bool GestureRecognitionPipeline::train(const RegressionData &trainingData){
         if( getIsFeatureExtractionSet() ){
             for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.size(); moduleIndex++){
                 if( !featureExtractionModules[ moduleIndex ]->computeFeatures( inputVector ) ){
-                    errorLog << "train(const RegressionData &trainingData) - Failed To Compute Features For Training Data. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
+                    errorLog << __FILENAME__ << " Failed To Compute Features For Training Data. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
                     return false;
                 }
                 
@@ -809,7 +800,7 @@ bool GestureRecognitionPipeline::train(const RegressionData &trainingData){
         
         //Add the training sample to the processed training data
         if( !processedTrainingData.addSample(inputVector,targetVector) ){
-            errorLog << "train(const RegressionData &trainingData) - Failed to add processed training sample to training data" << std::endl;
+            errorLog << __FILENAME__ << " Failed to add processed training sample to training data" << std::endl;
             return false;
         }
     }
@@ -819,13 +810,13 @@ bool GestureRecognitionPipeline::train(const RegressionData &trainingData){
     
     //Train the classification system
     if( getIsRegressifierSet() ){
-        trained =  regressifier->train( processedTrainingData );
+        trained =  regressifier->train_( processedTrainingData );
         if( !trained ){
-            errorLog << "train(const RegressionData &trainingData) - Failed To Train Regressifier: " << regressifier->getLastErrorMessage() << std::endl;
+            errorLog << __FILENAME__ << " Failed To Train Regressifier: " << regressifier->getLastErrorMessage() << std::endl;
             return false;
         }
     }else{
-        errorLog << "train(const RegressionData &trainingData) - Classifier is not set" << std::endl;
+        errorLog << __FILENAME__ << " Classifier is not set" << std::endl;
         return false;
     }
     
@@ -834,20 +825,28 @@ bool GestureRecognitionPipeline::train(const RegressionData &trainingData){
     
     return true;
 }
-    
+
+bool GestureRecognitionPipeline::train_(RegressionData &trainingData,RegressionData &validationData){ return false; } //TODO Need to add this function
+
 bool GestureRecognitionPipeline::train(const RegressionData &trainingData,const UINT kFoldValue){
+    //Get a copy of the training data so we can split it
+    RegressionData data = trainingData;
+    return train_( data, kFoldValue );
+}
+
+bool GestureRecognitionPipeline::train_(RegressionData &data,const UINT kFoldValue){
 
     trained = false;
     trainingTime = 0;
     clearTestResults();
     
     if( !getIsRegressifierSet() ){
-        errorLog << "train(const RegressionData &trainingData,const UINT kFoldValue) - Failed To Train Regressifier, the regressifier has not been set!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Regressifier, the regressifier has not been set!" << std::endl;
         return false;
     }
     
-    if( trainingData.getNumSamples() == 0 ){
-        errorLog << "train(const RegressionData &trainingData,const UINT kFoldValue) - Failed To Train Regressifier, there is no training data!" << std::endl;
+    if( data.getNumSamples() == 0 ){
+        errorLog << __FILENAME__ << " Failed To Train Regressifier, there is no training data!" << std::endl;
         return false;
     }
     
@@ -857,9 +856,6 @@ bool GestureRecognitionPipeline::train(const RegressionData &trainingData,const 
     //Start the training timer
     Timer timer;
     timer.start();
-   
-    //Get a copy of the training data so we can split it
-	RegressionData data = trainingData;
 
     //Spilt the data into K folds
     bool spiltResult = data.spiltDataIntoKFolds(kFoldValue);
@@ -876,7 +872,7 @@ bool GestureRecognitionPipeline::train(const RegressionData &trainingData,const 
         ///Train the classification system
         foldTrainingData = data.getTrainingFoldData(k);
         
-        if( !train( foldTrainingData ) ){
+        if( !train_( foldTrainingData ) ){
             return false;
         }
         
@@ -902,19 +898,19 @@ bool GestureRecognitionPipeline::train(const RegressionData &trainingData,const 
     return true;
 }
     
-bool GestureRecognitionPipeline::train(const UnlabelledData &trainingData){
+bool GestureRecognitionPipeline::train_(UnlabelledData &trainingData){
     
     trained = false;
     trainingTime = 0;
     clearTestResults();
     
     if( !getIsClustererSet() ){
-        errorLog << "train(const UnlabelledData &trainingData) - Failed To Train Clusterer, the clusterer has not been set!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Clusterer, the clusterer has not been set!" << std::endl;
         return false;
     }
     
     if( trainingData.getNumSamples() == 0 ){
-        errorLog << "train(const UnlabelledData &trainingData) - Failed To Train Clusterer, there is no training data!" << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Clusterer, there is no training data!" << std::endl;
         return false;
     }
     
@@ -951,7 +947,7 @@ bool GestureRecognitionPipeline::train(const UnlabelledData &trainingData){
         if( getIsPreProcessingSet() ){
             for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
                 if( !preProcessingModules[moduleIndex]->process( trainingSample ) ){
-                    errorLog << "train(const UnlabelledData &trainingData) - Failed to PreProcess Training Data. PreProcessingModuleIndex: ";
+                    errorLog << __FILENAME__ << " Failed to PreProcess Training Data. PreProcessingModuleIndex: ";
                     errorLog << moduleIndex;
                     errorLog << std::endl;
                     return false;
@@ -964,7 +960,7 @@ bool GestureRecognitionPipeline::train(const UnlabelledData &trainingData){
         if( getIsFeatureExtractionSet() ){
             for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.size(); moduleIndex++){
                 if( !featureExtractionModules[moduleIndex]->computeFeatures( trainingSample ) ){
-                    errorLog << "train(const UnlabelledData &trainingData) - Failed to Compute Features from Training Data. FeatureExtractionModuleIndex ";
+                    errorLog << __FILENAME__ << " Failed to Compute Features from Training Data. FeatureExtractionModuleIndex ";
                     errorLog << moduleIndex;
                     errorLog << std::endl;
                     return false;
@@ -990,7 +986,7 @@ bool GestureRecognitionPipeline::train(const UnlabelledData &trainingData){
     
     if( processedTrainingData.getNumSamples() != trainingData.getNumSamples() ){
         
-        warningLog << "train(const ClassificationData &trainingData) - Lost " << trainingData.getNumSamples()-processedTrainingData.getNumSamples() << " of " << trainingData.getNumSamples() << " training samples due to the processing stage!" << std::endl;
+        warningLog << __FILENAME__ << " Lost " << trainingData.getNumSamples()-processedTrainingData.getNumSamples() << " of " << trainingData.getNumSamples() << " training samples due to the processing stage!" << std::endl;
     }
     
     //Store the number of training samples
@@ -999,7 +995,7 @@ bool GestureRecognitionPipeline::train(const UnlabelledData &trainingData){
     //Train the cluster model
     trained = clusterer->train_( processedTrainingData );
     if( !trained ){
-        errorLog << "train(const UnlabelledData &trainingData) - Failed To Train Clusterer: " << clusterer->getLastErrorMessage() << std::endl;
+        errorLog << __FILENAME__ << " Failed To Train Clusterer: " << clusterer->getLastErrorMessage() << std::endl;
         return false;
     }
     
@@ -1016,18 +1012,18 @@ bool GestureRecognitionPipeline::test(const ClassificationData &testData){
     
     //Make sure the classification model has been trained
     if( !trained ){
-        errorLog << "test(const ClassificationData &testData) - Classifier is not trained" << std::endl;
+        errorLog << __FILENAME__ << " Classifier is not trained" << std::endl;
         return false;
     }
     
     //Make sure the dimensionality of the test data matches the input Vector's dimensions
     if( testData.getNumDimensions() != inputVectorDimensions ){
-        errorLog << "test(const ClassificationData &testData) - The dimensionality of the test data (" + Util::toString(testData.getNumDimensions()) + ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
+        errorLog << __FILENAME__ << " The dimensionality of the test data (" + Util::toString(testData.getNumDimensions()) + ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
         return false;
     }
     
     if( !getIsClassifierSet() ){
-        errorLog << "test(const ClassificationData &testData) - The classifier has not been set" << std::endl;
+        errorLog << __FILENAME__ << " The classifier has not been set" << std::endl;
         return false;
     }
     
@@ -1047,12 +1043,12 @@ bool GestureRecognitionPipeline::test(const ClassificationData &testData){
 
 		if( !labelFound ){
 			classLabelValidationPassed = false;
-            errorLog << "test(const ClassificationData &testData) - The test dataset contains a class label (" << testData.getClassTracker()[i].classLabel << ") that is not in the model!" << std::endl;
+            errorLog << __FILENAME__ << " The test dataset contains a class label (" << testData.getClassTracker()[i].classLabel << ") that is not in the model!" << std::endl;
 		}
 	}
 
 	if( !classLabelValidationPassed ){
-        errorLog << "test(const ClassificationData &testData) -  Model Class Labels: ";
+        errorLog << __FILENAME__ << "  Model Class Labels: ";
         for(UINT k=0; k<classifier->getNumClasses(); k++){
             errorLog << classifier->getClassLabels()[k] << "\t";
 		}
@@ -1091,8 +1087,8 @@ bool GestureRecognitionPipeline::test(const ClassificationData &testData){
         VectorFloat testSample = testData[i].getSample();
         
         //Pass the test sample through the pipeline
-        if( !predict( testSample ) ){
-            errorLog << "test(const ClassificationData &testData) - Prediction failed for test sample at index: " << i << std::endl;
+        if( !predict_( testSample ) ){
+            errorLog << __FILENAME__ << " Prediction failed for test sample at index: " << i << std::endl;
             return false;
         }
         
@@ -1100,7 +1096,7 @@ bool GestureRecognitionPipeline::test(const ClassificationData &testData){
         UINT predictedClassLabel = getPredictedClassLabel();
         
         if( !updateTestMetrics(classLabel,predictedClassLabel,precisionCounter,recallCounter,rejectionPrecisionCounter,rejectionRecallCounter, confusionMatrixCounter) ){
-            errorLog << "test(const ClassificationData &testData) - Failed to update test metrics at test sample index: " << i << std::endl;
+            errorLog << __FILENAME__ << " Failed to update test metrics at test sample index: " << i << std::endl;
             return false;
         }
         //cout << "i: " << i << " class label: " << classLabel << " predictedClassLabel: " << predictedClassLabel << std::endl;
@@ -1113,7 +1109,7 @@ bool GestureRecognitionPipeline::test(const ClassificationData &testData){
     }
     
     if( !computeTestMetrics(precisionCounter,recallCounter,rejectionPrecisionCounter,rejectionRecallCounter, confusionMatrixCounter, numTestSamples) ){
-        errorLog <<"test(const ClassificationData &testData) - Failed to compute test metrics!" << std::endl;
+        errorLog << __FILENAME__ << " Failed to compute test metrics!" << std::endl;
         return false;
     }
     
@@ -1129,18 +1125,18 @@ bool GestureRecognitionPipeline::test(const TimeSeriesClassificationData &testDa
     
     //Make sure the classification model has been trained
     if( !trained ){
-        errorLog << "test(const TimeSeriesClassificationData &testData) - The classifier has not been trained" << std::endl;
+        errorLog << __FILENAME__ << " The classifier has not been trained" << std::endl;
         return false;
     }
     
     //Make sure the dimensionality of the test data matches the input Vector's dimensions
     if( testData.getNumDimensions() != inputVectorDimensions ){
-        errorLog << "test(const TimeSeriesClassificationData &testData) - The dimensionality of the test data (" << testData.getNumDimensions() << ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
+        errorLog << __FILENAME__ << " The dimensionality of the test data (" << testData.getNumDimensions() << ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
         return false;
     }
     
     if( !getIsClassifierSet() ){
-        errorLog << "test(const TimeSeriesClassificationData &testData) - The classifier has not been set" << std::endl;
+        errorLog << __FILENAME__ << " The classifier has not been set" << std::endl;
         return false;
     }
     
@@ -1185,9 +1181,9 @@ bool GestureRecognitionPipeline::test(const TimeSeriesClassificationData &testDa
         MatrixFloat& timeseries = *newTimeseries;
 
         //Pass the test timeseries through the pipeline
-        if( !predict( timeseries ) ){
+        if( !predict_( timeseries ) ){
             if(newTimeseries) delete newTimeseries;
-            errorLog << "test(const TimeSeriesClassificationData &testData) - Failed to run prediction for test sample index: " << i << std::endl;
+            errorLog << __FILENAME__ << " Failed to run prediction for test sample index: " << i << std::endl;
             return false;
         }
         
@@ -1197,7 +1193,7 @@ bool GestureRecognitionPipeline::test(const TimeSeriesClassificationData &testDa
 
         if( !updateTestMetrics(classLabel,predictedClassLabel,precisionCounter,recallCounter,rejectionPrecisionCounter,rejectionRecallCounter, confusionMatrixCounter) ){
             if(newTimeseries) delete newTimeseries;
-            errorLog << "test(const TimeSeriesClassificationData &testData) - Failed to update test metrics at test sample index: " << i << std::endl;
+            errorLog << __FILENAME__ << " Failed to update test metrics at test sample index: " << i << std::endl;
             return false;
         }
 
@@ -1205,7 +1201,7 @@ bool GestureRecognitionPipeline::test(const TimeSeriesClassificationData &testDa
     }
 
     if( !computeTestMetrics(precisionCounter,recallCounter,rejectionPrecisionCounter,rejectionRecallCounter, confusionMatrixCounter, M) ){
-        errorLog << "test(const TimeSeriesClassificationData &testData) - Failed to compute test metrics!" << std::endl;
+        errorLog << __FILENAME__ << " Failed to compute test metrics!" << std::endl;
         return false;
     }
     
@@ -1221,18 +1217,18 @@ bool GestureRecognitionPipeline::test(const ClassificationDataStream &testData){
     
     //Make sure the classification model has been trained
     if( !trained ){
-        errorLog << "test(const ClassificationDataStream &testData) - The classifier has not been trained" << std::endl;
+        errorLog << __FILENAME__ << " The classifier has not been trained" << std::endl;
         return false;
     }
     
     //Make sure the dimensionality of the test data matches the input Vector's dimensions
     if( testData.getNumDimensions() != inputVectorDimensions ){
-        errorLog << "test(const ClassificationDataStream &testData) - The dimensionality of the test data (" + Util::toString(testData.getNumDimensions()) + ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
+        errorLog << __FILENAME__ << " The dimensionality of the test data (" + Util::toString(testData.getNumDimensions()) + ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
         return false;
     }
     
     if( !getIsClassifierSet() ){
-        errorLog << "test(const ClassificationDataStream &testData) - The classifier has not been set" << std::endl;
+        errorLog << __FILENAME__ << " The classifier has not been set" << std::endl;
         return false;
     }
     
@@ -1275,8 +1271,8 @@ bool GestureRecognitionPipeline::test(const ClassificationDataStream &testData){
         VectorFloat testSample = sample.getSample();
             
         //Pass the test sample through the pipeline
-        if( !predict( testSample ) ){
-            errorLog << "test(const ClassificationDataStream &testData) - Prediction Failed! " << classifier->getLastErrorMessage() << std::endl;
+        if( !predict_( testSample ) ){
+            errorLog << __FILENAME__ << " Prediction Failed! " << classifier->getLastErrorMessage() << std::endl;
             return false;
         }
         
@@ -1326,23 +1322,23 @@ bool GestureRecognitionPipeline::test(const RegressionData &testData){
     
     //Make sure the classification model has been trained
     if( !trained ){
-        errorLog << "test(const RegressionData &testData) - Regressifier is not trained" << std::endl;
+        errorLog << __FILENAME__ << " Regressifier is not trained" << std::endl;
         return false;
     }
     
     //Make sure the dimensionality of the test data matches the input Vector's dimensions
     if( testData.getNumInputDimensions() != inputVectorDimensions ){
-        errorLog << "test(const RegressionData &testData) - The dimensionality of the test data (" << testData.getNumInputDimensions() << ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
+        errorLog << __FILENAME__ << " The dimensionality of the test data (" << testData.getNumInputDimensions() << ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
         return false;
     }
     
     if( !getIsRegressifierSet() ){
-        errorLog << "test(const RegressionData &testData) - The regressifier has not been set" << std::endl;
+        errorLog << __FILENAME__ << " The regressifier has not been set" << std::endl;
         return false;
     }
     
     if( regressifier->getNumOutputDimensions() != testData.getNumTargetDimensions() ){
-        errorLog << "test(const RegressionData &testData) - The size of the output of the regressifier (" << regressifier->getNumOutputDimensions() << ") does not match that of the size of the number of target dimensions (" << testData.getNumTargetDimensions() << ")" << std::endl;
+        errorLog << __FILENAME__ << " The size of the output of the regressifier (" << regressifier->getNumOutputDimensions() << ") does not match that of the size of the number of target dimensions (" << testData.getNumTargetDimensions() << ")" << std::endl;
         return false;
     }
     
@@ -1365,7 +1361,7 @@ bool GestureRecognitionPipeline::test(const RegressionData &testData){
         
         //Pass the test sample through the pipeline
         if( !map( inputVector ) ){
-            errorLog <<  "test(const RegressionData &testData) - Failed to map input Vector!" << std::endl;
+            errorLog << __FILENAME__ << " Failed to map input Vector!" << std::endl;
             return false;
         }
         
@@ -1393,17 +1389,17 @@ bool GestureRecognitionPipeline::test(const RegressionData &testData){
     return true;
 }
 
-bool GestureRecognitionPipeline::predict(const VectorFloat &inputVector){
+bool GestureRecognitionPipeline::predict_(VectorFloat &inputVector){
 	
 	//Make sure the classification model has been trained
     if( !trained ){
-        errorLog << "predict(const VectorFloat &inputVector) - The classifier has not been trained" << std::endl;
+        errorLog << __FILENAME__ << " The classifier has not been trained" << std::endl;
         return false;
     }
     
     //Make sure the dimensionality of the input Vector matches the inputVectorDimensions
     if( inputVector.size() != inputVectorDimensions ){
-        errorLog << "predict(const VectorFloat &inputVector) - The dimensionality of the input Vector (" << int(inputVector.size()) << ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
+        errorLog << __FILENAME__ << " The dimensionality of the input Vector (" << int(inputVector.size()) << ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
         return false;
     }
 
@@ -1419,26 +1415,26 @@ bool GestureRecognitionPipeline::predict(const VectorFloat &inputVector){
         return predict_clusterer( inputVector );
     }
 
-    errorLog << "predict(const VectorFloat &inputVector) - Neither a classifier, regressifer or clusterer is set" << std::endl;
+    errorLog << __FILENAME__ << " Neither a classifier, regressifer or clusterer is set" << std::endl;
 	return false;
 }
 
-bool GestureRecognitionPipeline::predict(const MatrixFloat &input){
+bool GestureRecognitionPipeline::predict_(MatrixFloat &input){
 	
 	//Make sure the classification model has been trained
     if( !trained ){
-        errorLog << "predict(const MatrixFloat &inputMatrix) - The classifier has not been trained!" << std::endl;
+        errorLog << __FILENAME__ << " The classifier has not been trained!" << std::endl;
         return false;
     }
 
     //Make sure the dimensionality of the input matrix matches the inputVectorDimensions
     if( input.getNumCols() < inputVectorDimensions ){ // CDF
-        errorLog << "predict_timeseries(const MatrixFloat &inputMatrix) - The dimensionality of the input matrix (" << input.getNumCols() << ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
+        errorLog << __FILENAME__ << " The dimensionality of the input matrix (" << input.getNumCols() << ") does not match that of the input Vector dimensions of the pipeline (" << inputVectorDimensions << ")" << std::endl;
         return false;
     }
 
     if( !getIsClassifierSet() ){
-        errorLog << "predict_timeseries(const MatrixFloat &inputMatrix) - A classifier has not been set" << std::endl;
+        errorLog << __FILENAME__ << " A classifier has not been set" << std::endl;
         return false;
     }
 
@@ -1498,18 +1494,18 @@ bool GestureRecognitionPipeline::predict(const MatrixFloat &input){
             switch( inputType ){
                 case DATA_TYPE_VECTOR:
                     if( !featureExtractionModules[ moduleIndex ]->computeFeatures( *static_cast< const VectorFloat* >( feInput ) ) ){
-                        errorLog << "predict(const MatrixFloat &inputMatrix) - Failed to PreProcess Input Matrix. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
+                        errorLog << __FILENAME__ << " Failed to PreProcess Input Matrix. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
                         return false;
                     }
                 break;
                 case DATA_TYPE_MATRIX:
                     if( !featureExtractionModules[ moduleIndex ]->computeFeatures( *static_cast< const MatrixFloat* >( feInput ) ) ){
-                        errorLog << "predict(const MatrixFloat &inputMatrix) - Failed to PreProcess Input Matrix. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
+                        errorLog << __FILENAME__ << " Failed to PreProcess Input Matrix. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
                         return false;
                     }
                 break;
                 default:
-                    errorLog << "predict(const MatrixFloat &inputMatrix) - Failed to process data. Unknown output data type for FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
+                    errorLog << __FILENAME__ << " Failed to process data. Unknown output data type for FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
                     return false;
                 break;
             }
@@ -1523,7 +1519,7 @@ bool GestureRecognitionPipeline::predict(const MatrixFloat &input){
                     feOutput = static_cast< const void* >( &featureExtractionModules[ moduleIndex ]->getFeatureMatrix() );
                 break;
                 default:
-                    errorLog << "predict(const MatrixFloat &inputMatrix) - Failed to process data. Unknown output data type for FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
+                    errorLog << __FILENAME__ << " Failed to process data. Unknown output data type for FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
                     return false;
                 break;
             }
@@ -1549,7 +1545,7 @@ bool GestureRecognitionPipeline::predict(const MatrixFloat &input){
         case DATA_TYPE_VECTOR:
             //infoLog << "DATA_TYPE_VECTOR classifier" << std::endl;
             if( !classifier->predict_( *(VectorFloat*)data ) ){
-                errorLog <<"predict_timeseries(const MatrixFloat &inputMatrix) - Prediction Failed! " << classifier->getLastErrorMessage() << std::endl;
+                errorLog << __FILENAME__ << " Prediction Failed! " << classifier->getLastErrorMessage() << std::endl;
                 return false;
             }
         break;
@@ -1557,12 +1553,12 @@ bool GestureRecognitionPipeline::predict(const MatrixFloat &input){
             //infoLog << "DATA_TYPE_MATRIX classifier" << std::endl;
             //if( !classifier->predict_( *(MatrixFloat*)data ) ){
             if( !classifier->predict_( *enabledData )){
-                errorLog <<"predict_timeseries(const MatrixFloat &inputMatrix) - Prediction Failed! " << classifier->getLastErrorMessage() << std::endl;
+                errorLog << __FILENAME__ << " Prediction Failed! " << classifier->getLastErrorMessage() << std::endl;
                 return false;
             }
         break;
         default:
-            errorLog << "predict(const MatrixFloat &inputMatrix) - Failed to run prediction. Unknown data type!" << std::endl;
+            errorLog << __FILENAME__ << " Failed to run prediction. Unknown data type!" << std::endl;
             return false;
         break;
     }
@@ -1633,7 +1629,7 @@ bool GestureRecognitionPipeline::predict(const MatrixFloat &input){
 	return true;
 }
 
-bool GestureRecognitionPipeline::map(const VectorFloat &inputVector){
+bool GestureRecognitionPipeline::map_(VectorFloat &inputVector){
 	return predict_regressifier( inputVector );
 }
 
@@ -1647,7 +1643,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     if( contextModules[ START_OF_PIPELINE ].size() > 0 ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ START_OF_PIPELINE ].size(); moduleIndex++){
             if( !contextModules[ START_OF_PIPELINE ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_classifier(const VectorFloat &inputVector) - Context Module Failed at START_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at START_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ START_OF_PIPELINE ][moduleIndex]->getOK() ){
@@ -1661,7 +1657,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     if( getIsPreProcessingSet() ){
         for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
             if( !preProcessingModules[moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_classifier(const VectorFloat &inputVector) - Failed to PreProcess Input Vector. PreProcessingModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed to PreProcess Input Vector. PreProcessingModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             inputVector = preProcessingModules[moduleIndex]->getProcessedData();
@@ -1673,7 +1669,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     if( contextModules[ AFTER_PREPROCESSING ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_PREPROCESSING ].size(); moduleIndex++){
             if( !contextModules[ AFTER_PREPROCESSING ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_classifier(VectorFloat inputVector) - Context Module Failed at AFTER_PREPROCESSING. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_PREPROCESSING. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_PREPROCESSING ][moduleIndex]->getOK() ){
@@ -1688,7 +1684,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     if( getIsFeatureExtractionSet() ){
         for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.size(); moduleIndex++){
             if( !featureExtractionModules[moduleIndex]->computeFeatures( inputVector ) ){
-                errorLog << "predict_classifier(VectorFloat inputVector) - Failed to compute features from data. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed to compute features from data. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             inputVector = featureExtractionModules[moduleIndex]->getFeatureVector();
@@ -1700,7 +1696,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     if( contextModules[ AFTER_FEATURE_EXTRACTION ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_FEATURE_EXTRACTION ].size(); moduleIndex++){
             if( !contextModules[ AFTER_FEATURE_EXTRACTION ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_classifier(VectorFloat inputVector) - Context Module Failed at AFTER_FEATURE_EXTRACTION. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_FEATURE_EXTRACTION. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_FEATURE_EXTRACTION ][moduleIndex]->getOK() ){
@@ -1712,8 +1708,8 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     }
     
     //Perform the classification
-    if( !classifier->predict(inputVector) ){
-        errorLog << "predict_classifier(VectorFloat inputVector) - Prediction Failed! " << classifier->getLastErrorMessage() << std::endl;
+    if( !classifier->predict_(inputVector) ){
+        errorLog << __FILENAME__ << " Prediction Failed! " << classifier->getLastErrorMessage() << std::endl;
         return false;
     }
     predictedClassLabel = classifier->getPredictedClassLabel();
@@ -1722,7 +1718,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     if( contextModules[ AFTER_CLASSIFIER ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_CLASSIFIER ].size(); moduleIndex++){
             if( !contextModules[ AFTER_CLASSIFIER ][moduleIndex]->process( VectorFloat(1,predictedClassLabel) ) ){
-                errorLog << "predict_classifier(VectorFloat inputVector) - Context Module Failed at AFTER_CLASSIFIER. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_CLASSIFIER. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_CLASSIFIER ][moduleIndex]->getOK() ){
@@ -1738,7 +1734,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     if( getIsPostProcessingSet() ){
         
         if( pipelineMode != CLASSIFICATION_MODE){
-            errorLog << "predict_classifier(VectorFloat inputVector) - Pipeline Mode Is Not in CLASSIFICATION_MODE!" << std::endl;
+            errorLog << __FILENAME__ << " Pipeline Mode Is Not in CLASSIFICATION_MODE!" << std::endl;
             return false;
         }
         
@@ -1753,13 +1749,13 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
                 
                 //Verify that the input size is OK
                 if( data.size() != postProcessingModules[moduleIndex]->getNumInputDimensions() ){
-                    errorLog << "predict_classifier(VectorFloat inputVector) - The size of the data Vector (" << int(data.size()) << ") does not match that of the postProcessingModule (" << postProcessingModules[moduleIndex]->getNumInputDimensions() << ") at the moduleIndex: " << moduleIndex << std::endl;
+                    errorLog << __FILENAME__ << " The size of the data Vector (" << int(data.size()) << ") does not match that of the postProcessingModule (" << postProcessingModules[moduleIndex]->getNumInputDimensions() << ") at the moduleIndex: " << moduleIndex << std::endl;
                     return false;
                 }
                 
                 //Postprocess the data
                 if( !postProcessingModules[moduleIndex]->process( data ) ){
-                    errorLog << "predict_classifier(VectorFloat inputVector) - Failed to post process data. PostProcessing moduleIndex: " << moduleIndex << std::endl;
+                    errorLog << __FILENAME__ << " Failed to post process data. PostProcessing moduleIndex: " << moduleIndex << std::endl;
                     return false;
                 }
                 
@@ -1774,7 +1770,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
                 
                 //Verify that the output size is OK
                 if( data.size() != 1 ){
-                    errorLog << "predict_classifier(VectorFloat inputVector) - The size of the processed data Vector (" << int(data.size()) << ") from postProcessingModule at the moduleIndex: " << moduleIndex << " is not equal to 1 even though it is in OutputModePredictedClassLabel!" << std::endl;
+                    errorLog << __FILENAME__ << " The size of the processed data Vector (" << int(data.size()) << ") from postProcessingModule at the moduleIndex: " << moduleIndex << " is not equal to 1 even though it is in OutputModePredictedClassLabel!" << std::endl;
                     return false;
                 }
                 
@@ -1790,7 +1786,7 @@ bool GestureRecognitionPipeline::predict_classifier(const VectorFloat &input){
     if( contextModules[ END_OF_PIPELINE ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ END_OF_PIPELINE ].size(); moduleIndex++){
             if( !contextModules[ END_OF_PIPELINE ][moduleIndex]->process( VectorFloat(1,predictedClassLabel) ) ){
-                errorLog << "predict_classifier(VectorFloat inputVector) - Context Module Failed at END_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at END_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ END_OF_PIPELINE ][moduleIndex]->getOK() ){
@@ -1813,7 +1809,7 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     if( contextModules[ START_OF_PIPELINE ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ START_OF_PIPELINE ].size(); moduleIndex++){
             if( !contextModules[ START_OF_PIPELINE ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - Context Module Failed at START_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at START_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ START_OF_PIPELINE ][moduleIndex]->getOK() ){
@@ -1827,7 +1823,7 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     if( getIsPreProcessingSet() ){
         for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
             if( !preProcessingModules[moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - Failed to PreProcess Input Vector. PreProcessingModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed to PreProcess Input Vector. PreProcessingModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             inputVector = preProcessingModules[moduleIndex]->getProcessedData();
@@ -1839,7 +1835,7 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     if( contextModules[ AFTER_PREPROCESSING ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_PREPROCESSING ].size(); moduleIndex++){
             if( !contextModules[ AFTER_PREPROCESSING ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - Context Module Failed at AFTER_PREPROCESSING. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_PREPROCESSING. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_PREPROCESSING ][moduleIndex]->getOK() ){
@@ -1854,7 +1850,7 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     if( getIsFeatureExtractionSet() ){
         for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.size(); moduleIndex++){
             if( !featureExtractionModules[moduleIndex]->computeFeatures( inputVector ) ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - Failed to compute features from data. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed to compute features from data. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             inputVector = featureExtractionModules[moduleIndex]->getFeatureVector();
@@ -1866,7 +1862,7 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     if( contextModules[ AFTER_FEATURE_EXTRACTION ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_FEATURE_EXTRACTION ].size(); moduleIndex++){
             if( !contextModules[ AFTER_FEATURE_EXTRACTION ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - Context Module Failed at AFTER_FEATURE_EXTRACTION. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_FEATURE_EXTRACTION. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_FEATURE_EXTRACTION ][moduleIndex]->getOK() ){
@@ -1878,8 +1874,8 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     }
     
     //Perform the regression
-    if( !regressifier->predict(inputVector) ){
-        errorLog << "predict_regressifier(VectorFloat inputVector) - Prediction Failed! " << regressifier->getLastErrorMessage() << std::endl;
+    if( !regressifier->predict_(inputVector) ){
+        errorLog << __FILENAME__ << " Prediction Failed! " << regressifier->getLastErrorMessage() << std::endl;
         return false;
     }
     regressionData = regressifier->getRegressionData();
@@ -1888,7 +1884,7 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     if( contextModules[ AFTER_CLASSIFIER ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_CLASSIFIER ].size(); moduleIndex++){
             if( !contextModules[ AFTER_CLASSIFIER ][moduleIndex]->process( regressionData ) ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - Context Module Failed at AFTER_CLASSIFIER. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_CLASSIFIER. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_CLASSIFIER ][moduleIndex]->getOK() ){
@@ -1904,18 +1900,18 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     if( getIsPostProcessingSet() ){
         
         if( pipelineMode != REGRESSION_MODE ){
-            errorLog << "predict_regressifier(VectorFloat inputVector) - Pipeline Mode Is Not In RegressionMode!" << std::endl;
+            errorLog << __FILENAME__ << " Pipeline Mode Is Not In RegressionMode!" << std::endl;
             return false;
         }
           
         for(UINT moduleIndex=0; moduleIndex<postProcessingModules.size(); moduleIndex++){
             if( regressionData.size() != postProcessingModules[moduleIndex]->getNumInputDimensions() ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - The size of the regression Vector (" << int(regressionData.size()) << ") does not match that of the postProcessingModule (" << postProcessingModules[moduleIndex]->getNumInputDimensions() << ") at the moduleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " The size of the regression Vector (" << int(regressionData.size()) << ") does not match that of the postProcessingModule (" << postProcessingModules[moduleIndex]->getNumInputDimensions() << ") at the moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             
             if( !postProcessingModules[moduleIndex]->process( regressionData ) ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - Failed to post process data. PostProcessing moduleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed to post process data. PostProcessing moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             regressionData = postProcessingModules[moduleIndex]->getProcessedData();        
@@ -1928,7 +1924,7 @@ bool GestureRecognitionPipeline::predict_regressifier(const VectorFloat &input){
     if( contextModules[ END_OF_PIPELINE ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ END_OF_PIPELINE ].size(); moduleIndex++){
             if( !contextModules[ END_OF_PIPELINE ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_regressifier(VectorFloat inputVector) - Context Module Failed at END_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at END_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ END_OF_PIPELINE ][moduleIndex]->getOK() ){
@@ -1952,7 +1948,7 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     if( contextModules[ START_OF_PIPELINE ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ START_OF_PIPELINE ].size(); moduleIndex++){
             if( !contextModules[ START_OF_PIPELINE ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_clusterer(VectorFloat inputVector) - Context Module Failed at START_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at START_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ START_OF_PIPELINE ][moduleIndex]->getOK() ){
@@ -1966,7 +1962,7 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     if( getIsPreProcessingSet() ){
         for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
             if( !preProcessingModules[moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_clusterer(VectorFloat inputVector) - Failed to PreProcess Input Vector. PreProcessingModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed to PreProcess Input Vector. PreProcessingModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             inputVector = preProcessingModules[moduleIndex]->getProcessedData();
@@ -1978,7 +1974,7 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     if( contextModules[ AFTER_PREPROCESSING ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_PREPROCESSING ].size(); moduleIndex++){
             if( !contextModules[ AFTER_PREPROCESSING ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_clusterer(VectorFloat inputVector) - Context Module Failed at AFTER_PREPROCESSING. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_PREPROCESSING. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_PREPROCESSING ][moduleIndex]->getOK() ){
@@ -1993,7 +1989,7 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     if( getIsFeatureExtractionSet() ){
         for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.size(); moduleIndex++){
             if( !featureExtractionModules[moduleIndex]->computeFeatures( inputVector ) ){
-                errorLog << "predict_clusterer(VectorFloat inputVector) - Failed to compute features from data. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed to compute features from data. FeatureExtractionModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             inputVector = featureExtractionModules[moduleIndex]->getFeatureVector();
@@ -2005,7 +2001,7 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     if( contextModules[ AFTER_FEATURE_EXTRACTION ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_FEATURE_EXTRACTION ].size(); moduleIndex++){
             if( !contextModules[ AFTER_FEATURE_EXTRACTION ][moduleIndex]->process( inputVector ) ){
-                errorLog << "predict_clusterer(VectorFloat inputVector) - Context Module Failed at AFTER_FEATURE_EXTRACTION. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_FEATURE_EXTRACTION. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_FEATURE_EXTRACTION ][moduleIndex]->getOK() ){
@@ -2017,8 +2013,8 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     }
     
     //Perform the classification
-    if( !clusterer->predict(inputVector) ){
-        errorLog << "predict_clusterer(VectorFloat inputVector) - Prediction Failed! " << clusterer->getLastErrorMessage() << std::endl;
+    if( !clusterer->predict_(inputVector) ){
+        errorLog << __FILENAME__ << " Prediction Failed! " << clusterer->getLastErrorMessage() << std::endl;
         return false;
     }
     predictedClusterLabel = clusterer->getPredictedClusterLabel();
@@ -2027,7 +2023,7 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     if( contextModules[ AFTER_CLASSIFIER ].size() ){
         for(UINT moduleIndex=0; moduleIndex<contextModules[ AFTER_CLASSIFIER ].size(); moduleIndex++){
             if( !contextModules[ AFTER_CLASSIFIER ][moduleIndex]->process( VectorFloat(1,predictedClusterLabel) ) ){
-                errorLog << "predict_clusterer(VectorFloat inputVector) - Context Module Failed at AFTER_CLASSIFIER. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at AFTER_CLASSIFIER. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ AFTER_CLASSIFIER ][moduleIndex]->getOK() ){
@@ -2043,7 +2039,7 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     if( getIsPostProcessingSet() ){
         
         if( pipelineMode != CLASSIFICATION_MODE){
-            errorLog << "predict_clusterer(VectorFloat inputVector) - Pipeline Mode Is Not in CLASSIFICATION_MODE!" << std::endl;
+            errorLog << __FILENAME__ << " Pipeline Mode Is Not in CLASSIFICATION_MODE!" << std::endl;
             return false;
         }
         
@@ -2057,14 +2053,14 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
                 data[0] = predictedClusterLabel;
                 
                 //Verify that the input size is OK
-                if( data.size() != postProcessingModules[moduleIndex]->getNumInputDimensions() ){
-                    errorLog << "predict_clusterer(VectorFloat inputVector) - The size of the data Vector (" << int(data.size()) << ") does not match that of the postProcessingModule (" << postProcessingModules[moduleIndex]->getNumInputDimensions() << ") at the moduleIndex: " << moduleIndex << std::endl;
+                if( data.getSize() != postProcessingModules[moduleIndex]->getNumInputDimensions() ){
+                    errorLog << __FILENAME__ << " The size of the data Vector (" << int(data.size()) << ") does not match that of the postProcessingModule (" << postProcessingModules[moduleIndex]->getNumInputDimensions() << ") at the moduleIndex: " << moduleIndex << std::endl;
                     return false;
                 }
                 
                 //Postprocess the data
                 if( !postProcessingModules[moduleIndex]->process( data ) ){
-                    errorLog << "predict_clusterer(VectorFloat inputVector) - Failed to post process data. PostProcessing moduleIndex: " << moduleIndex << std::endl;
+                    errorLog << __FILENAME__ << " Failed to post process data. PostProcessing moduleIndex: " << moduleIndex << std::endl;
                     return false;
                 }
                 
@@ -2078,8 +2074,8 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
                 data = postProcessingModules[moduleIndex]->getProcessedData();
                 
                 //Verify that the output size is OK
-                if( data.size() != 1 ){
-                    errorLog << "predict_clusterer(VectorFloat inputVector) - The size of the processed data Vector (" << int(data.size()) << ") from postProcessingModule at the moduleIndex: " << moduleIndex << " is not equal to 1 even though it is in OutputModePredictedClassLabel!" << std::endl;
+                if( data.getSize() != 1 ){
+                    errorLog << __FILENAME__ << " The size of the processed data Vector (" << int(data.getSize()) << ") from postProcessingModule at the moduleIndex: " << moduleIndex << " is not equal to 1 even though it is in OutputModePredictedClassLabel!" << std::endl;
                     return false;
                 }
                 
@@ -2092,10 +2088,10 @@ bool GestureRecognitionPipeline::predict_clusterer(const VectorFloat &input){
     
     //Update the context module
     predictionModuleIndex = END_OF_PIPELINE;
-    if( contextModules[ END_OF_PIPELINE ].size() ){
-        for(UINT moduleIndex=0; moduleIndex<contextModules[ END_OF_PIPELINE ].size(); moduleIndex++){
+    if( contextModules[ END_OF_PIPELINE ].getSize() ){
+        for(UINT moduleIndex=0; moduleIndex<contextModules[ END_OF_PIPELINE ].getSize(); moduleIndex++){
             if( !contextModules[ END_OF_PIPELINE ][moduleIndex]->process( VectorFloat(1,predictedClassLabel) ) ){
-                errorLog << "predict_clusterer(VectorFloat inputVector) - Context Module Failed at END_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Context Module Failed at END_OF_PIPELINE. ModuleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             if( !contextModules[ END_OF_PIPELINE ][moduleIndex]->getOK() ){
@@ -2113,9 +2109,9 @@ bool GestureRecognitionPipeline::reset(){
     
     //Reset any pre processing
     if( getIsPreProcessingSet() ){
-        for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
+        for(UINT moduleIndex=0; moduleIndex<preProcessingModules.getSize(); moduleIndex++){
             if( !preProcessingModules[ moduleIndex ]->reset() ){
-                errorLog << "Failed To Reset PreProcessingModule " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed To Reset PreProcessingModule " << moduleIndex << std::endl;
                 return false;
             }
         }
@@ -2123,9 +2119,9 @@ bool GestureRecognitionPipeline::reset(){
     
     //Reset any feature extraction
     if( getIsFeatureExtractionSet() ){
-        for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.size(); moduleIndex++){
+        for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.getSize(); moduleIndex++){
             if( !featureExtractionModules[ moduleIndex ]->reset() ){
-                errorLog << "Failed To Reset FeatureExtractionModule " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed To Reset FeatureExtractionModule " << moduleIndex << std::endl;
                 return false;
             }
         }
@@ -2134,7 +2130,7 @@ bool GestureRecognitionPipeline::reset(){
     //Reset the classifier
     if( getIsClassifierSet() ){
         if( !classifier->reset() ){
-            errorLog << "Failed To Reset Classifier! " << classifier->getLastErrorMessage() << std::endl;
+            errorLog << __FILENAME__ << " Failed To Reset Classifier! " << classifier->getLastErrorMessage() << std::endl;
             return false;
         }
     }
@@ -2142,7 +2138,7 @@ bool GestureRecognitionPipeline::reset(){
     //Reset the regressiier
     if( getIsRegressifierSet() ){
         if( !regressifier->reset() ){
-            errorLog << "Failed To Reset Regressifier! " << regressifier->getLastErrorMessage() << std::endl;
+            errorLog << __FILENAME__ << " Failed To Reset Regressifier! " << regressifier->getLastErrorMessage() << std::endl;
             return false;
         }
     }
@@ -2150,16 +2146,16 @@ bool GestureRecognitionPipeline::reset(){
     //Reset the clusterer
     if( getIsClustererSet() ){
         if( !clusterer->reset() ){
-            errorLog << "Failed To Reset clusterer! " << clusterer->getLastErrorMessage() << std::endl;
+            errorLog << __FILENAME__ << " Failed To Reset clusterer! " << clusterer->getLastErrorMessage() << std::endl;
             return false;
         }
     }
     
     //Reset any post processing
     if( getIsPostProcessingSet() ){
-        for(UINT moduleIndex=0; moduleIndex<postProcessingModules.size(); moduleIndex++){
+        for(UINT moduleIndex=0; moduleIndex<postProcessingModules.getSize(); moduleIndex++){
             if( !postProcessingModules[ moduleIndex ]->reset() ){
-                errorLog << "Failed To Reset PostProcessingModule " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed To Reset PostProcessingModule " << moduleIndex << std::endl;
                 return false;
             }
         }
@@ -2236,7 +2232,7 @@ bool GestureRecognitionPipeline::savePipelineToFile(const std::string &filename)
 bool GestureRecognitionPipeline::save(const std::string &filename) const {
     
     if( !initialized ){
-        errorLog << "Failed to write pipeline to file as the pipeline has not been initialized yet!" << std::endl;
+        errorLog << __FILENAME__ << " Failed to write pipeline to file as the pipeline has not been initialized yet!" << std::endl;
         return false;
     }
     
@@ -2245,7 +2241,7 @@ bool GestureRecognitionPipeline::save(const std::string &filename) const {
     file.open(filename.c_str(), std::iostream::out );
     
     if( !file.is_open() ){
-        errorLog << "Failed to open file with filename: " << filename << std::endl;
+        errorLog << __FILENAME__ << " Failed to open file with filename: " << filename << std::endl;
         return false;
     }
     
@@ -2261,13 +2257,13 @@ bool GestureRecognitionPipeline::save(const std::string &filename) const {
     //Write the module datatype names
     file << "PreProcessingModuleDatatypes:";
     for(UINT i=0; i<getNumPreProcessingModules(); i++){
-        file << "\t" << preProcessingModules[i]->getPreProcessingType();
+        file << "\t" << preProcessingModules[i]->getId();
     }
     file << std::endl;
     
     file << "FeatureExtractionModuleDatatypes:";
     for(UINT i=0; i<getNumFeatureExtractionModules(); i++){
-        file << "\t" << featureExtractionModules[i]->getFeatureExtractionType();
+        file << "\t" << featureExtractionModules[i]->getId();
     }
     file << std::endl;
     
@@ -2275,15 +2271,15 @@ bool GestureRecognitionPipeline::save(const std::string &filename) const {
         case PIPELINE_MODE_NOT_SET:
             break;
         case CLASSIFICATION_MODE:
-            if( getIsClassifierSet() ) file << "ClassificationModuleDatatype:\t" << classifier->getClassifierType() << std::endl;
+            if( getIsClassifierSet() ) file << "ClassificationModuleDatatype:\t" << classifier->getId() << std::endl;
             else file << "ClassificationModuleDatatype:\tCLASSIFIER_NOT_SET" << std::endl;
             break;
         case REGRESSION_MODE:
-            if( getIsRegressifierSet() ) file << "RegressionModuleDatatype:\t" << regressifier->getRegressifierType() << std::endl;
+            if( getIsRegressifierSet() ) file << "RegressionModuleDatatype:\t" << regressifier->getId() << std::endl;
             else file << "RegressionModuleDatatype:\tREGRESSIFIER_NOT_SET" << std::endl;
             break;
         case CLUSTER_MODE:
-            if( getIsClustererSet() ) file << "ClusterModuleDatatype:\t" << clusterer->getClustererType() << std::endl;
+            if( getIsClustererSet() ) file << "ClusterModuleDatatype:\t" << clusterer->getId() << std::endl;
             else file << "ClusterModuleDatatype:\tCLUSTERER_NOT_SET" << std::endl;
             break;
         default:
@@ -2292,7 +2288,7 @@ bool GestureRecognitionPipeline::save(const std::string &filename) const {
     
     file << "PostProcessingModuleDatatypes:";
     for(UINT i=0; i<getNumPostProcessingModules(); i++){
-        file << "\t" << postProcessingModules[i]->getPostProcessingType();
+        file << "\t" << postProcessingModules[i]->getId();
     }
     file << std::endl;
     
@@ -2380,7 +2376,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
     file.open(filename.c_str(), std::iostream::in );
     
     if( !file.is_open() ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to open file with filename: " << filename << std::endl;
+        errorLog << __FILENAME__ << " Failed to open file with filename: " << filename << std::endl;
         return false;
     }
 
@@ -2389,7 +2385,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Load the file header
 	file >> word;
 	if( word != "GRT_PIPELINE_FILE_V3.0" ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to read file header" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read file header" << std::endl;
 		file.close();
         return false;
 	}
@@ -2397,7 +2393,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Load the pipeline mode
 	file >> word;
 	if( word != "PipelineMode:" ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to read PipelineMode" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read PipelineMode" << std::endl;
 		file.close();
         return false;
 	}
@@ -2407,7 +2403,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Load the NumPreprocessingModules
 	file >> word;
 	if( word != "NumPreprocessingModules:" ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to read NumPreprocessingModules header" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read NumPreprocessingModules header" << std::endl;
 		file.close();
         return false;
 	}
@@ -2417,7 +2413,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Load the NumFeatureExtractionModules
 	file >> word;
 	if( word != "NumFeatureExtractionModules:" ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to read NumFeatureExtractionModules header" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read NumFeatureExtractionModules header" << std::endl;
 		file.close();
         return false;
 	}
@@ -2427,7 +2423,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Load the NumPostprocessingModules
 	file >> word;
 	if( word != "NumPostprocessingModules:" ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to read NumPostprocessingModules header" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read NumPostprocessingModules header" << std::endl;
 		file.close();
         return false;
 	}
@@ -2437,16 +2433,16 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Load if the pipeline has been trained
 	file >> word;
 	if( word != "Trained:" ){
-        	errorLog << "loadPipelineFromFile(string filename) - Failed to read Trained header" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read Trained header" << std::endl;
 		file.close();
-        	return false;
+        return false;
 	}
 	file >> trained;
     
 	//Load the info
 	file >> word;
 	if( word != "Info:" ){
-    	errorLog << "loadPipelineFromFile(string filename) - Failed to read Info header" << std::endl;
+    	errorLog << __FILENAME__ << " Failed to read Info header" << std::endl;
     	file.close();
     	return false;
 	}
@@ -2454,8 +2450,8 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Read the info text
 	file >> word;
 	while( word != "PreProcessingModuleDatatypes:" ){
-    	info += word;
-	file >> word;
+        info += word;
+        file >> word;
 	}
     
 	//Resize the modules
@@ -2465,15 +2461,15 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	
 	//Load the preprocessing module datatypes and initialize the modules
 	if( word != "PreProcessingModuleDatatypes:" ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to read PreProcessingModuleDatatypes" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read PreProcessingModuleDatatypes" << std::endl;
 		file.close();
         return false;
 	}
     for(UINT i=0; i<numPreprocessingModules; i++){
 		file >> word;
-		preProcessingModules[i] = PreProcessing::createInstanceFromString( word );
+		preProcessingModules[i] = PreProcessing::create( word );
 		if( preProcessingModules[i] == NULL ){
-            errorLog << "loadPipelineFromFile(string filename) - Failed to create preprocessing instance from string: " << word << std::endl;
+            errorLog << __FILENAME__ << " Failed to create preprocessing instance from string: " << word << std::endl;
 			file.close();
 	        return false;
 		}
@@ -2482,15 +2478,15 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Load the feature extraction module datatypes and initialize the modules
 	file >> word;
 	if( word != "FeatureExtractionModuleDatatypes:" ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to read FeatureExtractionModuleDatatypes" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read FeatureExtractionModuleDatatypes" << std::endl;
 		file.close();
         return false;
 	}
     for(UINT i=0; i<numFeatureExtractionModules; i++){
 		file >> word;
-		featureExtractionModules[i] = FeatureExtraction::createInstanceFromString( word );
+		featureExtractionModules[i] = FeatureExtraction::create( word );
 		if( featureExtractionModules[i] == NULL ){
-            errorLog << "loadPipelineFromFile(string filename) - Failed to create feature extraction instance from string: " << word << std::endl;
+            errorLog << __FILENAME__ << " Failed to create feature extraction instance from string: " << word << std::endl;
 			file.close();
 	        return false;
 		}
@@ -2502,7 +2498,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
         case CLASSIFICATION_MODE:
 			file >> word;
 			if( word != "ClassificationModuleDatatype:" ){
-                errorLog << "loadPipelineFromFile(string filename) - Failed to read ClassificationModuleDatatype" << std::endl;
+                errorLog << __FILENAME__ << " Failed to read ClassificationModuleDatatype" << std::endl;
 				file.close();
 		        return false;
 			}
@@ -2510,9 +2506,9 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 			file >> word;
 			
 			//Initialize the classifier
-			classifier = Classifier::createInstanceFromString( word );
+			classifier = Classifier::create( word );
 			if( classifier == NULL ){
-                errorLog << "loadPipelineFromFile(string filename) - Failed to create classifier instance from string: " << word << std::endl;
+                errorLog << __FILENAME__ << " Failed to create classifier instance from string: " << word << std::endl;
 				file.close();
 		        return false;
 			}
@@ -2520,7 +2516,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
         case REGRESSION_MODE:
 			file >> word;
 			if( word != "RegressionModuleDatatype:" ){
-                errorLog << "loadPipelineFromFile(string filename) - Failed to read RegressionModuleDatatype" << std::endl;
+                errorLog << __FILENAME__ << " Failed to read RegressionModuleDatatype" << std::endl;
 				file.close();
 		        return false;
 			}
@@ -2528,9 +2524,9 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 			file >> word;
 			
 			//Initialize the regressifier
-			regressifier = Regressifier::createInstanceFromString( word );
+			regressifier = Regressifier::create( word );
 			if( regressifier == NULL ){
-                errorLog << "loadPipelineFromFile(string filename) - Failed to create regressifier instance from string: " << word << std::endl;
+                errorLog << __FILENAME__ << " Failed to create regressifier instance from string: " << word << std::endl;
 				file.close();
 		        return false;
 			}
@@ -2538,7 +2534,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
         case CLUSTER_MODE:
             file >> word;
 			if( word != "ClusterModuleDatatype:" ){
-                errorLog << "loadPipelineFromFile(string filename) - Failed to read ClusterModuleDatatype" << std::endl;
+                errorLog << __FILENAME__ << " Failed to read ClusterModuleDatatype" << std::endl;
 				file.close();
 		        return false;
 			}
@@ -2546,9 +2542,9 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 			file >> word;
 			
 			//Initialize the clusterer
-			clusterer = Clusterer::createInstanceFromString( word );
+			clusterer = Clusterer::create( word );
 			if( clusterer == NULL ){
-                errorLog << "loadPipelineFromFile(string filename) - Failed to create clusterer instance from string: " << word << std::endl;
+                errorLog << __FILENAME__ << " Failed to create clusterer instance from string: " << word << std::endl;
 				file.close();
 		        return false;
 			}
@@ -2560,13 +2556,13 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 	//Load the post processing module datatypes and initialize the modules
 	file >> word;
 	if( word != "PostProcessingModuleDatatypes:" ){
-        errorLog << "loadPipelineFromFile(string filename) - Failed to read PostProcessingModuleDatatypes" << std::endl;
+        errorLog << __FILENAME__ << " Failed to read PostProcessingModuleDatatypes" << std::endl;
 		file.close();
 	    return false;
 	}
 	for(UINT i=0; i<numPostprocessingModules; i++){
 		file >> word;
-		postProcessingModules[i] = PostProcessing::createInstanceFromString( word );
+		postProcessingModules[i] = PostProcessing::create( word );
 	}
 	
 	//Load the preprocessing module data from the file
@@ -2574,7 +2570,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 		//Load the preprocessing module header
 		file >> word;
         if( !preProcessingModules[i]->load( file ) ){
-            errorLog << "Failed to load preprocessing module " << i << " settings from file!" << std::endl;
+            errorLog <<  __FILENAME__ << " Failed to load preprocessing module " << i << " settings from file!" << std::endl;
             file.close();
             return false;
         }
@@ -2585,7 +2581,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 		//Load the feature extraction module header
 		file >> word;
 	    if( !featureExtractionModules[i]->load( file ) ){
-            errorLog << "Failed to load feature extraction module " << i << " settings from file!" << std::endl;
+            errorLog <<  __FILENAME__ << " Failed to load feature extraction module " << i << " settings from file!" << std::endl;
 	        file.close();
 	        return false;
 	    }
@@ -2597,21 +2593,21 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
             break;
         case CLASSIFICATION_MODE:
                if( !classifier->load( file ) ){
-                   errorLog << "Failed to load classifier model from file!" << std::endl;
+                   errorLog <<  __FILENAME__ << " Failed to load classifier model from file!" << std::endl;
                    file.close();
                    return false;
                }
             break;
         case REGRESSION_MODE:
                if( !regressifier->load( file ) ){
-                   errorLog << "Failed to load regressifier model from file!" << std::endl;
+                   errorLog <<  __FILENAME__ << " Failed to load regressifier model from file!" << std::endl;
                    file.close();
                    return false;
                }
             break;
         case CLUSTER_MODE:
             if( !clusterer->load( file ) ){
-                errorLog << "Failed to load cluster model from file!" << std::endl;
+                errorLog <<  __FILENAME__ << " Failed to load cluster model from file!" << std::endl;
                 file.close();
                 return false;
             }
@@ -2625,7 +2621,7 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
 		//Load the post processing module header
 		file >> word;
         if( !postProcessingModules[i]->load( file ) ){
-            errorLog << "Failed to load post processing module " << i << " settings from file!" << std::endl;
+            errorLog <<  __FILENAME__ << " Failed to load post processing module " << i << " settings from file!" << std::endl;
             file.close();
             return false;
         }
@@ -2673,12 +2669,12 @@ bool GestureRecognitionPipeline::preProcessData(VectorFloat inputVector,bool com
         for(UINT moduleIndex=0; moduleIndex<preProcessingModules.getSize(); moduleIndex++){
             
             if( inputVector.getSize() != preProcessingModules[ moduleIndex ]->getNumInputDimensions() ){
-                errorLog << "preProcessData(VectorFloat inputVector) - The size of the input Vector (" << preProcessingModules[ moduleIndex ]->getNumInputDimensions() << ") does not match that of the PreProcessing Module at moduleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " The size of the input Vector (" << preProcessingModules[ moduleIndex ]->getNumInputDimensions() << ") does not match that of the PreProcessing Module at moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             
             if( !preProcessingModules[ moduleIndex ]->process( inputVector ) ){
-                errorLog << "preProcessData(VectorFloat inputVector) - Failed To PreProcess Input Vector. PreProcessing moduleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed To PreProcess Input Vector. PreProcessing moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             inputVector = preProcessingModules[ moduleIndex ]->getProcessedData();
@@ -2689,12 +2685,12 @@ bool GestureRecognitionPipeline::preProcessData(VectorFloat inputVector,bool com
     if( getIsFeatureExtractionSet() && computeFeatures ){
         for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.getSize(); moduleIndex++){
             if( inputVector.getSize() != featureExtractionModules[ moduleIndex ]->getNumInputDimensions() ){
-                errorLog << "FeatureExtraction(VectorFloat inputVector) - The size of the input Vector (" << featureExtractionModules[ moduleIndex ]->getNumInputDimensions() << ") does not match that of the FeatureExtraction Module at moduleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " The size of the input Vector (" << featureExtractionModules[ moduleIndex ]->getNumInputDimensions() << ") does not match that of the FeatureExtraction Module at moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             
             if( !featureExtractionModules[ moduleIndex ]->computeFeatures( inputVector ) ){
-                errorLog << "FeatureExtraction(VectorFloat inputVector) - Failed To Compute Features from Input Vector. FeatureExtraction moduleIndex: " << moduleIndex << std::endl;
+                errorLog << __FILENAME__ << " Failed To Compute Features from Input Vector. FeatureExtraction moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             inputVector = featureExtractionModules[ moduleIndex ]->getFeatureVector();
@@ -2707,10 +2703,6 @@ bool GestureRecognitionPipeline::preProcessData(VectorFloat inputVector,bool com
 /////////////////////////////// GETTERS ///////////////////////////////
 bool GestureRecognitionPipeline::getIsInitialized() const{ 
     return initialized; 
-}
-    
-bool GestureRecognitionPipeline::getTrained() const{ 
-    return trained;
 }
     
 bool GestureRecognitionPipeline::getIsPreProcessingSet() const{ 
@@ -2856,6 +2848,13 @@ Float GestureRecognitionPipeline::getMaximumLikelihood() const{
 Float GestureRecognitionPipeline::getPhase() const{
     if( getIsClassifierSet() ){
         return classifier->getPhase();
+    }
+    return 0;
+}
+
+Float GestureRecognitionPipeline::getTrainingSetAccuracy() const{
+    if( getIsClassifierSet() ){
+        return classifier->getTrainingSetAccuracy();
     }
     return 0;
 }
@@ -3040,7 +3039,7 @@ VectorFloat GestureRecognitionPipeline::getFeatureExtractionData(const UINT modu
             return featureExtractionModules[ moduleIndex ]->getFeatureVector(); 
         }
     }
-    warningLog << "getFeatureExtractionData(UINT moduleIndex) - Failed to get class labels!" << std::endl;
+    warningLog << __FILENAME__ << " Failed to get class labels!" << std::endl;
     return VectorFloat();
 }
     
@@ -3051,7 +3050,7 @@ Vector< UINT > GestureRecognitionPipeline::getClassLabels() const{
     if( getIsClustererSet() ){
         return clusterer->getClusterLabels();
     }
-    warningLog << "getClassLabels() - Failed to get class labels!" << std::endl;
+    warningLog << __FILENAME__ << " Failed to get class labels!" << std::endl;
     return Vector< UINT>(); 
 }
     
@@ -3067,7 +3066,7 @@ PreProcessing* GestureRecognitionPipeline::getPreProcessingModule(const UINT mod
     if( moduleIndex < preProcessingModules.getSize() ){
         return preProcessingModules[ moduleIndex ];
     }
-    warningLog << "getPreProcessingModule(const UINT moduleIndex) - Failed to get pre processing module!" << std::endl;
+    warningLog << __FILENAME__ << " Failed to get pre processing module!" << std::endl;
     return NULL;
 }
     
@@ -3075,7 +3074,7 @@ FeatureExtraction* GestureRecognitionPipeline::getFeatureExtractionModule(const 
     if( moduleIndex < featureExtractionModules.getSize() ){
         return featureExtractionModules[ moduleIndex ];
     }
-    warningLog << "getFeatureExtractionModule(const UINT moduleIndex) - Failed to get feature extraction module!" << std::endl;
+    warningLog << __FILENAME__ << " Failed to get feature extraction module!" << std::endl;
     return NULL;
 }
     
@@ -3095,7 +3094,7 @@ PostProcessing* GestureRecognitionPipeline::getPostProcessingModule(UINT moduleI
     if( moduleIndex < postProcessingModules.getSize() ){
         return postProcessingModules[ moduleIndex ];
     }
-    warningLog << "getPostProcessingModule(UINT moduleIndex) - Failed to get post processing module!" << std::endl;
+    warningLog << __FILENAME__ << "Failed to get post processing module!" << std::endl;
     return NULL;
 }
     
@@ -3105,7 +3104,7 @@ Context* GestureRecognitionPipeline::getContextModule(UINT contextLevel,UINT mod
             return contextModules[ contextLevel ][ moduleIndex ];
         }
     }
-    warningLog << "getContextModule(UINT contextLevel,UINT moduleIndex) - Failed to get context module!" << std::endl;
+    warningLog << __FILENAME__ << " Failed to get context module!" << std::endl;
     return NULL;
 }
     
@@ -3116,19 +3115,19 @@ Context* GestureRecognitionPipeline::getContextModule(UINT contextLevel,UINT mod
 bool GestureRecognitionPipeline::addPreProcessingModule(const PreProcessing &preProcessingModule,UINT insertIndex){
     
     //Validate the insertIndex is valid
-    if( insertIndex != INSERT_AT_END_INDEX && insertIndex > preProcessingModules.getSize() ){
-        errorLog << "addPreProcessingModule(const PreProcessing &preProcessingModule) - Invalid insertIndex value!" << std::endl;
+    if( insertIndex != INSERT_AT_END_INDEX && insertIndex >= preProcessingModules.getSize() ){
+        errorLog << __FILENAME__ << "Invalid insertIndex value!" << std::endl;
         return false;
     }
     
     //Create a new instance of the preProcessing and then clone the values across from the reference preProcessing
-    PreProcessing *newInstance = preProcessingModule.createNewInstance();
+    PreProcessing *newInstance = preProcessingModule.create();
     
     //Verify that the clone was successful
     if( !newInstance->deepCopyFrom( &preProcessingModule ) ){
         delete newInstance;
         newInstance = NULL;
-        errorLog << "addPreProcessingModule(const PreProcessing &preProcessingModule) - PreProcessing Module Not Set!" << std::endl;
+        errorLog << __FILENAME__ << " PreProcessing Module Not Set!" << std::endl;
         return false;
     }
     
@@ -3155,18 +3154,18 @@ bool GestureRecognitionPipeline::addFeatureExtractionModule(const FeatureExtract
     
     //Validate the insertIndex is valid
     if( insertIndex != INSERT_AT_END_INDEX && insertIndex >= featureExtractionModules.getSize() ){
-        errorLog << "addFeatureExtractionModule(const FeatureExtraction &featureExtractionModule) - Invalid insertIndex value!" << std::endl;
+        errorLog << __FILENAME__ << " Invalid insertIndex value!" << std::endl;
         return false;
     }
     
     //Create a new instance of the preProcessing and then clone the values across from the reference preProcessing
-    FeatureExtraction *newInstance = featureExtractionModule.createNewInstance();
+    FeatureExtraction *newInstance = featureExtractionModule.create();
     
     //Verify that the clone was successful
     if( !newInstance->deepCopyFrom( &featureExtractionModule ) ){
         delete newInstance;
         newInstance = NULL;
-        errorLog << "addFeatureExtractionModule(const FeatureExtraction &featureExtractionModule - FeatureExtraction Module Not Set!" << std::endl;
+        errorLog << __FILENAME__ << " FeatureExtraction Module Not Set!" << std::endl;
         return false;
     }
     
@@ -3197,10 +3196,10 @@ bool GestureRecognitionPipeline::setClassifier(const Classifier &classifier){
     deleteClusterer();
 
     //Create a new instance of the classifier and then clone the values across from the reference classifier
-    this->classifier = classifier.createNewInstance();
+    this->classifier = classifier.create( classifier.getId() );
     
     if( this->classifier == NULL ){
-        errorLog << "setClassifier(const Classifier classifier) - Classifier Module Not Set!" << std::endl;
+        errorLog << __FILENAME__ << " Classifier Module Not Set!" << std::endl;
         return false;
     }
     
@@ -3208,7 +3207,7 @@ bool GestureRecognitionPipeline::setClassifier(const Classifier &classifier){
     if( !this->classifier->deepCopyFrom( &classifier ) ){
         deleteClassifier();
         pipelineMode = PIPELINE_MODE_NOT_SET;
-        errorLog << "setClassifier(const Classifier classifier) - Classifier Module Not Set!" << std::endl;
+        errorLog << __FILENAME__ << " Classifier Module Not Set!" << std::endl;
         return false;
     }
     
@@ -3239,13 +3238,13 @@ bool GestureRecognitionPipeline::setRegressifier(const Regressifier &regressifie
     pipelineMode = REGRESSION_MODE;
     
     //Create a new instance of the regressifier and then clone the values across from the reference regressifier
-    this->regressifier = regressifier.createNewInstance();
+    this->regressifier = regressifier.create( regressifier.getId() );
     
     //Validate that the regressifier was cloned correctly
     if( !this->regressifier->deepCopyFrom( &regressifier ) ){
         deleteRegressifier();
         pipelineMode = PIPELINE_MODE_NOT_SET;
-        errorLog << "setRegressifier(const Regressifier &regressifier) - Regressifier Module Not Set!" << std::endl;
+        errorLog << __FILENAME__ << " Regressifier Module Not Set!" << std::endl;
         return false;
     }
     
@@ -3272,13 +3271,13 @@ bool GestureRecognitionPipeline::setClusterer(const Clusterer &clusterer){
     pipelineMode = CLUSTER_MODE;
     
     //Create a new instance of the clusterer and then clone the values across from the reference clusterer
-    this->clusterer = clusterer.createNewInstance();
+    this->clusterer = clusterer.create( clusterer.getId() );
     
     //Validate that the regressifier was cloned correctly
     if( !this->clusterer->deepCopyFrom( &clusterer ) ){
         deleteClusterer();
         pipelineMode = PIPELINE_MODE_NOT_SET;
-        errorLog << "setClusterer(const Clusterer &clusterer) - Clusterer Module Not Set!" << std::endl;
+        errorLog << __FILENAME__ << " Clusterer Module Not Set!" << std::endl;
         return false;
     }
     
@@ -3298,18 +3297,18 @@ bool GestureRecognitionPipeline::addPostProcessingModule(const PostProcessing &p
     
     //Validate the insertIndex is valid
     if( insertIndex != INSERT_AT_END_INDEX && insertIndex >= postProcessingModules.getSize() ){
-        errorLog << "addPostProcessingModule((const PostProcessing &postProcessingModule) - Invalid insertIndex value!" << std::endl;
+        errorLog << __FILENAME__ << " Invalid insertIndex value!" << std::endl;
         return false;
     }
     
     //Create a new instance of the preProcessing and then clone the values across from the reference preProcessing
-    PostProcessing *newInstance = postProcessingModule.createNewInstance();
+    PostProcessing *newInstance = postProcessingModule.create( postProcessingModule.getId() );
     
     //Verify that the clone was successful
     if( !newInstance->deepCopyFrom( &postProcessingModule ) ){
         delete newInstance;
         newInstance = NULL;
-        errorLog << "addPostProcessingModule(const PostProcessing &postProcessingModule) - PostProcessing Module Not Set!" << std::endl;
+        errorLog << __FILENAME__ << " PostProcessing Module Not Set!" << std::endl;
         return false;
     }
     
@@ -3335,24 +3334,24 @@ bool GestureRecognitionPipeline::addContextModule(const Context &contextModule,U
 	
 	//Validate the contextLevel is valid
     if( contextLevel >= contextModules.getSize() ){
-        errorLog << "addContextModule(...) - Invalid contextLevel value!" << std::endl;
+        errorLog << __FILENAME__ << " Invalid contextLevel value!" << std::endl;
         return false;
     }
 
 	//Validate the insertIndex is valid
     if( insertIndex != INSERT_AT_END_INDEX && insertIndex >= contextModules[contextLevel].getSize() ){
-        errorLog << "addContextModule(...) - Invalid insertIndex value!" << std::endl;
+        errorLog << __FILENAME__ << " Invalid insertIndex value!" << std::endl;
         return false;
     }
     
     //Create a new instance of the preProcessing and then clone the values across from the reference preProcessing
-    Context *newInstance = contextModule.createNewInstance();
+    Context *newInstance = contextModule.create( contextModule.getId() );
     
     //Verify that the clone was successful
     if( !newInstance->deepCopyFrom( &contextModule ) ){
         delete newInstance;
         newInstance = NULL;
-        errorLog << "addContextModule(...) - Context Module Not Set!" << std::endl;
+        errorLog << __FILENAME__ << " Context Module Not Set!" << std::endl;
         return false;
     }
     
@@ -3371,13 +3370,13 @@ bool GestureRecognitionPipeline::updateContextModule(bool value,UINT contextLeve
     
     //Validate the contextLevel is valid
     if( contextLevel >= contextModules.getSize() ){
-        errorLog << "updateContextModule(...) - Context Level is out of bounds!" << std::endl;
+        errorLog << __FILENAME__ << " Context Level is out of bounds!" << std::endl;
         return false;
     }
     
     //Validate the moduleIndex is valid
     if( moduleIndex >= contextModules[contextLevel].getSize() ){
-        errorLog << "updateContextModule(...) - Invalid contextLevel value!"  << std::endl;
+        errorLog << __FILENAME__ << " Invalid contextLevel value!"  << std::endl;
         return false;
     }
     
@@ -3391,7 +3390,7 @@ bool GestureRecognitionPipeline::removeAllPreProcessingModules(){
     
 bool GestureRecognitionPipeline::removePreProcessingModule(UINT moduleIndex){
     if( moduleIndex >= preProcessingModules.getSize() ){
-        errorLog << "removePreProcessingModule(UINT moduleIndex) - Invalid moduleIndex " << moduleIndex << ". The size of the preProcessingModules Vector is " << int(preProcessingModules.size()) << std::endl;
+        errorLog << __FILENAME__ << " Invalid moduleIndex " << moduleIndex << ". The size of the preProcessingModules Vector is " << int(preProcessingModules.size()) << std::endl;
         return false;
     }
     
@@ -3413,7 +3412,7 @@ bool GestureRecognitionPipeline::removeAllFeatureExtractionModules(){
         
 bool GestureRecognitionPipeline::removeFeatureExtractionModule(UINT moduleIndex){
     if( moduleIndex >= featureExtractionModules.getSize() ){
-        errorLog << "removeFeatureExtractionModule(UINT moduleIndex) - Invalid moduleIndex " << moduleIndex << ". The size of the featureExtractionModules Vector is " << int(featureExtractionModules.size()) << std::endl;
+        errorLog << __FILENAME__ << " Invalid moduleIndex " << moduleIndex << ". The size of the featureExtractionModules Vector is " << int(featureExtractionModules.size()) << std::endl;
         return false;
     }
     
@@ -3435,7 +3434,7 @@ bool GestureRecognitionPipeline::removeAllPostProcessingModules(){
 
 bool GestureRecognitionPipeline::removePostProcessingModule(UINT moduleIndex){
     if( moduleIndex >= postProcessingModules.size() ){
-        errorLog << "removePostProcessingModule(UINT moduleIndex) - Invalid moduleIndex " << moduleIndex << ". The size of the postProcessingModules Vector is " << int(postProcessingModules.size()) << std::endl;
+        errorLog << __FILENAME__ << " Invalid moduleIndex " << moduleIndex << ". The size of the postProcessingModules Vector is " << int(postProcessingModules.size()) << std::endl;
         return false;
     }
     
@@ -3452,12 +3451,12 @@ bool GestureRecognitionPipeline::removePostProcessingModule(UINT moduleIndex){
     
 bool GestureRecognitionPipeline::removeContextModule(UINT contextLevel,UINT moduleIndex){
     if( contextLevel >= NUM_CONTEXT_LEVELS ){
-        errorLog << "removeContextModule(UINT contextLevel,UINT moduleIndex) - Invalid moduleIndex " << moduleIndex << " is out of bounds!" << std::endl;
+        errorLog << __FILENAME__ << " Invalid moduleIndex " << moduleIndex << " is out of bounds!" << std::endl;
         return false;
     }
     
     if( moduleIndex >= contextModules[contextLevel].size() ){
-        errorLog << "removePostProcessingModule(UINT moduleIndex) - Invalid moduleIndex " << moduleIndex << ". The size of the contextModules Vector at context level " << " is " << int(contextModules[contextLevel].size()) << std::endl;
+        errorLog << __FILENAME__ << " Invalid moduleIndex " << moduleIndex << ". The size of the contextModules Vector at context level " << " is " << int(contextModules[contextLevel].size()) << std::endl;
         return false;
     }
     
@@ -3614,7 +3613,7 @@ bool GestureRecognitionPipeline::updateTestMetrics(const UINT classLabel,const U
     }
         
     if( !predictedClassLabelIndexFound && (nullRejectionEnabled == false || predictedClassLabel != GRT_DEFAULT_NULL_CLASS_LABEL) ){
-        errorLog << "Failed to find class label index for label: " << predictedClassLabel << std::endl;
+        errorLog << __FILENAME__ << " Failed to find class label index for label: " << predictedClassLabel << std::endl;
         return false;
     }
 
@@ -3736,13 +3735,13 @@ std::string GestureRecognitionPipeline::getModelAsString() const{
             break;
         case CLASSIFICATION_MODE:
             if( getIsClassifierSet() ){
-                model += "Classifier: " + classifier->getClassifierType() + "\n";
+                model += "Classifier: " + classifier->getId() + "\n";
                 model += classifier->getModelAsString();
             }
             break;
         case REGRESSION_MODE:
             if( getIsRegressifierSet() ){
-                model += "Regressifier: " + regressifier->getRegressifierType() + "\n";
+                model += "Regressifier: " + regressifier->getId() + "\n";
                 model += regressifier->getModelAsString();
             }
             break;
