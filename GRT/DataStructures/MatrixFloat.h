@@ -112,6 +112,12 @@ public:
         return rowVector;
     }
 
+    // CDF
+    void getRowWithoutAlloc(const unsigned int r, VectorFloat* rowVector) const {
+        for(unsigned int c=0; c<cols; c++)
+            (*rowVector)[c] = dataPtr[r*cols+c];
+    }
+
     /**
      Gets a column vector [rows 1] from the Matrix at the column index c
      

@@ -97,6 +97,7 @@ bool LowPassFilter::process(const VectorFloat &inputVector){
 bool LowPassFilter::reset(){
     if( initialized )
     {
+        //debugLog << "reset()" << std::endl;
         yy.clear();
         yy.resize(numInputDimensions,0);
         processedData.clear();
@@ -244,7 +245,9 @@ VectorFloat LowPassFilter::filter(const VectorFloat &x){
         errorLog << "filter(const VectorFloat &x) - The Number Of Input Dimensions (" << numInputDimensions << ") does not match the size of the input vector (" << x.size() << ")!" << std::endl;
         return VectorFloat();
     }
-    
+
+    //infoLog << "LowPassFilter::filter from vector size=" << x.size() << std::endl;
+
     //Exponential moving average filter: lastOutput*alpha + (1.0f-alpha)*input;
     for(UINT n=0; n<numInputDimensions; n++){
         processedData[n] = (yy[n] * filterFactor) + (x[n] * (1.0 - filterFactor)) * gain;

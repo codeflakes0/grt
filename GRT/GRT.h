@@ -100,6 +100,7 @@
 #include "PreProcessingModules/WeightedAverageFilter.h"
 
 //Include the FeatureExtraction Modules
+#include "FeatureExtractionModules/LocalPeakDetection/LocalPeakDetection.h"
 #include "FeatureExtractionModules/ZeroCrossingCounter/ZeroCrossingCounter.h"
 #include "FeatureExtractionModules/EnvelopeExtractor/EnvelopeExtractor.h"
 #include "FeatureExtractionModules/FFT/FFT.h"

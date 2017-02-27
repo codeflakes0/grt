@@ -279,7 +279,10 @@ SOURCES += main.cpp\
         bargraph.cpp \
         versioninfo.cpp \
         featureplot.cpp \
-        ../../GRT/Util/Log.cpp
+        ../../GRT/Util/Log.cpp \
+    ../../GRT/FeatureExtractionModules/EnvelopeExtractor/EnvelopeExtractor.cpp \
+    ../../GRT/FeatureExtractionModules/PeakDetection/LocalPeakDetection.cpp \
+    ../../GRT/FeatureExtractionModules/LocalPeakDetection/LocalPeakDetection.cpp
 
 HEADERS  += mainwindow.h \
         OSC/OSCMessage.h \
@@ -304,7 +307,10 @@ HEADERS  += mainwindow.h \
         timeseriesgraph.h \
         bargraph.h \
         versioninfo.h \
-        featureplot.h
+        featureplot.h \
+    ../../GRT/FeatureExtractionModules/EnvelopeExtractor/EnvelopeExtractor.h \
+    ../../GRT/FeatureExtractionModules/PeakDetection/PeakDetection.h \
+    ../../GRT/FeatureExtractionModules/LocalPeakDetection/LocalPeakDetection.h
 
 FORMS += mainwindow.ui \
     timeseriesgraph.ui \
