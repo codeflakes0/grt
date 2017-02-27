@@ -402,13 +402,14 @@ ClassificationSample ClassificationDataStream::getNextSample(){
     
 TimeSeriesClassificationData ClassificationDataStream::getAllTrainingExamplesWithClassLabel(const UINT classLabel) const {
 	TimeSeriesClassificationData classData(numDimensions);
+    const std::string& className = getClassNameForCorrespondingClassLabel(classLabel);
 	for(UINT x=0; x<timeSeriesPositionTracker.size(); x++){
 		if( timeSeriesPositionTracker[x].getClassLabel() == classLabel && timeSeriesPositionTracker[x].getEndIndex() > 0){
 			Matrix<Float> timeSeries;
 			for(UINT i=timeSeriesPositionTracker[x].getStartIndex(); i<timeSeriesPositionTracker[x].getEndIndex(); i++){
 				timeSeries.push_back( data[ i ].getSample() );
 			}
-			classData.addSample(classLabel,timeSeries);
+            classData.addSample(classLabel,timeSeries,className);
 		}
 	}
 	return classData;
@@ -449,7 +450,7 @@ UINT ClassificationDataStream::getClassLabelIndexValue(const UINT classLabel) co
     return 0;
 }
 
-std::string ClassificationDataStream::getClassNameForCorrespondingClassLabel(const UINT classLabel){
+const std::string& ClassificationDataStream::getClassNameForCorrespondingClassLabel(const UINT classLabel) const{
     
     for(UINT i=0; i<classTracker.size(); i++){
         if( classTracker[i].classLabel == classLabel ){
@@ -869,7 +870,10 @@ TimeSeriesClassificationData ClassificationDataStream::getTimeSeriesClassificati
     for(UINT i=0; i<numTimeseries; i++){
         addSample = includeNullGestures ? true : timeSeriesPositionTracker[i].getClassLabel() != GRT_DEFAULT_NULL_CLASS_LABEL;
         if( addSample ){
-            tsData.addSample(timeSeriesPositionTracker[i].getClassLabel(), getTimeSeriesData( timeSeriesPositionTracker[i] ) );
+            const std::string& className = getClassNameForCorrespondingClassLabel(timeSeriesPositionTracker[i].getClassLabel());
+            tsData.addSample(timeSeriesPositionTracker[i].getClassLabel(),
+                             getTimeSeriesData( timeSeriesPositionTracker[i] ),
+                             className);
         }
     }
     

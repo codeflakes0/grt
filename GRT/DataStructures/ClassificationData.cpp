@@ -130,7 +130,11 @@ bool ClassificationData::setAllowNullGestureClass(const bool allowNullGestureCla
     return true;
 }
 
-bool ClassificationData::addSample(const UINT classLabel,const VectorFloat &sample){
+bool ClassificationData::addSample(const UINT classLabel,const VectorFloat &sample) {
+    addSample(classLabel, sample, "NOT_SET");
+}
+
+bool ClassificationData::addSample(const UINT classLabel,const VectorFloat &sample,const std::string& className){
     
 	if( sample.getSize() != numDimensions ){
         if( totalNumSamples == 0 ){
@@ -157,7 +161,7 @@ bool ClassificationData::addSample(const UINT classLabel,const VectorFloat &samp
 	totalNumSamples++;
 
 	if( classTracker.getSize() == 0 ){
-		ClassTracker tracker(classLabel,1);
+        ClassTracker tracker(classLabel,1,className);
 		classTracker.push_back(tracker);
 	}else{
 		bool labelFound = false;
@@ -169,7 +173,7 @@ bool ClassificationData::addSample(const UINT classLabel,const VectorFloat &samp
 			}
 		}
 		if( !labelFound ){
-			ClassTracker tracker(classLabel,1);
+            ClassTracker tracker(classLabel,1,className);
 			classTracker.push_back(tracker);
 		}
 	}
@@ -1201,7 +1205,7 @@ UINT ClassificationData::getClassLabelIndexValue(const UINT classLabel) const{
     return 0;
 }
 
-std::string ClassificationData::getClassNameForCorrespondingClassLabel(const UINT classLabel) const{
+const std::string& ClassificationData::getClassNameForCorrespondingClassLabel(const UINT classLabel) const{
 
     for(UINT i=0; i<classTracker.getSize(); i++){
         if( classTracker[i].classLabel == classLabel ){

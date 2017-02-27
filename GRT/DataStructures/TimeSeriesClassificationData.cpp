@@ -143,7 +143,7 @@ bool TimeSeriesClassificationData::setAllowNullGestureClass(const bool allowNull
     return true;
 }
 
-bool TimeSeriesClassificationData::addSample(const UINT classLabel,const MatrixFloat &trainingSample){
+bool TimeSeriesClassificationData::addSample(const UINT classLabel,const MatrixFloat &trainingSample,const std::string& className){
 	
     if( trainingSample.getNumCols() != numDimensions ){
         errorLog << "addSample(UINT classLabel, MatrixFloat trainingSample) - The dimensionality of the training sample (" << trainingSample.getNumCols() << ") does not match that of the dataset (" << numDimensions << ")" << std::endl;
@@ -161,7 +161,7 @@ bool TimeSeriesClassificationData::addSample(const UINT classLabel,const MatrixF
     totalNumSamples++;
 
     if( classTracker.size() == 0 ){
-        ClassTracker tracker(classLabel,1);
+        ClassTracker tracker(classLabel,1,className);
         classTracker.push_back(tracker);
     }else{
         bool labelFound = false;
@@ -173,7 +173,7 @@ bool TimeSeriesClassificationData::addSample(const UINT classLabel,const MatrixF
             }
         }
         if( !labelFound ){
-            ClassTracker tracker(classLabel,1);
+            ClassTracker tracker(classLabel,1,className);
             classTracker.push_back(tracker);
         }
     }
@@ -689,7 +689,7 @@ bool TimeSeriesClassificationData::loadDatasetFromCSVFile(const std::string &fil
         //Check to see if a new timeseries has started, if so then add the previous time series as a sample and start recording the new time series
         if( sampleCounter != lastSampleCounter && i != 0 ){
             //Add the labelled sample to the dataset
-            if( !addSample(classLabel, timeseries) ){
+            if( !addSample(classLabel, timeseries, "NOT_SET") ){
                 warningLog << "loadDatasetFromCSVFile(const std::string &filename,const UINT classLabelColumnIndex) - Could not add sample " << i << " to the dataset!" << std::endl;
             }
             timeseries.clear();
@@ -712,7 +712,7 @@ bool TimeSeriesClassificationData::loadDatasetFromCSVFile(const std::string &fil
     }
 	if ( timeseries.getSize() > 0 )
         //Add the labelled sample to the dataset
-        if( !addSample(classLabel, timeseries) ){
+        if( !addSample(classLabel, timeseries, "NOT_SET") ){
             warningLog << "loadDatasetFromCSVFile(const std::string &filename,const UINT classLabelColumnIndex) - Could not add sample " << parser.getRowSize()-1 << " to the dataset!" << std::endl;
         }
     
@@ -830,10 +830,12 @@ TimeSeriesClassificationData TimeSeriesClassificationData::split(const UINT trai
 
             //Add the data to the training and test sets
             for(UINT i=0; i<numTrainingExamples; i++){
-                trainingSet.addSample( data[ classData[k][i] ].getClassLabel(), data[ classData[k][i] ].getData() );
+                const std::string className = getClassNameForCorrespondingClassLabel(data[ classData[k][i] ].getClassLabel());
+                trainingSet.addSample( data[ classData[k][i] ].getClassLabel(), data[ classData[k][i] ].getData(), className );
             }
             for(UINT i=numTrainingExamples; i<classData[k].size(); i++){
-                testSet.addSample( data[ classData[k][i] ].getClassLabel(), data[ classData[k][i] ].getData() );
+                const std::string className = getClassNameForCorrespondingClassLabel(data[ classData[k][i] ].getClassLabel());
+                testSet.addSample( data[ classData[k][i] ].getClassLabel(), data[ classData[k][i] ].getData(), className);
             }
         }
 
@@ -856,10 +858,12 @@ TimeSeriesClassificationData TimeSeriesClassificationData::split(const UINT trai
 
         //Add the data to the training and test sets
         for(UINT i=0; i<numTrainingExamples; i++){
-            trainingSet.addSample( data[ indexs[i] ].getClassLabel(), data[ indexs[i] ].getData() );
+            const std::string className = getClassNameForCorrespondingClassLabel(data[ indexs[i] ].getClassLabel());
+            trainingSet.addSample( data[ indexs[i] ].getClassLabel(), data[ indexs[i] ].getData(), className );
         }
         for(UINT i=numTrainingExamples; i<totalNumSamples; i++){
-            testSet.addSample( data[ indexs[i] ].getClassLabel(), data[ indexs[i] ].getData() );
+            const std::string className = getClassNameForCorrespondingClassLabel(data[ indexs[i] ].getClassLabel());
+            testSet.addSample( data[ indexs[i] ].getClassLabel(), data[ indexs[i] ].getData(), className );
         }
 
         //Overwrite the training data in this instance with the training data of the trainingSet
@@ -886,7 +890,8 @@ bool TimeSeriesClassificationData::merge(const TimeSeriesClassificationData &lab
 
     //Add the data from the labelledData to this instance
     for(UINT i=0; i<labelledData.getNumSamples(); i++){
-        addSample(labelledData[i].getClassLabel(), labelledData[i].getData());
+        const std::string className = getClassNameForCorrespondingClassLabel(labelledData[i].getClassLabel());
+        addSample(labelledData[i].getClassLabel(), labelledData[i].getData(), className);
     }
 
     //Set the class names from the dataset
@@ -1023,7 +1028,8 @@ TimeSeriesClassificationData TimeSeriesClassificationData::getTrainingFoldData(c
             for(UINT i=0; i<crossValidationIndexs[k].size(); i++){
 
                 index = crossValidationIndexs[k][i];
-                trainingData.addSample( data[ index ].getClassLabel(), data[ index ].getData() );
+                const std::string className = getClassNameForCorrespondingClassLabel(data[ index ].getClassLabel());
+                trainingData.addSample( data[ index ].getClassLabel(), data[ index ].getData(), className );
             }
         }
     }
@@ -1045,7 +1051,8 @@ TimeSeriesClassificationData TimeSeriesClassificationData::getTestFoldData(const
     for(UINT i=0; i<crossValidationIndexs[ foldIndex ].size(); i++){
 
         index = crossValidationIndexs[ foldIndex ][i];
-        testData.addSample( data[ index ].getClassLabel(), data[ index ].getData() );
+        const std::string className = getClassNameForCorrespondingClassLabel(data[ index ].getClassLabel());
+        testData.addSample( data[ index ].getClassLabel(), data[ index ].getData(), className );
     }
 
     return testData;
@@ -1057,7 +1064,8 @@ TimeSeriesClassificationData TimeSeriesClassificationData::getClassData(const UI
     for(UINT x=0; x<totalNumSamples; x++){
         if( data[x].getClassLabel() == classLabel ){
             TimeSeriesClassificationSample sample = data[x];
-            classData.addSample( classLabel, sample.getData());//getEnabledData(this->getEnabledDimensions()) ); // CDF
+            const std::string className = getClassNameForCorrespondingClassLabel(classLabel);
+            classData.addSample( classLabel, sample.getData(), className);//getEnabledData(this->getEnabledDimensions()) ); // CDF
         }
     }
     return classData;
@@ -1198,6 +1206,18 @@ MatrixFloat TimeSeriesClassificationData::getSampleData(UINT classLabel, UINT re
     return MatrixFloat();
 }
 
+void TimeSeriesClassificationData::getSampleDataWithoutAlloc(UINT classLabel, UINT recordID, MatrixFloat* m) const {
+    int record = 0;
+    for(UINT x=0; x<totalNumSamples; x++){
+        if( data[x].getClassLabel() == classLabel ){
+            if(record == recordID) {
+                m->copy(data[x].getData());
+            } else
+                record++;
+        }
+    }
+}
+
 
 UINT TimeSeriesClassificationData::getNumSamplesForClassLabel(UINT classLabel) const {
     for(UINT i=0; i<classTracker.size(); i++){
@@ -1210,6 +1230,15 @@ UINT TimeSeriesClassificationData::getNumSamplesForClassLabel(UINT classLabel) c
 
 Vector<std::string> TimeSeriesClassificationData::getDimensionNames() const {
     return dimensionsName;
+}
+
+Vector<std::string>* TimeSeriesClassificationData::getEnabledDimensionNames() const {
+    Vector<std::string>* eNames = new Vector<std::string>();
+    for (UINT d=0; d<numDimensions; d++) {
+        if(enabledDimensions[d])
+            eNames->push_back(dimensionsName[d]);
+    }
+    return eNames;
 }
 
 void TimeSeriesClassificationData::setDimensionNames(Vector<std::string> names) {

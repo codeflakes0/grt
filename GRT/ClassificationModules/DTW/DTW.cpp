@@ -167,7 +167,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
 
         for(UINT i=0; i<data.getNumSamples(); i++){
             if( timeSeriesTrimmer.leftTrimTimeSeries( data[i] ) ){
-                tempData.addSample(data[i].getClassLabel(), data[i].getEnabledData(enabledDimensions));
+                tempData.addSample(data[i].getClassLabel(), data[i].getEnabledData(enabledDimensions), "NOT_SET");
             }else{
                 trainingLog << "Removing training sample " << i << " from the dataset as it could not be trimmed!" << std::endl;
             }
@@ -186,7 +186,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
 
         for(UINT i=0; i<data.getNumSamples(); i++){
             if( timeSeriesTrimmer.trimTimeSeries( data[i] ) ){
-                tempData.addSample(data[i].getClassLabel(), data[i].getEnabledData(enabledDimensions)); // CDF
+                tempData.addSample(data[i].getClassLabel(), data[i].getEnabledData(enabledDimensions), "NOT_SET"); // CDF
             }else{
                 trainingLog << "Removing training sample " << i << " from the dataset as it could not be trimmed!" << std::endl;
             }
@@ -209,6 +209,13 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     classNames.resize( numClasses ); // CDF
     nullRejectionThresholds.resize( numClasses );
     averageTemplateLength = 0;
+
+    Vector<std::string>* dnames = data.getEnabledDimensionNames();
+    for (int i=0; i<dnames->size(); i++) {
+        trainingLog << " - " << (*dnames)[i] << std::endl;
+    }
+    setDimensionNames(*dnames);
+    delete dnames;
     
     //Need to copy the labelled training data incase we need to scale it or znorm it
     TimeSeriesClassificationData trainingData( data );
@@ -225,6 +232,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
         //Get the class label for the cth class
         UINT classLabel = trainingData.getClassTracker()[k].classLabel;
         std::string className = trainingData.getClassTracker()[k].className;
+        infoLog << "TEST=" << className << std::endl;
 
         TimeSeriesClassificationData classData = trainingData.getClassData( classLabel );
 
@@ -304,7 +312,7 @@ bool DTW::train_(TimeSeriesClassificationData &data){
     classDistances.resize(numTemplates,0);
     predictedClassLabel = GRT_DEFAULT_NULL_CLASS_LABEL;
     maxLikelihood = DEFAULT_NULL_LIKELIHOOD_VALUE;
-
+  
     //Training complete
     return true;
 }
@@ -405,6 +413,8 @@ bool DTW::predict_(MatrixFloat &inputTimeSeries){
         return false;
     }
     
+    infoLog << "DTW::predict_ " << inputTimeSeries.getNumRows() << "x" << inputTimeSeries.getNumCols() << std::endl;
+
     if( classLikelihoods.size() != numTemplates ) classLikelihoods.resize(numTemplates);
     if( classDistances.size() != numTemplates ) classDistances.resize(numTemplates);
     
@@ -1004,7 +1014,7 @@ void DTW::smoothData(MatrixFloat &data,UINT smoothFactor,MatrixFloat &resultsDat
 // CDF. From MLBase
 bool DTW::save(const std::string& filename ) const{
     //Open the file
-    debugLog << "saving '" << filename << "'" << std::endl;
+    debugLog << "DTW::save '" << filename << "'" << std::endl;
     std::fstream file;
     file.open(filename.c_str(), std::ios::out);
 
@@ -1033,6 +1043,8 @@ bool DTW::save( std::fstream &file ) const{
         return false;
     }
     
+     debugLog << "DTW::save" << std::endl;
+
     file << "DistanceMethod: ";
     switch(distanceMethod){
         case(ABSOLUTE_DIST):
@@ -1052,6 +1064,7 @@ bool DTW::save( std::fstream &file ) const{
     file << "ConstrainWarpingPath: " << constrainWarpingPath << std::endl;
     file << "Radius: " << radius << std::endl;
     file << "RejectionMode: " << rejectionMode<< std::endl;
+    file << "leftTrimInDataPoints: " << leftTrimInDataPoints<< std::endl; // CDF
     
     if( trained ){
         file << "NumberOfTemplates: " << numTemplates << std::endl;
@@ -1083,7 +1096,7 @@ bool DTW::save( std::fstream &file ) const{
 // CDF. From MLBase
 bool DTW::load(const std::string& filename ){
     //Open the file
-    debugLog << "opening '" << filename << "'" << std::endl;
+    debugLog << "DTW::load '" << filename << "'" << std::endl;
     std::fstream file;
     file.open(filename.c_str(), std::ios::in);
 
@@ -1103,6 +1116,8 @@ bool DTW::load( std::fstream &file ){
     UINT timeSeriesLength;
     UINT ts;
     
+    debugLog << "DTW::load from file stream" << std::endl;
+
     if(!file.is_open())
     {
         errorLog << "loadDTWModelFromFile( string fileName ) - Failed to open file!" << std::endl;
@@ -1192,6 +1207,14 @@ bool DTW::load( std::fstream &file ){
     }
     file >> rejectionMode;
     
+    // CDF
+    file >> word;
+    if(word != "leftTrimInDataPoints:"){
+        errorLog << "loadDTWModelFromFile( string fileName ) - Failed to find LeftTrimDataPoints!" << std::endl;
+        return false;
+    }
+    file >> leftTrimInDataPoints;
+
     if( trained ){
         
         //Check and load the Number of Templates

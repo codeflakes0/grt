@@ -209,7 +209,7 @@ public:
     */
     Vector< UINT > getClassLabels() const;
     
-    Vector< std::string > getClassNames() const;
+    Vector< std::string > getClassNames() const; // CDF
 
     /**
     Gets a Vector of the ranges used to scale the data for training and prediction, these ranges are only used if the classifier has been trained
@@ -315,6 +315,11 @@ public:
     */
     static Vector< std::string > getRegisteredClassifiers();
     
+    // CDF
+    Vector<std::string> getDimensionNames()  const;
+    void setDimensionNames(Vector<std::string> names);
+    bool setClassNameForCorrespondingClassLabel(const std::string className,const UINT classLabel);
+
 protected:
     /**
     Saves the core base settings to a file.
@@ -346,6 +351,7 @@ protected:
     Vector< UINT > classLabels;
     Vector< std::string > classNames;
     Vector< MinMax > ranges;
+    Vector<std::string> dimensionsName; // CDF
 
     /**
     This function returns the classifier map, only one map should exist across all classifiers.

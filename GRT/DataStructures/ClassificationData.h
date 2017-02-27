@@ -161,6 +161,7 @@ public:
      @return true if the sample was correctly added to the dataset, false otherwise
     */
     bool addSample(const UINT classLabel,const VectorFloat &sample);
+    bool addSample(const UINT classLabel,const VectorFloat &sample,const std::string& className);
     
     /**
      Removes the training sample at the specific index from the dataset.
@@ -497,7 +498,7 @@ public:
      @param classLabel: the class label you want to access the name for
      @return a string containing the name of the given class label or the string "CLASS_LABEL_NOT_FOUND" if the class label does not exist
      */
-    std::string getClassNameForCorrespondingClassLabel(const UINT classLabel) const;
+    const std::string& getClassNameForCorrespondingClassLabel(const UINT classLabel) const;
     
 	/**
      Gets the ranges of the classification data.

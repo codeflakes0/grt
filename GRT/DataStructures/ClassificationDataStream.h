@@ -375,7 +375,7 @@ public:
      
 	 @return a std::string containing the name of the given class label or the std::string "CLASS_LABEL_NOT_FOUND" if the class label does not exist
      */
-    std::string getClassNameForCorrespondingClassLabel(const UINT classLabel);
+    const std::string& getClassNameForCorrespondingClassLabel(const UINT classLabel) const;
     
 	/**
      Gets the ranges of the classification data.

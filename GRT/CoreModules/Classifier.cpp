@@ -89,6 +89,7 @@ Classifier::Classifier( const std::string &id ) : MLBase( id, MLBase::CLASSIFIER
     trainingSetAccuracy = 0;
     nullRejectionCoeff = 5;
     numClassifierInstances++;
+    dimensionsName.resize(numInputDimensions);
 }
     
 Classifier::~Classifier(void){
@@ -242,8 +243,9 @@ Vector< UINT > Classifier::getClassLabels() const{
     return classLabels;
 }
 
+// CDF
 Vector< std::string > Classifier::getClassNames() const {
-    debugLog << "getClassNames" << std::endl;
+    //debugLog << "getClassNames" << std::endl;
     return classNames;
 }
 
@@ -313,12 +315,26 @@ bool Classifier::saveBaseSettingsToFile( std::fstream &file ) const{
         }
         file << std::endl;
         
+        file << "ClassNames: ";
+        for(UINT i=0; i<classLabels.size(); i++){
+            file << " " << classNames[i];
+        }
+        file << std::endl;
+
         if( useScaling ){
             file << "Ranges: " << std::endl;
             for(UINT i=0; i<ranges.size(); i++){
                 file << ranges[i].minValue << "\t" << ranges[i].maxValue << std::endl;
             }
         }
+
+        file << "NumDimensions: " << dimensionsName.size() << std::endl;
+        file << "DimensionNames: ";
+        for(UINT i=0; i<dimensionsName.size(); i++){
+            file << " " << dimensionsName[i];
+        }
+        file << std::endl;
+
     }
     
     return true;
@@ -401,6 +417,20 @@ bool Classifier::loadBaseSettingsFromFile( std::fstream &file ){
             file >> classLabels[i];
         }
         
+        //Load the class labels
+        classNames.resize( numClasses );
+        file >> word;
+        if( word != "ClassNames:" ){
+            errorLog << "loadBaseSettingsFromFile(fstream &file) - Failed to read ClassNames header!" << std::endl;
+            clear();
+            return false;
+        }
+        infoLog << "loading class names:" << std::endl;
+        for(UINT i=0; i<classNames.size(); i++){
+            file >> classNames[i];
+            infoLog << " - " << classNames[i] << std::endl;
+        }
+
         if( useScaling ){
             //Load if the Ranges
             file >> word;
@@ -416,8 +446,58 @@ bool Classifier::loadBaseSettingsFromFile( std::fstream &file ){
                 file >> ranges[i].maxValue;
             }
         }
+
+        file >> word;
+        if( word != "NumDimensions:" ){
+            errorLog << "loadBaseSettingsFromFile(fstream &file) - Failed to read NumDimensions!" << std::endl;
+            clear();
+            return false;
+        }
+        int numDimensions;
+        file >> numDimensions;
+
+        file >> word;
+        if( word != "DimensionNames:" ){
+            errorLog << "loadBaseSettingsFromFile(fstream &file) - Failed to read DimensionNames!" << std::endl;
+            clear();
+            return false;
+        }
+
+        dimensionsName.clear();
+        dimensionsName.resize(numDimensions);
+        for(UINT i=0; i<numDimensions; i++){
+            file >> dimensionsName[i];
+        }
     }
     
+    return true;
+}
+
+// CDF
+Vector<std::string> Classifier::getDimensionNames() const {
+    return dimensionsName;
+}
+
+// CDF
+void Classifier::setDimensionNames(Vector<std::string> names) {
+    infoLog << "Classifier::setDimensionNames" << std::endl;
+
+    if(names.size() != numInputDimensions) {
+        errorLog << "dimensionNames size=" << names.size() << " differs from numInputDimensions=" << numInputDimensions << std::endl;
+        return;
+    }
+    dimensionsName.clear();
+    for (int d=0; d<numInputDimensions; d++) {
+        dimensionsName.push_back(names[d]);
+        infoLog << "d=" << d << " name=" << dimensionsName[d] << std::endl;
+    }
+}
+
+// CDF
+bool Classifier::setClassNameForCorrespondingClassLabel(const std::string className, const UINT classLabel){
+    //debugLog << "Classifier::setClassNameForCorrespondingClassLabel " << className << " " << classLabel << std::endl;
+    int index = getClassLabelIndexValue(classLabel);
+    classNames[index] = className;
     return true;
 }
 

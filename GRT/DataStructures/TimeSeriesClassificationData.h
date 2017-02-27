@@ -161,7 +161,7 @@ public:
      @param trainingSample: the new sample you want to add to the dataset.  The dimensionality of this sample (i.e. Matrix columns) should match the number of dimensions in the dataset, the rows of the Matrix represent time and do not have to be any specific length
 	 @return true if the sample was correctly added to the dataset, false otherwise
      */
-	bool addSample(const UINT classLabel,const MatrixFloat &trainingSample);
+    bool addSample(const UINT classLabel,const MatrixFloat &trainingSample,const std::string& className);
     
     /**
      Removes the last training sample added to the dataset.
@@ -394,6 +394,7 @@ public:
     UINT inline getAbsoluteNumDimensions() const { return numDimensions; } // bypass dimension enabling
 
     Vector<std::string> getDimensionNames()  const; // CDF
+    Vector<std::string>* getEnabledDimensionNames()  const; // CDF
     void setDimensionNames(Vector<std::string> names);
 
     // CDF
@@ -413,6 +414,7 @@ public:
     UINT getNumSamplesForClassLabel(UINT classLabel) const; // CDF
 
     MatrixFloat getSampleData(UINT classLabel, UINT recordID) const; // CDF
+    void getSampleDataWithoutAlloc(UINT classLabel, UINT recordID, MatrixFloat* m) const; // CDF
 
 	/**
      Gets the number of classes.

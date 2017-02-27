@@ -81,7 +81,7 @@ MatrixFloat &TimeSeriesClassificationSample::getEnabledData(Vector<int> enabledD
         if(enabledDimensions[d])
             enabledCol++;
 
-    debugLog << "resize to " << data.getNumRows() << "x" << enabledCol << std::endl;
+    //debugLog << "resize to " << data.getNumRows() << "x" << enabledCol << std::endl;
     enabledData.resize(data.getNumRows(), enabledCol);
 
     UINT i=0;
