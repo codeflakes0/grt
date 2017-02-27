@@ -180,6 +180,11 @@ const VectorFloat& FeatureExtraction::getFeatureVector() const{
     return featureVector; 
 }
 
+// CDF
+void FeatureExtraction::getFeatureVectorWithoutAlloc(VectorFloat* v) const {
+    v->copy(featureVector);
+}
+
 const MatrixFloat& FeatureExtraction::getFeatureMatrix() const {
     return featureMatrix;
 }

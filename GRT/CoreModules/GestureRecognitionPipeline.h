@@ -785,6 +785,8 @@ public:
      @return returns a Vector containing the output of the last preprocessing module, an empty Vector will be returned if there are no preprocessing modules.
      */
     VectorFloat getPreProcessedData() const;
+    // CDF
+    void getPreProcessedDataWithoutAlloc(VectorFloat* v) const;
 
     /**
      Gets a Vector containing the output of the preprocessing module at index X, this will be an M-dimensional Vector, where M is the output size of the preprocessing module.  
@@ -800,6 +802,8 @@ public:
      @return returns a Vector containing the output of the last feature extraction module, an empty Vector will be returned if there are no feature extraction modules.
      */
     VectorFloat getFeatureExtractionData() const;
+    // CDF
+    void getFeatureExtractionDataWithoutAlloc(VectorFloat* v) const;
 
     /**
      Gets a Vector containing the output of the feature extraction module at index X, this will be an M-dimensional Vector, where M is the output size of the feature extraction module.  
@@ -816,6 +820,8 @@ public:
      @return returns a Vector containing the class labels for each class, an empty Vector will be returned if the model has not been trained
      */
     Vector< UINT > getClassLabels() const;
+
+    Vector< std::string > getClassNames() const; // CDF
 
     /**
      Gets a Vector containing the results from the most recent test.  Each element in the Vector represents the results for the corresponding test sample.  
@@ -1198,6 +1204,9 @@ public:
      */
     bool addFeatureExtractionModule(const FeatureExtraction &featureExtractionModule,UINT insertIndex = INSERT_AT_END_INDEX);
 
+    // CDF
+    bool addFeatureExtractionModuleNoCopy(FeatureExtraction* featureExtractionModule,UINT insertIndex = INSERT_AT_END_INDEX);
+
 	/**
 	 This function removes any existing feature extraction modules, then it adds the new feature extraction module.
      
@@ -1372,6 +1381,9 @@ public:
       @return returns true if the info text was updated successfully, false otherwise
      */
     bool setInfo(const std::string &info);
+
+    // CDF
+    void setClassifierDimensionsNames(TimeSeriesClassificationData& data);
 
     using MLBase::train;
     using MLBase::train_;

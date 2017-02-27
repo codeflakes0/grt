@@ -132,6 +132,8 @@ public:
      @return returns the current feature vector, this vector will be empty if the module has not been initialized
      */
     const VectorFloat& getFeatureVector() const;
+    // CDF
+    void getFeatureVectorWithoutAlloc(VectorFloat* v) const;
 
     /**
      Returns the current feature matrix.

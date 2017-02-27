@@ -20,6 +20,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define GRT_DLL_EXPORTS
 #include "GestureRecognitionPipeline.h"
+#include "../FeatureExtractionModules/LocalPeakDetection/LocalPeakDetection.h"
 
 GRT_BEGIN_NAMESPACE
 
@@ -353,6 +354,8 @@ bool GestureRecognitionPipeline::train_( TimeSeriesClassificationData &trainingD
    
     TimeSeriesClassificationData processedTrainingData( trainingData.getAbsoluteNumDimensions() ); // CDF
     processedTrainingData.enableDimensions(trainingData.getEnabledDimensions()); // CDF
+    processedTrainingData.setDimensionNames(trainingData.getDimensionNames()); // CDF
+
     TimeSeriesClassificationData timeseriesClassificationData;
     ClassificationData classificationData;
 
@@ -388,6 +391,7 @@ bool GestureRecognitionPipeline::train_( TimeSeriesClassificationData &trainingD
     }
 
     timeseriesClassificationData.enableDimensions(trainingData.getEnabledDimensions()); // CDF
+    timeseriesClassificationData.setDimensionNames(trainingData.getDimensionNames()); // CDF
     //classificationData.setNumDimensions(trainingData.getEnabledDimensions()); // CDF
 
     infoLog << "trainingData.getNumSamples " << trainingData.getNumSamples() << std::endl;
@@ -454,7 +458,8 @@ bool GestureRecognitionPipeline::train_( TimeSeriesClassificationData &trainingD
         //infoLog << "processedTrainingData dim=" << processedTrainingData.getNumDimensions() << "/" << processedTrainingData.getAbsoluteNumDimensions() << std::endl;
         //infoLog << "trainingSample dim=" << trainingSample.getNumCols() << std::endl;
         //Add the training sample to the processed training data
-        processedTrainingData.addSample(classLabel,trainingSample);
+        const std::string& className = trainingData.getClassNameForCorrespondingClassLabel(classLabel);
+        processedTrainingData.addSample(classLabel,trainingSample,className);
     }
     
     infoLog << "Feature Extraction" << std::endl;
@@ -508,7 +513,10 @@ bool GestureRecognitionPipeline::train_( TimeSeriesClassificationData &trainingD
                             errorLog << __FILENAME__ << " Failed To add feature Vector to feature data matrix! FeatureExtractionModuleIndex: " << std::endl;
                             return false;
                         }
-                    }else classificationData.addSample(classLabel, inputVector);
+                    }else {
+                        const std::string& className = trainingData.getClassNameForCorrespondingClassLabel(classLabel);
+                        classificationData.addSample(classLabel, inputVector, className);
+                    }
                 }
                 
             }else{
@@ -518,13 +526,28 @@ bool GestureRecognitionPipeline::train_( TimeSeriesClassificationData &trainingD
                         return false;
                     }
                 }
-                else classificationData.addSample(classLabel, inputVector);
+                else {
+                    const std::string& className = trainingData.getClassNameForCorrespondingClassLabel(classLabel);
+                    classificationData.addSample(classLabel, inputVector, className);
+                }
             }
         }
         
-        if( classifier->getTimeseriesCompatible() ) timeseriesClassificationData.addSample(classLabel, featureData);
+        if( classifier->getTimeseriesCompatible() ) {
+            const std::string& className = trainingData.getClassNameForCorrespondingClassLabel(classLabel);
+            timeseriesClassificationData.addSample(classLabel, featureData, className);
+        }
         
     }
+
+    /*
+    const Vector<ClassTracker>& t = processedTrainingData.getClassTracker();
+    for (int i=0; i< t.size(); i++) {
+        UINT label = processedTrainingData.getClassLabelIndexValue(i);
+        std::string name = processedTrainingData.getClassNameForCorrespondingClassLabel(label);
+        timeseriesClassificationData.setClassNameForCorrespondingClassLabel(name, label);
+    }
+    */
 
     infoLog << "Training" << std::endl;
 
@@ -542,9 +565,11 @@ bool GestureRecognitionPipeline::train_( TimeSeriesClassificationData &trainingD
         return false;
     }
     
+    setClassifierDimensionsNames( trainingData );
+
     //Store the training time
     trainingTime = timer.getMilliSeconds();
-    
+
     return true;
 }
 
@@ -711,7 +736,7 @@ bool GestureRecognitionPipeline::train_(ClassificationDataStream &trainingData){
 
     //Store the number of training samples
     numTrainingSamples = processedTrainingData.getNumSamples();
-    
+
     //Train the classifier
     trained = classifier->train_( processedTrainingData );
     if( !trained ){
@@ -1449,12 +1474,13 @@ bool GestureRecognitionPipeline::predict_(MatrixFloat &input){
     infoLog << "GestureRecognitionPipeline::predict() preProcessing=" << getIsPreProcessingSet() << " featureExtraction=" << getIsFeatureExtractionSet() << std::endl;
 
     //Perform any pre-processing
-    /*
     if( getIsPreProcessingSet() ){
         
         for(UINT moduleIndex=0; moduleIndex<preProcessingModules.size(); moduleIndex++){
             MatrixFloat tmpMatrix( inputMatrix.getNumRows(), preProcessingModules[moduleIndex]->getNumOutputDimensions() );
             
+            tmpMatrix.enableDimensions(inputMatrix.getEnabledDimensions()); // CDF
+
             for(UINT i=0; i<inputMatrix.getNumRows(); i++){
                 if( !preProcessingModules[moduleIndex]->process( inputMatrix.getRow(i) ) ){
                     errorLog << "predict_timeseries(const MatrixFloat &inputMatrix) - Failed to PreProcess Input Matrix. PreProcessingModuleIndex: " << moduleIndex << std::endl;
@@ -1467,7 +1493,6 @@ bool GestureRecognitionPipeline::predict_(MatrixFloat &input){
             inputMatrix = tmpMatrix;
         }
     }
-    */
     
     //Update the context module
     predictionModuleIndex = AFTER_PREPROCESSING;
@@ -1532,7 +1557,11 @@ bool GestureRecognitionPipeline::predict_(MatrixFloat &input){
     //Update the context module
     predictionModuleIndex = AFTER_FEATURE_EXTRACTION;
 
+    //infoLog << "inputMatrix " << inputMatrix.getNumRows() << "x" << inputMatrix.getNumCols() << std::endl;
+
     MatrixFloat* enabledData = inputMatrix.getEnabledData();
+
+    //infoLog << "enabledData " << enabledData->getNumRows() << "x" << enabledData->getNumCols() << std::endl;
 
     //Perform the classification
     switch( dataType ){
@@ -2239,6 +2268,8 @@ bool GestureRecognitionPipeline::save(const std::string &filename) const {
         return false;
     }
     
+    infoLog << "GestureRecognitionPipeline::save '" << filename << "'" << std::endl;
+
     //Write the pipeline header info
     file << "GRT_PIPELINE_FILE_V3.0\n";
     file << "PipelineMode: " << getPipelineModeAsString() << std::endl;
@@ -2305,12 +2336,15 @@ bool GestureRecognitionPipeline::save(const std::string &filename) const {
             return false;
         }
     }
+
+    infoLog << "pipelineMode=" << pipelineMode << " classifier set=" << getIsClassifierSet() << std::endl;
     
     switch( pipelineMode ){
         case PIPELINE_MODE_NOT_SET:
             break;
-        case CLASSIFICATION_MODE:
+        case CLASSIFICATION_MODE: // 1
             if( getIsClassifierSet() ){
+                infoLog << "save classifier " << classifier->getClassifierType() << std::endl;
                 if( !classifier->save( file ) ){
                     errorLog << "Failed to write classifier model to file!" << std::endl;
                     file.close();
@@ -2318,7 +2352,7 @@ bool GestureRecognitionPipeline::save(const std::string &filename) const {
                 }
             }
             break;
-        case REGRESSION_MODE:
+        case REGRESSION_MODE: // 2
             if( getIsRegressifierSet() ){
                 if( !regressifier->save( file ) ){
                     errorLog << "Failed to write regressifier model to file!" << std::endl;
@@ -2327,7 +2361,7 @@ bool GestureRecognitionPipeline::save(const std::string &filename) const {
                 }
             }
             break;
-        case CLUSTER_MODE:
+        case CLUSTER_MODE: // 3
             if( getIsClustererSet() ){
                 if( !clusterer->save( file ) ){
                     errorLog << "Failed to write clusterer model to file!" << std::endl;
@@ -2361,8 +2395,9 @@ bool GestureRecognitionPipeline::loadPipelineFromFile(const std::string &filenam
 }
     
 bool GestureRecognitionPipeline::load(const std::string &filename){
-    
     std::fstream file;
+
+    infoLog << "GestureRecognitionPipeline::load " << filename << std::endl;
 
 	//Clear any previous setup
 	clear();
@@ -2659,35 +2694,37 @@ bool GestureRecognitionPipeline::load(const std::string &filename){
     
 bool GestureRecognitionPipeline::preProcessData(VectorFloat inputVector,bool computeFeatures){
     
+    VectorFloat inputVector2 = inputVector;
+
     if( getIsPreProcessingSet() ){
         for(UINT moduleIndex=0; moduleIndex<preProcessingModules.getSize(); moduleIndex++){
             
-            if( inputVector.getSize() != preProcessingModules[ moduleIndex ]->getNumInputDimensions() ){
+            if( inputVector2.getSize() != preProcessingModules[ moduleIndex ]->getNumInputDimensions() ){
                 errorLog << __FILENAME__ << " The size of the input Vector (" << preProcessingModules[ moduleIndex ]->getNumInputDimensions() << ") does not match that of the PreProcessing Module at moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             
-            if( !preProcessingModules[ moduleIndex ]->process( inputVector ) ){
+            if( !preProcessingModules[ moduleIndex ]->process( inputVector2 ) ){
                 errorLog << __FILENAME__ << " Failed To PreProcess Input Vector. PreProcessing moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
-            inputVector = preProcessingModules[ moduleIndex ]->getProcessedData();
+            inputVector2 = preProcessingModules[ moduleIndex ]->getProcessedData();
         }
     }
     
     //Perform any feature extraction
     if( getIsFeatureExtractionSet() && computeFeatures ){
         for(UINT moduleIndex=0; moduleIndex<featureExtractionModules.getSize(); moduleIndex++){
-            if( inputVector.getSize() != featureExtractionModules[ moduleIndex ]->getNumInputDimensions() ){
+            if( inputVector2.getSize() != featureExtractionModules[ moduleIndex ]->getNumInputDimensions() ){
                 errorLog << __FILENAME__ << " The size of the input Vector (" << featureExtractionModules[ moduleIndex ]->getNumInputDimensions() << ") does not match that of the FeatureExtraction Module at moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
             
-            if( !featureExtractionModules[ moduleIndex ]->computeFeatures( inputVector ) ){
+            if( !featureExtractionModules[ moduleIndex ]->computeFeatures( inputVector2 ) ){
                 errorLog << __FILENAME__ << " Failed To Compute Features from Input Vector. FeatureExtraction moduleIndex: " << moduleIndex << std::endl;
                 return false;
             }
-            inputVector = featureExtractionModules[ moduleIndex ]->getFeatureVector();
+            inputVector2 = featureExtractionModules[ moduleIndex ]->getFeatureVector();
         }
     }
     
@@ -3011,6 +3048,14 @@ VectorFloat GestureRecognitionPipeline::getPreProcessedData() const{
     return VectorFloat();
 }
 
+// CDF
+void GestureRecognitionPipeline::getPreProcessedDataWithoutAlloc(VectorFloat* v) const{
+    if( getIsPreProcessingSet() ){
+        const VectorFloat& d = preProcessingModules[ preProcessingModules.getSize()-1 ]->getProcessedData();
+        v->copy(d);
+    }
+}
+
 VectorFloat GestureRecognitionPipeline::getPreProcessedData(const UINT moduleIndex) const{
     if( getIsPreProcessingSet() ){ 
         if( moduleIndex < preProcessingModules.getSize() ){
@@ -3025,6 +3070,14 @@ VectorFloat GestureRecognitionPipeline::getFeatureExtractionData() const{
         return featureExtractionModules[ featureExtractionModules.getSize()-1 ]->getFeatureVector(); 
     }
     return VectorFloat();
+}
+
+// CDF
+void GestureRecognitionPipeline::getFeatureExtractionDataWithoutAlloc(VectorFloat* v) const{
+    if( getIsFeatureExtractionSet() ){
+        const VectorFloat& d = featureExtractionModules[ featureExtractionModules.getSize()-1 ]->getFeatureVector();
+        v->copy(d);
+    }
 }
     
 VectorFloat GestureRecognitionPipeline::getFeatureExtractionData(const UINT moduleIndex) const{
@@ -3048,6 +3101,15 @@ Vector< UINT > GestureRecognitionPipeline::getClassLabels() const{
     return Vector< UINT>(); 
 }
     
+// CDF
+Vector< std::string > GestureRecognitionPipeline::getClassNames() const{
+    if( getIsClassifierSet() ){
+        return classifier->getClassNames();
+    }
+    warningLog << __FILENAME__ << " Failed to get class labels!" << std::endl;
+    return Vector< std::string>();
+}
+
 Vector< TestInstanceResult > GestureRecognitionPipeline::getTestInstanceResults() const{
     return testResults;
 }
@@ -3152,9 +3214,19 @@ bool GestureRecognitionPipeline::addFeatureExtractionModule(const FeatureExtract
         return false;
     }
     
+    infoLog << "GestureRecognitionPipeline::1" << std::endl;
+
+    //FeatureExtraction *newInstance = NULL;
+    //if( featureExtractionModule.getId() == LocalPeakDetection::getId() ) {
+    //
+    //    newInstance = new LocalPeakDetection(static_cast<const LocalPeakDetection&>(featureExtractionModule));
+    //}
+
     //Create a new instance of the preProcessing and then clone the values across from the reference preProcessing
     FeatureExtraction *newInstance = featureExtractionModule.create();
-    
+
+    //infoLog << "GestureRecognitionPipeline::2" << std::endl;
+
     //Verify that the clone was successful
     if( !newInstance->deepCopyFrom( &featureExtractionModule ) ){
         delete newInstance;
@@ -3174,6 +3246,28 @@ bool GestureRecognitionPipeline::addFeatureExtractionModule(const FeatureExtract
     //The pipeline has been changed, so flag that the pipeline is no longer trained
     trained = false;
     
+    return true;
+}
+
+bool GestureRecognitionPipeline::addFeatureExtractionModuleNoCopy(FeatureExtraction* featureExtractionModule,UINT insertIndex){
+
+    //Validate the insertIndex is valid
+    if( insertIndex != INSERT_AT_END_INDEX && insertIndex > featureExtractionModules.getSize() ){ // CDF. >
+        errorLog << __FILENAME__ << " Invalid insertIndex value!" << std::endl;
+        return false;
+    }
+
+    //Add the new instance to the preProcessingModules
+    Vector< FeatureExtraction* >::iterator iter = featureExtractionModules.begin();
+
+    if( insertIndex == INSERT_AT_END_INDEX ) iter = featureExtractionModules.end();
+    else iter = featureExtractionModules.begin() + insertIndex;
+
+    featureExtractionModules.insert(iter, featureExtractionModule);
+
+    //The pipeline has been changed, so flag that the pipeline is no longer trained
+    trained = false;
+
     return true;
 }
 
@@ -3780,6 +3874,30 @@ UINT GestureRecognitionPipeline::getPipelineModeFromString(std::string pipelineM
 		return REGRESSION_MODE;
 	}
 	return PIPELINE_MODE_NOT_SET;
+}
+
+// CDF
+void GestureRecognitionPipeline::setClassifierDimensionsNames(TimeSeriesClassificationData& data) {
+    
+    infoLog << "GestureRecognitionPipeline::setClassifierDimensionsNames" << std::endl;
+
+    Vector<std::string> names = data.getDimensionNames();
+    const Vector<int> enabledDims = data.getEnabledDimensions();
+    int enabledCount = 0;
+    for (int i=0; i<enabledDims.size(); i++) {
+        if(enabledDims[i] > 0) enabledCount++;
+    }
+    
+    if(enabledCount == numInputDimensions) {
+        errorLog << "numInputDimensions=" << numInputDimensions << " not equal to enabledCount=" << enabledCount << std::endl;
+    } else {
+        Vector<std::string> enabledNames(0);
+        for (int i=0; i<enabledDims.size(); i++) {
+            if(enabledDims[i] > 0)
+                enabledNames.push_back(names[i]);
+        }
+        classifier->setDimensionNames(enabledNames);
+    }
 }
 
 GRT_END_NAMESPACE
