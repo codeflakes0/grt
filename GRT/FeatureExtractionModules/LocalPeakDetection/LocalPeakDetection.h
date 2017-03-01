@@ -108,7 +108,7 @@ public:
     static std::string getId();
     
 private:
-    const Float peak(const int v, const int d, const int i);
+    const void peak(const float v, const int d, const int i);
     void initPeakDetection(int numDimensions);
 
 protected:

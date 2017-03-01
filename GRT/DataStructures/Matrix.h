@@ -406,6 +406,16 @@ public:
         return true;
 	}
 	
+    // CDF
+    bool setVal(const T& val, const unsigned int rowIndex, const unsigned int colIndex) {
+        if( dataPtr == NULL ) return false;
+        if( colIndex >= cols ) return false;
+        if( rowIndex >= rows ) return false;
+
+        dataPtr[ rowIndex * cols + colIndex ] = val;
+        return true;
+    }
+
 	/**
      Sets all the values in the column at colIndex with the values in the vector called column.
      The size of the column vector must match the number of rows in this Matrix.

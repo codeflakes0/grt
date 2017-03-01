@@ -20,6 +20,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define GRT_DLL_EXPORTS
 #include "LocalPeakDetection.h"
+#include <iomanip>
 
 GRT_BEGIN_NAMESPACE
 
@@ -233,9 +234,16 @@ void LocalPeakDetection::initPeakDetection(int numDimensions) {
  * value
  * dimension
  * index
+ *
+ * based on http://www.billauer.co.il/peakdet.html
+ *
+ * return [ NAN NAN x NAN NAN ] or [ NAN -x NAN NAN NAN ] where x is the index of local min or max.
+ * x < 0 means it's a min, x > 0 means its a max.
+ * NAN means this point is neither mix nor max
+ * Note that if x = 0 you still receives -0 or 0
  */
 
-const Float LocalPeakDetection::peak(const int v, const int d, const int i) {
+const void LocalPeakDetection::peak(const float v, const int d, const int i) {
     Float now = v;
     Float min = minPerDimension[d];
     Float max = maxPerDimension[d];
@@ -243,30 +251,36 @@ const Float LocalPeakDetection::peak(const int v, const int d, const int i) {
     Float maxPos = maxPosPerDimension[d];
     Float lookformax = lookForMaxPerDimension[d];
 
-    Float r = 0;
-
     if(now > max) {
         max = now;
         maxPos = i;
+        if(d==5)
+        infoLog << "max=" << std::setprecision(2) << max << " (" << maxPos << ")" << std::endl;
     }
 
     if(now < min) {
         min = now;
         minPos = i;
+        if(d==5)
+        infoLog << "min=" << std::setprecision(2) << min << " (" << minPos << ")" << std::endl;
     }
 
     if(lookformax) {
         if(now < max-minDelta) {
+            if(d==5)
+            infoLog << "max " << std::setprecision(2) << max << " found at " << maxPos << std::endl;
+            featureVector[d] = maxPos;
             min = now;
             minPos = i;
-            r = -1;
             lookformax = 0;
         }
     } else {
-        if(now > min-minDelta) {
+        if(now > min+minDelta) {
+            if(d==5)
+            infoLog << "min " << std::setprecision(2) << min << " found at " << minPos << std::endl;
+            featureVector[d] = -minPos;
             max = now;
             maxPos = i;
-            r = 1;
             lookformax = 1;
         }
     }
@@ -276,8 +290,6 @@ const Float LocalPeakDetection::peak(const int v, const int d, const int i) {
     minPosPerDimension[d] = minPos;
     maxPosPerDimension[d] = maxPos;
     lookForMaxPerDimension[d] = lookformax;
-
-    return r;
 }
 
 /*
@@ -302,14 +314,24 @@ VectorFloat LocalPeakDetection::update(const VectorFloat &x){
 
     //Add the new data to the trajectory data buffer
     const unsigned int index = dataBuffer.getWritePointerPosition();
-    infoLog << "currentPosition=" << currentPosition << " index=" << index << std::endl;
+    //infoLog << "currentPosition=" << currentPosition << " index=" << index << std::endl;
 
     dataBuffer.push_back( x );
+    featureVector.fill(NAN);
 
     // For each dimension
     for(UINT d=0; d<numInputDimensions; d++){
-        featureVector[d] = peak(x[d], d, currentPosition);
+        peak(x[d], d, currentPosition); // will set feature vector
     }
+
+    /*
+    if(currentPosition == 0) {
+        featureVector[0] = 0.0;
+        featureVector[1] = -0.0;
+        featureVector[2] = NAN;
+        infoLog << featureVector[0] << " " << featureVector[1] << " " << featureVector[2] << std::endl;
+    }
+    */
 
     currentPosition++;
 

@@ -83,7 +83,7 @@ inline Float grt_sqrt( const Float &x ){ return sqrt(x); }
 
 inline Float grt_antilog( const Float &x ){ return exp( x ); }
 
-// TBE
+// CDF
 #ifdef __ANDROID__
 void enableAndroidLog();
 void disableAndroidLog();
